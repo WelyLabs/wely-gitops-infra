@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-users
+  labels:
+    app: wely
+    component: users
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-users
+  template:
+    metadata:
+      labels:
+        app: wely-users
+    spec:
+      containers:
+      - name: users-api
+        image: ghcr.io/welylabs/wely-users:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8082
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: DB_URL
+          value: "r2dbc:postgresql://ep-cool-rain-ab1vehtz-pooler.eu-west-2.aws.neon.tech/neondb"
+        - name: DB_USERNAME
+          value: "neondb_owner"
+        - name: KEYCLOAK_ISSUER_URI
+          value: "https://auth.welylabs.app/realms/calendar-app"
+        - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+          value: "http://wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+        - name: KEYCLOAK_INTERNAL_TOKEN_URI
+          value: "http://wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
+        - name: KEYCLOAK_BASE_URL
+          value: "http://wely-auth-service:8080"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wely-secrets
+              key: users-db-password
+        - name: KEYCLOAK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: wely-secrets
+              key: kc-client-secret
+        - name: KAFKA_BOOTSTRAP_SERVER
+          value: "pkc-e0zxq.eu-west-3.aws.confluent.cloud:9092"
+        - name: KAFKA_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kafka-secrets
+              key: kafka-key
+        - name: KAFKA_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: kafka-secrets
+              key: kafka-secret
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-secrets
+              key: aws-access-key-id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-secrets
+              key: aws-secret-access-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-users-service
+spec:
+  selector:
+    app: wely-users
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8082
+  type: NodePort

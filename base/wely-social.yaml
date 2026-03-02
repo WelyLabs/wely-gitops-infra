@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-social
+  labels:
+    app: wely
+    component: social
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-social
+  template:
+    metadata:
+      labels:
+        app: wely-social
+    spec:
+      containers:
+      - name: social
+        image: ghcr.io/welylabs/wely-social:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8083
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: NEO4J_URI
+          value: "neo4j+s://9ef21cd5.databases.neo4j.io"
+        - name: NEO4J_USERNAME
+          value: "neo4j"
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wely-secrets
+              key: neo4j-password
+        - name: KAFKA_BOOTSTRAP_SERVER
+          value: "pkc-e0zxq.eu-west-3.aws.confluent.cloud:9092"
+        - name: KAFKA_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kafka-secrets
+              key: kafka-key
+        - name: KAFKA_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: kafka-secrets
+              key: kafka-secret
+        - name: KEYCLOAK_ISSUER_URI
+          value: "https://auth.welylabs.app/realms/calendar-app"
+        - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+          value: "http://wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-social-service
+spec:
+  selector:
+    app: wely-social
+  ports:
+    - protocol: TCP
+      port: 8083
+      targetPort: 8083
+  type: NodePort

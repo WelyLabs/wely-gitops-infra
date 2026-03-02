@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - cloudflared.yaml
+  - wely-auth.yaml
+  - wely-web.yaml
+  - wely-gateway.yaml
+  - wely-events.yaml
+  - wely-users.yaml
+  - wely-social.yaml
+  - wely-chat.yaml

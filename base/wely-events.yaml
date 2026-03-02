@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-events
+  labels:
+    app: wely
+    component: events
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-events
+  template:
+    metadata:
+      labels:
+        app: wely-events
+    spec:
+      containers:
+      - name: events-api
+        image: ghcr.io/welylabs/wely-events:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: wely-secrets
+              key: mongodb-uri-events
+        - name: KEYCLOAK_ISSUER_URI
+          value: "https://auth.welylabs.app/realms/calendar-app"
+        - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+          value: "http://wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-events-service
+spec:
+  selector:
+    app: wely-events
+  ports:
+    - protocol: TCP
+      port: 8086
+      targetPort: 8086
+  type: NodePort

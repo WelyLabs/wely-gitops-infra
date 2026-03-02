@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wely-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/WelyLabs/wely-gitops-infra.git
+    targetRevision: HEAD
+    path: overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wely-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wely-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/WelyLabs/wely-gitops-infra.git
+    targetRevision: HEAD
+    path: overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wely-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

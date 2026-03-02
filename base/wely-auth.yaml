@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-auth
+  labels:
+    app: wely
+    component: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-auth
+  template:
+    metadata:
+      labels:
+        app: wely-auth
+    spec:
+      containers:
+      - name: keycloak
+        image: ghcr.io/welylabs/wely-keycloak:latest
+        imagePullPolicy: IfNotPresent
+        args: ["start"]
+        env:
+        - name: KC_BOOTSTRAP_ADMIN_USERNAME
+          value: "admin"
+        - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+          value: "admin"
+        - name: KC_HTTP_ENABLED
+          value: "true"
+        - name: KC_PROXY
+          value: "edge"
+        - name: KC_HOSTNAME
+          value: "https://auth.welylabs.app"
+        - name: KC_HOSTNAME_STRICT_HTTPS
+          value: "true"
+        - name: KC_DB
+          value: "postgres"
+        - name: KC_DB_URL
+          value: "jdbc:postgresql://ep-long-credit-ab091oy0-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+        - name: KC_DB_USERNAME
+          value: "neondb_owner"
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wely-secrets
+              key: kc-db-password
+      volumes:
+      - name: import-vol
+        configMap:
+          name: kc-import
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-auth-service
+spec:
+  selector:
+    app: wely-auth
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: NodePort

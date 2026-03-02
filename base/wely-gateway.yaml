@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-gateway
+  labels:
+    app: wely
+    component: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-gateway
+  template:
+    metadata:
+      labels:
+        app: wely-gateway
+    spec:
+      containers:
+      - name: gateway
+        image: ghcr.io/welylabs/wely-gateway:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8081
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: KEYCLOAK_ISSUER_URI
+          value: "https://auth.welylabs.app/realms/calendar-app"
+        - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+          value: "http://wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+        - name: USERS_API_URL
+          value: "http://wely-users-service:8082"
+        - name: SOCIAL_API_URL
+          value: "http://wely-social-service:8083"
+        - name: CHAT_API_URL
+          value: "http://wely-chat-service:8084"
+        - name: CHAT_RSOCKET_URL
+          value: "ws://wely-chat-service:8084"
+        - name: EVENTS_API_URL
+          value: "http://wely-events-service:8086"
+        - name: MEDIA_API_URL
+          value: "http://localhost:8085"
+        - name: CORS_ALLOWED_ORIGIN
+          value: "https://web.welylabs.app"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-gateway-service
+spec:
+  selector:
+    app: wely-gateway
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+  type: NodePort
