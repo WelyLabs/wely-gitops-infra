@@ -22,9 +22,6 @@ patches:
       name: wely-gateway
     patch: |-
       - op: replace
-        path: /spec/template/spec/containers/0/env/2/value
-        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
-      - op: replace
         path: /spec/template/spec/containers/0/env/3/value
         value: "http://dev-wely-users-service:8082"
       - op: replace
