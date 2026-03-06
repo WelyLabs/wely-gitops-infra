@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: users-api
-        image: ghcr.io/welylabs/wely-users:latest
+        image: ghcr.io/welylabs/wely-users:sha-7100366e595e860206f9e1f113e76a29aef8d429
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8082
