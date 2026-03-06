@@ -2,16 +2,32 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../base
+- ../../base
 
 namespace: wely-prod
 
 # On peut ici modifier le nombre de réplicas ou d'autres paramètres pour la prod
 patches:
-  - target:
-      kind: Deployment
-      name: wely-web
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 2
+- patch: |-
+    - op: replace
+      path: /spec/replicas
+      value: 2
+  target:
+    kind: Deployment
+    name: wely-web
+images:
+- name: ghcr.io/welylabs/wely-chat
+  newName: ghcr.io/welylabs/wely-chat
+  newTag: latest
+- name: ghcr.io/welylabs/wely-gateway
+  newName: ghcr.io/welylabs/wely-gateway
+  newTag: latest
+- name: ghcr.io/welylabs/wely-social
+  newName: ghcr.io/welylabs/wely-social
+  newTag: latest
+- name: ghcr.io/welylabs/wely-users
+  newName: ghcr.io/welylabs/wely-users
+  newTag: latest
+- name: ghcr.io/welylabs/wely-web
+  newName: ghcr.io/welylabs/wely-web
+  newTag: latest
