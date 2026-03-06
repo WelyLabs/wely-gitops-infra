@@ -11,7 +11,7 @@ namePrefix: dev-
 images:
 - name: ghcr.io/welylabs/wely-chat
   newName: ghcr.io/welylabs/wely-chat
-  newTag: sha-c5f871cae03ec02c44fad7fb9de82729782be01b
+  newTag: sha-fc2bdc5424ac9e4e5b4f668aa8cb578d805b73f4
 - name: ghcr.io/welylabs/wely-events
   newName: ghcr.io/welylabs/wely-events
   newTag: sha-db9d3c66d713309f6d0a01712a1bbdccd57ab755
