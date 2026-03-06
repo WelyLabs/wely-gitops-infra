@@ -60,16 +60,6 @@ spec:
             secretKeyRef:
               name: kafka-secrets
               key: kafka-secret
-        - name: AWS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: aws-secrets
-              key: aws-access-key-id
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: aws-secrets
-              key: aws-secret-access-key
 ---
 apiVersion: v1
 kind: Service
