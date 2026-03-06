@@ -15,6 +15,8 @@ spec:
       labels:
         app: wely-users
     spec:
+      imagePullSecrets:
+      - name: wely-registry
       containers:
       - name: users-api
         image: ghcr.io/welylabs/wely-users:sha-7100366e595e860206f9e1f113e76a29aef8d429
@@ -58,16 +60,6 @@ spec:
             secretKeyRef:
               name: kafka-secrets
               key: kafka-secret
-        - name: AWS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: aws-secrets
-              key: aws-access-key-id
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: aws-secrets
-              key: aws-secret-access-key
 ---
 apiVersion: v1
 kind: Service
