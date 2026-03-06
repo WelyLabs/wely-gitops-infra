@@ -6,88 +6,92 @@ resources:
 
 namespace: wely-dev
 
-# On peut ici ajouter des préfixes aux noms ou modifier des variables spécifiques au dev
 namePrefix: dev-
+
 patches:
-- patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/0/value
-      value: "http://dev-wely-gateway-service:8081"
-  target:
-    kind: Deployment
-    name: wely-web
-- patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/3/value
-      value: "http://dev-wely-users-service:8082"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/4/value
-      value: "http://dev-wely-social-service:8083"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/5/value
-      value: "http://dev-wely-chat-service:8084"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/6/value
-      value: "ws://dev-wely-chat-service:8084"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/7/value
-      value: "http://dev-wely-events-service:8086"
-  target:
-    kind: Deployment
-    name: wely-gateway
-- patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/4/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/5/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/6/value
-      value: "http://dev-wely-auth-service:8080"
-  target:
-    kind: Deployment
-    name: wely-users
-- patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/8/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
-  target:
-    kind: Deployment
-    name: wely-social
-- patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/3/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
-  target:
-    kind: Deployment
-    name: wely-chat
-- patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/3/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
-  target:
-    kind: Deployment
-    name: wely-events
+  - target:
+      kind: Deployment
+      name: wely-web
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: "http://dev-wely-gateway-service:8081"
+  - target:
+      kind: Deployment
+      name: wely-gateway
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/2/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/3/value
+        value: "http://dev-wely-users-service:8082"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/4/value
+        value: "http://dev-wely-social-service:8083"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/5/value
+        value: "http://dev-wely-chat-service:8084"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/6/value
+        value: "ws://dev-wely-chat-service:8084"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/7/value
+        value: "http://dev-wely-events-service:8086"
+  - target:
+      kind: Deployment
+      name: wely-users
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/4/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/5/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/6/value
+        value: "http://dev-wely-auth-service:8080"
+  - target:
+      kind: Deployment
+      name: wely-social
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/8/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+  - target:
+      kind: Deployment
+      name: wely-chat
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/3/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+  - target:
+      kind: Deployment
+      name: wely-events
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/3/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+
 images:
-- name: ghcr.io/welylabs/wely-chat
-  newName: ghcr.io/welylabs/wely-chat
-  newTag: sha-fc2bdc5424ac9e4e5b4f668aa8cb578d805b73f4
-- name: ghcr.io/welylabs/wely-events
-  newName: ghcr.io/welylabs/wely-events
-  newTag: sha-16bc7fea8a482a70a37d28f512423b49841cb996
-- name: ghcr.io/welylabs/wely-gateway
-  newName: ghcr.io/welylabs/wely-gateway
-  newTag: sha-894eb6976a24bb09b56d0ff7a0200b16c3a9ae14
-- name: ghcr.io/welylabs/wely-keycloak
-  newName: ghcr.io/welylabs/wely-keycloak
-  newTag: sha-ad7e3bdfe69016b4ad986cec8510adfb9fa74f0b
-- name: ghcr.io/welylabs/wely-social
-  newName: ghcr.io/welylabs/wely-social
-  newTag: sha-d4741cd539fb8fbda90761b4b4d6e41dd617234f
-- name: ghcr.io/welylabs/wely-users
-  newName: ghcr.io/welylabs/wely-users
-  newTag: sha-c1d55374e1d178fc55b6344c74ae72c74b8a4d9b
-- name: ghcr.io/welylabs/wely-web
-  newName: ghcr.io/welylabs/wely-web
-  newTag: sha-0551796df89a9870302be291ad67463427144ca0
+  - name: ghcr.io/welylabs/wely-chat
+    newName: ghcr.io/welylabs/wely-chat
+    newTag: sha-fc2bdc5424ac9e4e5b4f668aa8cb578d805b73f4
+  - name: ghcr.io/welylabs/wely-events
+    newName: ghcr.io/welylabs/wely-events
+    newTag: sha-16bc7fea8a482a70a37d28f512423b49841cb996
+  - name: ghcr.io/welylabs/wely-gateway
+    newName: ghcr.io/welylabs/wely-gateway
+    newTag: sha-894eb6976a24bb09b56d0ff7a0200b16c3a9ae14
+  - name: ghcr.io/welylabs/wely-keycloak
+    newName: ghcr.io/welylabs/wely-keycloak
+    newTag: sha-ad7e3bdfe69016b4ad986cec8510adfb9fa74f0b
+  - name: ghcr.io/welylabs/wely-social
+    newName: ghcr.io/welylabs/wely-social
+    newTag: sha-d4741cd539fb8fbda90761b4b4d6e41dd617234f
+  - name: ghcr.io/welylabs/wely-users
+    newName: ghcr.io/welylabs/wely-users
+    newTag: sha-c1d55374e1d178fc55b6344c74ae72c74b8a4d9b
+  - name: ghcr.io/welylabs/wely-web
+    newName: ghcr.io/welylabs/wely-web
+    newTag: sha-0551796df89a9870302be291ad67463427144ca0
