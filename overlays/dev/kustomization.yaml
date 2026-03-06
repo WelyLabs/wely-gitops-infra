@@ -9,6 +9,9 @@ namespace: wely-dev
 # On peut ici ajouter des préfixes aux noms ou modifier des variables spécifiques au dev
 namePrefix: dev-
 images:
+- name: ghcr.io/welylabs/wely-events
+  newName: ghcr.io/welylabs/wely-events
+  newTag: sha-db9d3c66d713309f6d0a01712a1bbdccd57ab755
 - name: ghcr.io/welylabs/wely-gateway
   newName: ghcr.io/welylabs/wely-gateway
   newTag: sha-edd7b091611b2cec1f5ba1e1231f05ae45aed907
