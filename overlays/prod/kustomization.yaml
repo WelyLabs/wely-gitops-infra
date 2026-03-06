@@ -25,6 +25,9 @@ images:
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
   newTag: latest
+- name: ghcr.io/welylabs/wely-users
+  newName: ghcr.io/welylabs/wely-users
+  newTag: latest
 - name: ghcr.io/welylabs/wely-web
   newName: ghcr.io/welylabs/wely-web
   newTag: latest
