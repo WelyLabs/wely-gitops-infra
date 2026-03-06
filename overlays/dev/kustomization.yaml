@@ -15,7 +15,7 @@ patches:
     patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/env/0/value
-        value: "http://dev-wely-gateway-service:8081"
+        value: "http://dev-wely-gateway-service.wely-dev.svc.cluster.local:8081"
   - target:
       kind: Deployment
       name: wely-gateway
