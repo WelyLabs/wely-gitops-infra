@@ -39,3 +39,37 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/env/7/value
         value: "http://dev-wely-events-service:8086"
+  - target:
+      kind: Deployment
+      name: wely-users
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/4/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/5/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/6/value
+        value: "http://dev-wely-auth-service:8080"
+  - target:
+      kind: Deployment
+      name: wely-social
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/8/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+  - target:
+      kind: Deployment
+      name: wely-chat
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/3/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+  - target:
+      kind: Deployment
+      name: wely-events
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/3/value
+        value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
