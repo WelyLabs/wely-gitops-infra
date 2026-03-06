@@ -8,3 +8,12 @@ namespace: wely-dev
 
 # On peut ici ajouter des préfixes aux noms ou modifier des variables spécifiques au dev
 namePrefix: dev-
+ 
+patches:
+  - target:
+      kind: Deployment
+      name: wely-web
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: "http://dev-wely-gateway-service:8081"
