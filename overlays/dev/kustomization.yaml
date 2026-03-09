@@ -10,14 +10,14 @@ namePrefix: dev-
 
 patches:
 - patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/env/0/value
-        value: "http://dev-wely-gateway-service.wely-dev.svc.cluster.local:8081"
-      - op: add
-        path: /spec/template/spec/containers/0/env/-
-        value:
-          name: KEYCLOAK_URL
-          value: "https://dev-auth.welylabs.app"
+    - op: replace
+      path: /spec/template/spec/containers/0/env/0/value
+      value: "http://dev-wely-gateway-service.wely-dev.svc.cluster.local:8081"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: KEYCLOAK_URL
+        value: "https://dev-auth.welylabs.app"
   target:
     kind: Deployment
     name: wely-web
@@ -99,4 +99,4 @@ images:
   newTag: sha-c1d55374e1d178fc55b6344c74ae72c74b8a4d9b
 - name: ghcr.io/welylabs/wely-web
   newName: ghcr.io/welylabs/wely-web
-  newTag: sha-4b9cd15177c4a62bb8619e0a4712026a990f8f62
+  newTag: sha-aae55950d6d2cf26a3bce8a3dc61a5ff203b6824
