@@ -77,13 +77,13 @@ patches:
   target:
     kind: Deployment
     name: wely-events
-  - target:
-      kind: Deployment
-      name: wely-auth
-    patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/env/4/value
-        value: "dev-auth.welylabs.app"
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/4/value
+      value: "dev-auth.welylabs.app"
+  target:
+    kind: Deployment
+    name: wely-auth
 
 images:
 - name: ghcr.io/welylabs/wely-chat
