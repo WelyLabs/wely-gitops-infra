@@ -32,7 +32,7 @@ spec:
         - name: KC_PROXY
           value: "edge"
         - name: KC_HOSTNAME
-          value: "https://auth.welylabs.app"
+          value: "auth.welylabs.app"
         - name: KC_HOSTNAME_STRICT_HTTPS
           value: "true"
         - name: KC_DB
