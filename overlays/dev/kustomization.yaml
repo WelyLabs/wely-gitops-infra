@@ -23,6 +23,9 @@ patches:
     name: wely-web
 - patch: |-
     - op: replace
+      path: /spec/template/spec/containers/0/env/1/value
+      value: "https://dev-auth.welylabs.app/realms/calendar-app"
+    - op: replace
       path: /spec/template/spec/containers/0/env/2/value
       value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
     - op: replace
@@ -45,6 +48,9 @@ patches:
     name: wely-gateway
 - patch: |-
     - op: replace
+      path: /spec/template/spec/containers/0/env/3/value
+      value: "https://dev-auth.welylabs.app/realms/calendar-app"
+    - op: replace
       path: /spec/template/spec/containers/0/env/4/value
       value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
     - op: replace
@@ -58,6 +64,9 @@ patches:
     name: wely-users
 - patch: |-
     - op: replace
+      path: /spec/template/spec/containers/0/env/7/value
+      value: "https://dev-auth.welylabs.app/realms/calendar-app"
+    - op: replace
       path: /spec/template/spec/containers/0/env/8/value
       value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
   target:
@@ -65,12 +74,18 @@ patches:
     name: wely-social
 - patch: |-
     - op: replace
+      path: /spec/template/spec/containers/0/env/2/value
+      value: "https://dev-auth.welylabs.app/realms/calendar-app"
+    - op: replace
       path: /spec/template/spec/containers/0/env/3/value
       value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
   target:
     kind: Deployment
     name: wely-chat
 - patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/2/value
+      value: "https://dev-auth.welylabs.app/realms/calendar-app"
     - op: replace
       path: /spec/template/spec/containers/0/env/3/value
       value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
