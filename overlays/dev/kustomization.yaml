@@ -64,6 +64,9 @@ patches:
     name: wely-users
 - patch: |-
     - op: replace
+      path: /spec/template/spec/containers/0/env/1/value
+      value: "neo4j://dev-wely-neo4j-service:7687"
+    - op: replace
       path: /spec/template/spec/containers/0/env/7/value
       value: "https://dev-auth.welylabs.app/realms/calendar-app"
     - op: replace
