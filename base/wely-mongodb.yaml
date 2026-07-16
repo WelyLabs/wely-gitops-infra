@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wely-mongodb
+  labels:
+    app: wely
+    component: mongodb
+spec:
+  serviceName: "wely-mongodb-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-mongodb
+  template:
+    metadata:
+      labels:
+        app: wely-mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:6.0
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-mongodb-service
+spec:
+  selector:
+    app: wely-mongodb
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
