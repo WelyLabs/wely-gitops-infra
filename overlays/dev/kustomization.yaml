@@ -84,6 +84,9 @@ patches:
     name: wely-chat
 - patch: |-
     - op: replace
+      path: /spec/template/spec/containers/0/env/1/value
+      value: "mongodb://dev-wely-mongodb-service:27017/events_db"
+    - op: replace
       path: /spec/template/spec/containers/0/env/2/value
       value: "https://dev-auth.welylabs.app/realms/calendar-app"
     - op: replace
