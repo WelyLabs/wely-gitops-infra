@@ -27,14 +27,11 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
         - name: NEO4J_URI
-          value: "neo4j+s://9ef21cd5.databases.neo4j.io"
+          value: "neo4j://wely-neo4j-service:7687"
         - name: NEO4J_USERNAME
           value: "neo4j"
         - name: NEO4J_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: wely-secrets
-              key: neo4j-password
+          value: "local-secret-neo4j"
         - name: KAFKA_BOOTSTRAP_SERVER
           value: "pkc-e0zxq.eu-west-3.aws.confluent.cloud:9092"
         - name: KAFKA_KEY
