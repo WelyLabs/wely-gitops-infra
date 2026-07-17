@@ -43,6 +43,9 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/env/7/value
       value: "http://dev-wely-events-service:8086"
+    - op: replace
+      path: /spec/template/spec/containers/0/env/9/value
+      value: "https://dev-web.welylabs.app"
   target:
     kind: Deployment
     name: wely-gateway
