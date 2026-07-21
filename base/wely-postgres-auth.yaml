@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wely-postgres-auth
+  labels:
+    app: wely
+    component: postgres-auth
+spec:
+  serviceName: "wely-postgres-auth-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-postgres-auth
+  template:
+    metadata:
+      labels:
+        app: wely-postgres-auth
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "keycloak"
+        - name: POSTGRES_USER
+          value: "keycloak"
+        - name: POSTGRES_PASSWORD
+          value: "local-secret-kc"
+        volumeMounts:
+        - name: pg-auth-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: pg-auth-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-postgres-auth-service
+spec:
+  selector:
+    app: wely-postgres-auth
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

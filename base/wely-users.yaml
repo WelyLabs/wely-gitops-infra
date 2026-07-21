@@ -27,9 +27,9 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
         - name: DB_URL
-          value: "r2dbc:postgresql://ep-cool-rain-ab1vehtz-pooler.eu-west-2.aws.neon.tech/neondb"
+          value: "r2dbc:postgresql://wely-postgres-users-service:5432/users"
         - name: DB_USERNAME
-          value: "neondb_owner"
+          value: "users"
         - name: KEYCLOAK_ISSUER_URI
           value: "https://auth.welylabs.app/realms/calendar-app"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
@@ -39,10 +39,7 @@ spec:
         - name: KEYCLOAK_BASE_URL
           value: "http://wely-auth-service:8080"
         - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: wely-secrets
-              key: users-db-password
+          value: "local-secret-users"
         - name: KEYCLOAK_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
