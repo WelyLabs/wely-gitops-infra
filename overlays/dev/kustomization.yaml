@@ -51,6 +51,9 @@ patches:
     name: wely-gateway
 - patch: |-
     - op: replace
+      path: /spec/template/spec/containers/0/env/1/value
+      value: "r2dbc:postgresql://dev-wely-postgres-users-service:5432/users"
+    - op: replace
       path: /spec/template/spec/containers/0/env/3/value
       value: "https://dev-auth.welylabs.app/realms/calendar-app"
     - op: replace
@@ -111,6 +114,9 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/env/5/value
       value: "true"
+    - op: replace
+      path: /spec/template/spec/containers/0/env/7/value
+      value: "jdbc:postgresql://dev-wely-postgres-auth-service:5432/keycloak"
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:

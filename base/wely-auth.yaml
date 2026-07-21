@@ -38,14 +38,11 @@ spec:
         - name: KC_DB
           value: "postgres"
         - name: KC_DB_URL
-          value: "jdbc:postgresql://ep-long-credit-ab091oy0-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+          value: "jdbc:postgresql://wely-postgres-auth-service:5432/keycloak"
         - name: KC_DB_USERNAME
-          value: "neondb_owner"
+          value: "keycloak"
         - name: KC_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: wely-secrets
-              key: kc-db-password
+          value: "local-secret-kc"
       volumes:
       - name: import-vol
         configMap:

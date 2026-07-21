@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wely-postgres-users
+  labels:
+    app: wely
+    component: postgres-users
+spec:
+  serviceName: "wely-postgres-users-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-postgres-users
+  template:
+    metadata:
+      labels:
+        app: wely-postgres-users
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "users"
+        - name: POSTGRES_USER
+          value: "users"
+        - name: POSTGRES_PASSWORD
+          value: "local-secret-users"
+        volumeMounts:
+        - name: pg-users-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: pg-users-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-postgres-users-service
+spec:
+  selector:
+    app: wely-postgres-users
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

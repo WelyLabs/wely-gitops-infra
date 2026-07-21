@@ -12,3 +12,5 @@ resources:
   - wely-chat.yaml
   - wely-mongodb.yaml
   - wely-neo4j.yaml
+  - wely-postgres-auth.yaml
+  - wely-postgres-users.yaml
