@@ -30,6 +30,8 @@ spec:
           value: "r2dbc:postgresql://wely-postgres-users-service:5432/users"
         - name: DB_USERNAME
           value: "users"
+        - name: SPRING_R2DBC_PROPERTIES_SSLMODE
+          value: "disable"
         - name: KEYCLOAK_ISSUER_URI
           value: "https://auth.welylabs.app/realms/calendar-app"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
