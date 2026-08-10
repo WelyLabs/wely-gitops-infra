@@ -1,2 +1,3 @@
 wely-secrets*.yaml
+!overlays/local/wely-secrets-local.yaml
 *.patch
