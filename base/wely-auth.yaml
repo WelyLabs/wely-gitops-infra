@@ -26,12 +26,12 @@ spec:
         - name: KC_BOOTSTRAP_ADMIN_USERNAME
           valueFrom:
             secretKeyRef:
-              name: wely-secrets-dev
+              name: dev-wely-secrets-dev
               key: kc-admin-username
         - name: KC_BOOTSTRAP_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: wely-secrets-dev
+              name: dev-wely-secrets-dev
               key: kc-admin-password
         - name: KC_HTTP_ENABLED
           value: "true"
@@ -48,12 +48,12 @@ spec:
         - name: KC_DB_USERNAME
           valueFrom:
             secretKeyRef:
-              name: wely-secrets-dev
+              name: dev-wely-secrets-dev
               key: auth-db-username
         - name: KC_DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: wely-secrets-dev
+              name: dev-wely-secrets-dev
               key: auth-db-password
       volumes:
       - name: import-vol

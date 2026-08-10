@@ -29,12 +29,12 @@ spec:
         - name: MONGO_USERNAME
           valueFrom:
             secretKeyRef:
-              name: wely-secrets-dev
+              name: dev-wely-secrets-dev
               key: mongo-root-username
         - name: MONGO_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: wely-secrets-dev
+              name: dev-wely-secrets-dev
               key: mongo-root-password
         - name: MONGODB_URI
           value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@wely-mongodb-service:27017/events_db?authSource=admin"
