@@ -25,9 +25,15 @@ spec:
         - name: POSTGRES_DB
           value: "users"
         - name: POSTGRES_USER
-          value: "users"
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: users-db-username
         - name: POSTGRES_PASSWORD
-          value: "local-secret-users"
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: users-db-password
         volumeMounts:
         - name: pg-users-data
           mountPath: /var/lib/postgresql/data

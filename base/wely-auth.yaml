@@ -24,9 +24,15 @@ spec:
         args: ["start"]
         env:
         - name: KC_BOOTSTRAP_ADMIN_USERNAME
-          value: "admin"
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: kc-admin-username
         - name: KC_BOOTSTRAP_ADMIN_PASSWORD
-          value: "admin"
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: kc-admin-password
         - name: KC_HTTP_ENABLED
           value: "true"
         - name: KC_PROXY
@@ -40,9 +46,15 @@ spec:
         - name: KC_DB_URL
           value: "jdbc:postgresql://wely-postgres-auth-service:5432/keycloak"
         - name: KC_DB_USERNAME
-          value: "keycloak"
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: auth-db-username
         - name: KC_DB_PASSWORD
-          value: "local-secret-kc"
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: auth-db-password
       volumes:
       - name: import-vol
         configMap:

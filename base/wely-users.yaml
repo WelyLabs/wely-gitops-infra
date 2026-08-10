@@ -29,7 +29,10 @@ spec:
         - name: DB_URL
           value: "r2dbc:postgresql://wely-postgres-users-service:5432/users"
         - name: DB_USERNAME
-          value: "users"
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: users-db-username
         - name: KEYCLOAK_ISSUER_URI
           value: "https://auth.welylabs.app/realms/calendar-app"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
@@ -39,23 +42,26 @@ spec:
         - name: KEYCLOAK_BASE_URL
           value: "http://wely-auth-service:8080"
         - name: DB_PASSWORD
-          value: "local-secret-users"
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: users-db-password
         - name: KEYCLOAK_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: wely-secrets
+              name: dev-wely-secrets-dev
               key: kc-client-secret
         - name: KAFKA_BOOTSTRAP_SERVER
           value: "pkc-e0zxq.eu-west-3.aws.confluent.cloud:9092"
         - name: KAFKA_KEY
           valueFrom:
             secretKeyRef:
-              name: kafka-secrets
+              name: dev-wely-secrets-dev
               key: kafka-key
         - name: KAFKA_SECRET
           valueFrom:
             secretKeyRef:
-              name: kafka-secrets
+              name: dev-wely-secrets-dev
               key: kafka-secret
         - name: SPRING_R2DBC_PROPERTIES_SSLMODE
           value: "disable"
