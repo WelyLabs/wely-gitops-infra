@@ -23,13 +23,18 @@ spec:
         - containerPort: 7687
         - containerPort: 7474
         env:
-        - name: MY_NEO4J_PASSWORD
+        - name: NEO4J_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: neo4j-username
+        - name: NEO4J_PASSWORD
           valueFrom:
             secretKeyRef:
               name: dev-wely-secrets-dev
               key: neo4j-password
         - name: NEO4J_AUTH
-          value: "neo4j/$(MY_NEO4J_PASSWORD)"
+          value: "$(NEO4J_USERNAME)/$(NEO4J_PASSWORD)"
         volumeMounts:
         - name: neo4j-data
           mountPath: /data
