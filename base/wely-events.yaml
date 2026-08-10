@@ -26,8 +26,18 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: mongo-root-username
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: mongo-root-password
         - name: MONGODB_URI
-          value: "mongodb://wely-mongodb-service:27017/events_db"
+          value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@wely-mongodb-service:27017/events_db?authSource=admin"
         - name: KEYCLOAK_ISSUER_URI
           value: "https://auth.welylabs.app/realms/calendar-app"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI

@@ -3,127 +3,154 @@ kind: Kustomization
 
 resources:
 - ../../base
+- wely-secrets-local.yaml
 - namespace.yaml
-- wely-sealed-secrets-dev.yaml
 
-namespace: wely-dev
+namespace: wely-local
 
-namePrefix: dev-
+namePrefix: local-
 
 patches:
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/0/value
-      value: "http://dev-wely-gateway-service.wely-dev.svc.cluster.local:8081"
+      value: "http://localhost:8081"
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
         name: KEYCLOAK_URL
-        value: "https://dev-auth.welylabs.app"
+        value: "http://localhost:8080"
   target:
     kind: Deployment
     name: wely-web
 - patch: |-
     - op: replace
+      path: /spec/type
+      value: LoadBalancer
+  target:
+    kind: Service
+    name: wely-web-service
+- patch: |-
+    - op: replace
+      path: /spec/type
+      value: LoadBalancer
+  target:
+    kind: Service
+    name: wely-gateway-service
+- patch: |-
+    - op: replace
+      path: /spec/type
+      value: LoadBalancer
+  target:
+    kind: Service
+    name: wely-auth-service
+- patch: |-
+    - op: replace
       path: /spec/template/spec/containers/0/env/1/value
-      value: "https://dev-auth.welylabs.app/realms/calendar-app"
+      value: "http://localhost:8080/realms/calendar-app"
     - op: replace
       path: /spec/template/spec/containers/0/env/2/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+      value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
     - op: replace
       path: /spec/template/spec/containers/0/env/3/value
-      value: "http://dev-wely-users-service:8082"
+      value: "http://local-wely-users-service:8082"
     - op: replace
       path: /spec/template/spec/containers/0/env/4/value
-      value: "http://dev-wely-social-service:8083"
+      value: "http://local-wely-social-service:8083"
     - op: replace
       path: /spec/template/spec/containers/0/env/5/value
-      value: "http://dev-wely-chat-service:8084"
+      value: "http://local-wely-chat-service:8084"
     - op: replace
       path: /spec/template/spec/containers/0/env/6/value
-      value: "ws://dev-wely-chat-service:8084"
+      value: "ws://local-wely-chat-service:8084"
     - op: replace
       path: /spec/template/spec/containers/0/env/7/value
-      value: "http://dev-wely-events-service:8086"
+      value: "http://local-wely-events-service:8086"
     - op: replace
       path: /spec/template/spec/containers/0/env/9/value
-      value: "https://dev-web.welylabs.app"
+      value: "http://localhost,http://localhost:80,http://localhost:4200"
   target:
     kind: Deployment
     name: wely-gateway
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/1/value
-      value: "r2dbc:postgresql://dev-wely-postgres-users-service:5432/users"
+      value: "r2dbc:postgresql://local-wely-postgres-users-service:5432/users"
     - op: replace
       path: /spec/template/spec/containers/0/env/3/value
-      value: "https://dev-auth.welylabs.app/realms/calendar-app"
+      value: "http://localhost:8080/realms/calendar-app"
     - op: replace
       path: /spec/template/spec/containers/0/env/4/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+      value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
     - op: replace
       path: /spec/template/spec/containers/0/env/5/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
+      value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
     - op: replace
       path: /spec/template/spec/containers/0/env/6/value
-      value: "http://dev-wely-auth-service:8080"
+      value: "http://local-wely-auth-service:8080"
   target:
     kind: Deployment
     name: wely-users
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/1/value
-      value: "neo4j://dev-wely-neo4j-service:7687"
+      value: "neo4j://local-wely-neo4j-service:7687"
     - op: replace
       path: /spec/template/spec/containers/0/env/7/value
-      value: "https://dev-auth.welylabs.app/realms/calendar-app"
+      value: "http://localhost:8080/realms/calendar-app"
     - op: replace
       path: /spec/template/spec/containers/0/env/8/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+      value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
   target:
     kind: Deployment
     name: wely-social
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/3/value
-      value: "mongodb://dev-wely-mongodb-service:27017/chat_db"
+      value: "mongodb://local-wely-mongodb-service:27017/chat_db"
     - op: replace
       path: /spec/template/spec/containers/0/env/4/value
-      value: "https://dev-auth.welylabs.app/realms/calendar-app"
+      value: "http://localhost:8080/realms/calendar-app"
     - op: replace
       path: /spec/template/spec/containers/0/env/5/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+      value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
   target:
     kind: Deployment
     name: wely-chat
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/3/value
-      value: "mongodb://dev-wely-mongodb-service:27017/events_db"
+      value: "mongodb://local-wely-mongodb-service:27017/events_db"
     - op: replace
       path: /spec/template/spec/containers/0/env/4/value
-      value: "https://dev-auth.welylabs.app/realms/calendar-app"
+      value: "http://localhost:8080/realms/calendar-app"
     - op: replace
       path: /spec/template/spec/containers/0/env/5/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+      value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
   target:
     kind: Deployment
     name: wely-events
 - patch: |-
+    $patch: delete
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: cloudflared-connector
+- patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/4/value
-      value: "https://dev-auth.welylabs.app"
+      value: "localhost"
     - op: replace
       path: /spec/template/spec/containers/0/env/5/value
-      value: "true"
+      value: "false"
     - op: replace
       path: /spec/template/spec/containers/0/env/7/value
-      value: "jdbc:postgresql://dev-wely-postgres-auth-service:5432/keycloak"
+      value: "jdbc:postgresql://local-wely-postgres-auth-service:5432/keycloak"
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
         name: USERS_API_URL
-        value: "http://dev-wely-users-service:8082"
+        value: "http://local-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-auth
@@ -140,7 +167,7 @@ images:
   newTag: sha-894eb6976a24bb09b56d0ff7a0200b16c3a9ae14
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
-  newTag: sha-aaaee310f4160ad4562d606c4602f5770ba182d1
+  newTag: sha-ad7e3bdfe69016b4ad986cec8510adfb9fa74f0b
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
   newTag: sha-d4741cd539fb8fbda90761b4b4d6e41dd617234f
