@@ -29,20 +29,26 @@ spec:
         - name: NEO4J_URI
           value: "neo4j://wely-neo4j-service:7687"
         - name: NEO4J_USERNAME
-          value: "neo4j"
+          valueFrom:
+            secretKeyRef:
+              name: wely-secrets-dev
+              key: neo4j-username
         - name: NEO4J_PASSWORD
-          value: "local-secret-neo4j"
+          valueFrom:
+            secretKeyRef:
+              name: wely-secrets-dev
+              key: neo4j-password
         - name: KAFKA_BOOTSTRAP_SERVER
           value: "pkc-e0zxq.eu-west-3.aws.confluent.cloud:9092"
         - name: KAFKA_KEY
           valueFrom:
             secretKeyRef:
-              name: kafka-secrets
+              name: wely-secrets-dev
               key: kafka-key
         - name: KAFKA_SECRET
           valueFrom:
             secretKeyRef:
-              name: kafka-secrets
+              name: wely-secrets-dev
               key: kafka-secret
         - name: KEYCLOAK_ISSUER_URI
           value: "https://auth.welylabs.app/realms/calendar-app"
