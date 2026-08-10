@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
 - ../../base
 - namespace.yaml
+- wely-sealed-secrets-dev.yaml
 
 namespace: wely-dev
 
