@@ -132,6 +132,12 @@ patches:
     name: wely-events
 - patch: |-
     $patch: delete
+    apiVersion: bitnami.com/v1alpha1
+    kind: SealedSecret
+    metadata:
+      name: wely-secrets-dev
+- patch: |-
+    $patch: delete
     apiVersion: apps/v1
     kind: Deployment
     metadata:
