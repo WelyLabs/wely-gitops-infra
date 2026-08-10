@@ -23,6 +23,8 @@ spec:
         - containerPort: 7687
         - containerPort: 7474
         env:
+        - name: NEO4J_server_config_strict__validation_enabled
+          value: "false"
         - name: NEO4J_PASSWORD
           valueFrom:
             secretKeyRef:
