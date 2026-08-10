@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
 - ../../base
 - wely-secrets-local.yaml
+- namespace.yaml
 
 namespace: wely-local
 
