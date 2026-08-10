@@ -25,9 +25,15 @@ spec:
         - name: POSTGRES_DB
           value: "keycloak"
         - name: POSTGRES_USER
-          value: "keycloak"
+          valueFrom:
+            secretKeyRef:
+              name: wely-secrets-dev
+              key: auth-db-username
         - name: POSTGRES_PASSWORD
-          value: "local-secret-kc"
+          valueFrom:
+            secretKeyRef:
+              name: wely-secrets-dev
+              key: auth-db-password
         volumeMounts:
         - name: pg-auth-data
           mountPath: /var/lib/postgresql/data
