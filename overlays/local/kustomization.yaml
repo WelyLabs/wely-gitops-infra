@@ -5,7 +5,6 @@ resources:
 - ../../base
 - wely-secrets-local.yaml
 - namespace.yaml
-- wely-kafka.yaml
 
 namespace: wely-local
 

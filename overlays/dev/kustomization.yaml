@@ -67,6 +67,19 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/env/6/value
       value: "http://dev-wely-auth-service:8080"
+    - op: replace
+      path: /spec/template/spec/containers/0/env/9/value
+      value: "dev-wely-kafka-service:9092"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
+        value: "PLAINTEXT"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
+        value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-users
@@ -75,11 +88,24 @@ patches:
       path: /spec/template/spec/containers/0/env/1/value
       value: "neo4j://dev-wely-neo4j-service:7687"
     - op: replace
+      path: /spec/template/spec/containers/0/env/4/value
+      value: "dev-wely-kafka-service:9092"
+    - op: replace
       path: /spec/template/spec/containers/0/env/7/value
       value: "https://dev-auth.welylabs.app/realms/calendar-app"
     - op: replace
       path: /spec/template/spec/containers/0/env/8/value
       value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
+        value: "PLAINTEXT"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
+        value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-social
