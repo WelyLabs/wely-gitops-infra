@@ -153,6 +153,13 @@ patches:
   target:
     kind: Deployment
     name: wely-auth
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/1/value
+      value: "dev-wely-kafka-service:9092"
+  target:
+    kind: Deployment
+    name: wely-kafka-ui
 
 images:
 - name: ghcr.io/welylabs/wely-chat

@@ -15,3 +15,4 @@ resources:
   - wely-postgres-auth.yaml
   - wely-postgres-users.yaml
   - wely-kafka.yaml
+  - wely-kafka-ui.yaml
