@@ -155,7 +155,7 @@ patches:
     name: wely-auth
 - patch: |-
     - op: replace
-      path: /spec/template/spec/containers/0/env/1/value
+      path: /spec/template/spec/containers/0/env/2/value
       value: "dev-wely-kafka-service:9092"
   target:
     kind: Deployment
