@@ -107,7 +107,7 @@ patches:
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/3/value
-      value: "mongodb://local-wely-mongodb-service:27017/chat_db"
+      value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/chat_db?authSource=admin"
     - op: replace
       path: /spec/template/spec/containers/0/env/4/value
       value: "http://localhost:8080/realms/calendar-app"
@@ -120,7 +120,7 @@ patches:
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/3/value
-      value: "mongodb://local-wely-mongodb-service:27017/events_db"
+      value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/events_db?authSource=admin"
     - op: replace
       path: /spec/template/spec/containers/0/env/4/value
       value: "http://localhost:8080/realms/calendar-app"
