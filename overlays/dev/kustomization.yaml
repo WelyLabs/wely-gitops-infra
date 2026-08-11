@@ -86,7 +86,7 @@ patches:
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/3/value
-      value: "mongodb://dev-wely-mongodb-service:27017/chat_db"
+      value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/chat_db?authSource=admin"
     - op: replace
       path: /spec/template/spec/containers/0/env/4/value
       value: "https://dev-auth.welylabs.app/realms/calendar-app"
@@ -99,7 +99,7 @@ patches:
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/3/value
-      value: "mongodb://dev-wely-mongodb-service:27017/events_db"
+      value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/events_db?authSource=admin"
     - op: replace
       path: /spec/template/spec/containers/0/env/4/value
       value: "https://dev-auth.welylabs.app/realms/calendar-app"
