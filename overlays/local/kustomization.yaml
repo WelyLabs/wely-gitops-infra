@@ -216,21 +216,6 @@ patches:
       value:
         name: USERS_API_URL
         value: "http://local-wely-users-service:8082"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: USERS_SERVICE_URL
-        value: "http://local-wely-users-service:8082"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: ENVIRONMENT
-        value: "local"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: PROFILE
-        value: "local"
   target:
     kind: Deployment
     name: wely-auth
