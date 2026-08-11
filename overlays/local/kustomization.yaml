@@ -14,6 +14,9 @@ configMapGenerator:
 - name: keycloak-init-sql
   files:
   - keycloak-init.sql
+- name: users-init-sql
+  files:
+  - users-init.sql
 
 patches:
 - patch: |-
@@ -31,6 +34,21 @@ patches:
   target:
     kind: StatefulSet
     name: wely-postgres-auth
+- patch: |-
+    - op: add
+      path: /spec/template/spec/volumes
+      value:
+      - name: users-init-volume
+        configMap:
+          name: users-init-sql
+    - op: add
+      path: /spec/template/spec/containers/0/volumeMounts/-
+      value:
+        name: users-init-volume
+        mountPath: /docker-entrypoint-initdb.d
+  target:
+    kind: StatefulSet
+    name: wely-postgres-users
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/0/value
