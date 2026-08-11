@@ -220,6 +220,13 @@ patches:
     name: wely-auth
 - patch: |-
     - op: replace
+      path: /spec/template/spec/containers/0/env/3/value
+      value: "PLAINTEXT://local-wely-kafka-service:9092"
+  target:
+    kind: Deployment
+    name: wely-kafka
+- patch: |-
+    - op: replace
       path: /spec/template/spec/containers/0/env/2/value
       value: "local-wely-kafka-service:9092"
   target:
