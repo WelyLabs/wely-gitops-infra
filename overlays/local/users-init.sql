@@ -65,9 +65,6 @@ ALTER TABLE public.app_user OWNER TO users;
 --
 
 COPY public.app_user (id, keycloak_id, user_name, hashtag, first_name, last_name, profile_pic_url, joined_date) FROM stdin;
-a5f79638-abfc-4ffc-bffc-c9f1d8878e56	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	darth	2922	Théo	Banette	\N	2026-07-16 22:41:03.313187
-9a28c34c-d6dd-406b-873b-e18ca6e35b64	2e7ebdbe-6a8a-488d-8495-1bee73197811	madie	2614	Madeline	Heyraud	\N	2026-07-16 22:42:44.504341
-74a5ab16-b4bc-4257-8842-bb3c664a4df4	b17cc54a-817c-4cfc-b8d6-3aa4d6c32dc2	manon	4856	Manon	Banette	\N	2026-07-16 23:17:26.899858
 \.
 
 
