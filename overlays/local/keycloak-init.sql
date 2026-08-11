@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict pJ0jj5iHRvvGJraGmem7ZRonKRzlBPCxpqzWVmSh8KRytsB2RWM1Rtjc7KxCjGp
+\restrict zEtZ9e1ALZd7HhnRqj76DvrxD2vIcjj9PrByTdM2RPjvXNXL38JnkegUHXLN4Uv
 
 -- Dumped from database version 17.10 (Debian 17.10-1.pgdg13+1)
 -- Dumped by pg_dump version 17.10 (Debian 17.10-1.pgdg13+1)
@@ -2057,12 +2057,12 @@ f36a51c9-a2d4-4906-8c17-4b0b79122b9f	t	f	broker	0	f	\N	\N	t	\N	f	30e57dba-b9d9-4
 02b7abeb-6f9a-49f8-ba6a-90c11fcf43c1	t	f	calendar-app-realm	0	f	\N	\N	t	\N	f	30e57dba-b9d9-4e06-b8e3-8fdebecf4dd5	\N	0	f	f	calendar-app Realm	f	client-secret	\N	\N	\N	t	f	f	f
 350810c9-0768-4aa7-8551-4846e646b8ab	t	f	account	0	t	\N	/realms/calendar-app/account/	f	\N	f	1652565b-23ef-42a5-9b2c-1287d008e1e3	openid-connect	0	f	f	${client_account}	f	client-secret	${authBaseUrl}	\N	\N	t	f	f	f
 7e87c8df-434a-4862-ae3e-573224e1762f	t	f	account-console	0	t	\N	/realms/calendar-app/account/	f	\N	f	1652565b-23ef-42a5-9b2c-1287d008e1e3	openid-connect	0	f	f	${client_account-console}	f	client-secret	${authBaseUrl}	\N	\N	t	f	f	f
-9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	t	t	calendar-app-client	0	t	\N	https://dev-web.welylabs.app	f		f	1652565b-23ef-42a5-9b2c-1287d008e1e3	openid-connect	-1	t	f		f	client-secret	https://dev-web.welylabs.app		\N	t	f	t	f
 cbfb3bbf-26f1-4dfc-bd8c-71fc83720438	t	t	admin-cli	0	t	\N	\N	f	\N	f	1652565b-23ef-42a5-9b2c-1287d008e1e3	openid-connect	0	f	f	${client_admin-cli}	f	client-secret	\N	\N	\N	f	f	t	f
 81e526a0-e939-4487-ae0c-69757e669b61	t	f	broker	0	f	\N	\N	t	\N	f	1652565b-23ef-42a5-9b2c-1287d008e1e3	openid-connect	0	f	f	${client_broker}	f	client-secret	\N	\N	\N	t	f	f	f
 d4e53d8d-f07f-47b2-b291-1b6c423bc52f	t	f	realm-management	0	f	\N	\N	t	\N	f	1652565b-23ef-42a5-9b2c-1287d008e1e3	openid-connect	0	f	f	${client_realm-management}	f	client-secret	\N	\N	\N	t	f	f	f
 5a35a12e-6b3e-4d21-987e-68021934e0eb	t	t	security-admin-console	0	t	\N	/admin/calendar-app/console/	f	\N	f	1652565b-23ef-42a5-9b2c-1287d008e1e3	openid-connect	0	f	f	${client_security-admin-console}	f	client-secret	${authAdminUrl}	\N	\N	t	f	f	f
 717a9e61-3f16-4378-b057-814ff141a9f3	t	t	calendar-users-api-client	0	f	ainh6bJBpFuazwikbnc9WiZsLq7hOI38		f		f	1652565b-23ef-42a5-9b2c-1287d008e1e3	openid-connect	-1	t	f		t	client-secret			\N	f	f	f	f
+9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	t	t	calendar-app-client	0	t	\N	http://localhost	f		f	1652565b-23ef-42a5-9b2c-1287d008e1e3	openid-connect	-1	t	f		f	client-secret	http://localhost		\N	t	f	t	f
 \.
 
 
@@ -2130,7 +2130,7 @@ d4e53d8d-f07f-47b2-b291-1b6c423bc52f	post.logout.redirect.uris	+
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	frontchannel.logout.session.required	true
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	logout.confirmation.enabled	false
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	login_theme	calendar-app
-9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	post.logout.redirect.uris	https://dev-web.welylabs.app/*
+9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	post.logout.redirect.uris	+
 \.
 
 
@@ -3037,7 +3037,6 @@ COPY public.idp_mapper_config (idp_mapper_id, value, name) FROM stdin;
 --
 
 COPY public.jgroups_ping (address, name, cluster_name, ip, coord) FROM stdin;
-uuid://00000000-0000-0000-0000-000000000031	local-wely-auth-66955c64d-4svn5-17318	ISPN	10.1.2.72:7800	t
 \.
 
 
@@ -3159,7 +3158,7 @@ COPY public.offline_client_session (user_session_id, client_id, offline_flag, "t
 5rlwpY_AKwAkWEWeZTs_xOYS	8a3c298b-765d-4ce0-8feb-d70d8587de21	0	1786406322	{"authMethod":"openid-connect","redirectUri":"https://dev-auth.welylabs.app/admin/master/console/","notes":{"clientId":"8a3c298b-765d-4ce0-8feb-d70d8587de21","iss":"https://dev-auth.welylabs.app/realms/master","startedAt":"1786406321","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"c46f189f-c272-4811-8aa0-638886a13876","response_mode":"query","scope":"openid","userSessionStartedAt":"1786406321","redirect_uri":"https://dev-auth.welylabs.app/admin/master/console/","state":"ebb6558d-a8c9-4844-bcb0-5067b33508ba","code_challenge":"-Pc6pOBkub3PoszfZlg3UA6cCoqg7hYPFuJ-L2F9YK4"}}	local	local	1	30e57dba-b9d9-4e06-b8e3-8fdebecf4dd5
 HmTbd31NaZZWdmC7NDEG0qWH	9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	0	1786407597	{"authMethod":"openid-connect","redirectUri":"https://dev-web.welylabs.app/assets/silent-check-sso.html","notes":{"clientId":"9cbadcae-a924-47ec-8e35-e6bd8e2ee33e","iss":"https://dev-auth.welylabs.app/realms/calendar-app","startedAt":"1786406299","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"2c1fcd98-05de-4ddd-ab71-ce673f6910d4","response_mode":"fragment","scope":"openid","userSessionStartedAt":"1786406299","redirect_uri":"https://dev-web.welylabs.app/assets/silent-check-sso.html","state":"cffdf1f8-1398-4ee1-a022-56f98db3e7ac","code_challenge":"020NSB1Y6Aq4Vpusr1YYOABJoAVtm-zNpzKYAV5mXKI","prompt":"none","SSO_AUTH":"true"}}	local	local	7	1652565b-23ef-42a5-9b2c-1287d008e1e3
 PnFUW65dNImrGpu1l2O7V0hq	9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	0	1786407728	{"authMethod":"openid-connect","redirectUri":"https://dev-web.welylabs.app/assets/silent-check-sso.html","notes":{"clientId":"9cbadcae-a924-47ec-8e35-e6bd8e2ee33e","iss":"https://dev-auth.welylabs.app/realms/calendar-app","startedAt":"1786406337","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"de81fc33-2098-4660-b128-26998c0af33e","response_mode":"fragment","scope":"openid","userSessionStartedAt":"1786406337","redirect_uri":"https://dev-web.welylabs.app/assets/silent-check-sso.html","state":"a1ec2f41-fff3-4cfb-81c2-90e9f3ae061e","code_challenge":"r-mRt7QdHTQie04gvvMP0t2J6-w0y36wMMjO34L7Twg","prompt":"none","SSO_AUTH":"true"}}	local	local	8	1652565b-23ef-42a5-9b2c-1287d008e1e3
-Y9OZOYGpxNYJsZ73F4HG1Z51	8a3c298b-765d-4ce0-8feb-d70d8587de21	0	1786407905	{"authMethod":"openid-connect","redirectUri":"http://localhost:8080/admin/master/console/","notes":{"clientId":"8a3c298b-765d-4ce0-8feb-d70d8587de21","iss":"http://localhost:8080/realms/master","startedAt":"1786407840","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"59f14f1f-4b99-419f-9e52-866e8f006803","response_mode":"query","scope":"openid","userSessionStartedAt":"1786407840","redirect_uri":"http://localhost:8080/admin/master/console/","state":"ff945412-a63e-47f7-9c8d-250e1fff0572","code_challenge":"P0T6tNik_HiO2T1DhlM71roQl3avQhHv1bsVOC0sYCg","SSO_AUTH":"true"}}	local	local	1	\N
+Y9OZOYGpxNYJsZ73F4HG1Z51	8a3c298b-765d-4ce0-8feb-d70d8587de21	0	1786408265	{"authMethod":"openid-connect","redirectUri":"http://localhost:8080/admin/master/console/#/calendar-app/clients/9cbadcae-a924-47ec-8e35-e6bd8e2ee33e/settings","notes":{"clientId":"8a3c298b-765d-4ce0-8feb-d70d8587de21","iss":"http://localhost:8080/realms/master","startedAt":"1786407840","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"808f565b-4bac-42b3-bbea-de79e905bf8c","response_mode":"query","scope":"openid","userSessionStartedAt":"1786407840","redirect_uri":"http://localhost:8080/admin/master/console/#/calendar-app/clients/9cbadcae-a924-47ec-8e35-e6bd8e2ee33e/settings","state":"d2136775-1feb-4a92-82cd-38b3addccc38","code_challenge":"3RI2DU4WeT-lhAAs9zFmvSSQu4R8pfGwFNauUYLNM4Q","SSO_AUTH":"true"}}	local	local	3	\N
 \.
 
 
@@ -3171,7 +3170,7 @@ COPY public.offline_user_session (user_session_id, user_id, realm_id, created_on
 5rlwpY_AKwAkWEWeZTs_xOYS	4403891a-616c-43d6-b6d1-d43c13010991	30e57dba-b9d9-4e06-b8e3-8fdebecf4dd5	1786406321	0	{"ipAddress":"10.42.0.88","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxMC40Mi4wLjg4Iiwib3MiOiJXaW5kb3dzIiwib3NWZXJzaW9uIjoiMTAiLCJicm93c2VyIjoiQ2hyb21lLzE1MS4wLjAiLCJkZXZpY2UiOiJPdGhlciIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786406321","authenticators-completed":"{\\"b1307dd7-0ee9-4196-9230-4c98d5ce2f54\\":1786406321}"},"state":"LOGGED_IN"}	1786406322	\N	1	f
 HmTbd31NaZZWdmC7NDEG0qWH	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	1652565b-23ef-42a5-9b2c-1287d008e1e3	1786406299	0	{"ipAddress":"10.42.0.88","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxMC40Mi4wLjg4Iiwib3MiOiJDaHJvbWUgT1MiLCJvc1ZlcnNpb24iOiIxNDU0MS4wLjAiLCJicm93c2VyIjoiQ2hyb21lLzE0Mi4wLjAiLCJkZXZpY2UiOiJPdGhlciIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786406299","authenticators-completed":"{\\"0d4e0843-740a-44fe-bdc4-637ac469e00a\\":1786406298,\\"35a76044-41bb-4182-8ced-d9a6dba7f03f\\":1786406907}"},"state":"LOGGED_IN"}	1786407597	\N	7	f
 PnFUW65dNImrGpu1l2O7V0hq	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	1652565b-23ef-42a5-9b2c-1287d008e1e3	1786406337	0	{"ipAddress":"10.42.0.88","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxMC40Mi4wLjg4Iiwib3MiOiJXaW5kb3dzIiwib3NWZXJzaW9uIjoiMTAiLCJicm93c2VyIjoiQ2hyb21lLzE1MS4wLjAiLCJkZXZpY2UiOiJPdGhlciIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786406337","authenticators-completed":"{\\"0d4e0843-740a-44fe-bdc4-637ac469e00a\\":1786406337,\\"35a76044-41bb-4182-8ced-d9a6dba7f03f\\":1786407035}"},"state":"LOGGED_IN"}	1786407728	\N	8	f
-Y9OZOYGpxNYJsZ73F4HG1Z51	4403891a-616c-43d6-b6d1-d43c13010991	30e57dba-b9d9-4e06-b8e3-8fdebecf4dd5	1786407840	0	{"ipAddress":"192.168.65.3","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxOTIuMTY4LjY1LjMiLCJvcyI6Ik1hYyBPUyBYIiwib3NWZXJzaW9uIjoiMTAuMTUuNyIsImJyb3dzZXIiOiJTYWZhcmkvMjcuMCIsImRldmljZSI6Ik1hYyIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786407840","authenticators-completed":"{\\"b1307dd7-0ee9-4196-9230-4c98d5ce2f54\\":1786407840,\\"0bffcf0d-199d-4a17-a062-89299cbd9d02\\":1786407905}"},"state":"LOGGED_IN"}	1786407905	\N	1	f
+Y9OZOYGpxNYJsZ73F4HG1Z51	4403891a-616c-43d6-b6d1-d43c13010991	30e57dba-b9d9-4e06-b8e3-8fdebecf4dd5	1786407840	0	{"ipAddress":"192.168.65.3","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxOTIuMTY4LjY1LjMiLCJvcyI6Ik1hYyBPUyBYIiwib3NWZXJzaW9uIjoiMTAuMTUuNyIsImJyb3dzZXIiOiJTYWZhcmkvMjcuMCIsImRldmljZSI6Ik1hYyIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786407840","authenticators-completed":"{\\"b1307dd7-0ee9-4196-9230-4c98d5ce2f54\\":1786407840,\\"0bffcf0d-199d-4a17-a062-89299cbd9d02\\":1786408265}"},"state":"LOGGED_IN"}	1786408265	\N	3	f
 \.
 
 
@@ -3934,11 +3933,12 @@ COPY public.redirect_uris (client_id, value) FROM stdin;
 7e87c8df-434a-4862-ae3e-573224e1762f	/realms/calendar-app/account/*
 717a9e61-3f16-4378-b057-814ff141a9f3	/*
 5a35a12e-6b3e-4d21-987e-68021934e0eb	/admin/calendar-app/console/*
-9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	https://dev-web.welylabs.app/*
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	http://localhost/*
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	http://localhost:80/*
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	http://localhost:4200/*
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	http://localhost:8081/*
+9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	https://dev-web.welylabs.app/*
+9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	*
 \.
 
 
@@ -4220,7 +4220,8 @@ COPY public.web_origins (client_id, value) FROM stdin;
 8a3c298b-765d-4ce0-8feb-d70d8587de21	+
 717a9e61-3f16-4378-b057-814ff141a9f3	/*
 5a35a12e-6b3e-4d21-987e-68021934e0eb	+
-9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	https://dev-web.welylabs.app
+9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	+
+9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	*
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	http://localhost
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	http://localhost:80
 9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	http://localhost:4200
@@ -6428,5 +6429,5 @@ REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict pJ0jj5iHRvvGJraGmem7ZRonKRzlBPCxpqzWVmSh8KRytsB2RWM1Rtjc7KxCjGp
+\unrestrict zEtZ9e1ALZd7HhnRqj76DvrxD2vIcjj9PrByTdM2RPjvXNXL38JnkegUHXLN4Uv
 
