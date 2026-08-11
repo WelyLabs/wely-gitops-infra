@@ -33,12 +33,12 @@ kind: Service
 metadata:
   name: wely-kafka-ui-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: wely-kafka-ui
   ports:
     - protocol: TCP
       port: 8085
       targetPort: 8085
-      nodePort: 30085
+
 
