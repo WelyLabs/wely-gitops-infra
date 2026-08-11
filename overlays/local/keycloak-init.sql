@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict zEtZ9e1ALZd7HhnRqj76DvrxD2vIcjj9PrByTdM2RPjvXNXL38JnkegUHXLN4Uv
+\restrict OPMVtKh18h41FXhLo4cObidAUPah6KW4NoCTuCmbheWOR6vFVfX7t1E4SHtgPXQ
 
 -- Dumped from database version 17.10 (Debian 17.10-1.pgdg13+1)
 -- Dumped by pg_dump version 17.10 (Debian 17.10-1.pgdg13+1)
@@ -232,7 +232,6 @@ ALTER TABLE IF EXISTS ONLY public.resource_uris DROP CONSTRAINT IF EXISTS constr
 ALTER TABLE IF EXISTS ONLY public.user_required_action DROP CONSTRAINT IF EXISTS constraint_required_action;
 ALTER TABLE IF EXISTS ONLY public.required_action_provider DROP CONSTRAINT IF EXISTS constraint_req_act_prv_pk;
 ALTER TABLE IF EXISTS ONLY public.required_action_config DROP CONSTRAINT IF EXISTS constraint_req_act_cfg_pk;
-ALTER TABLE IF EXISTS ONLY public.redirect_uris DROP CONSTRAINT IF EXISTS constraint_redirect_uris;
 ALTER TABLE IF EXISTS ONLY public.protocol_mapper_config DROP CONSTRAINT IF EXISTS constraint_pmconfig;
 ALTER TABLE IF EXISTS ONLY public.protocol_mapper DROP CONSTRAINT IF EXISTS constraint_pcm;
 ALTER TABLE IF EXISTS ONLY public.org_invitation DROP CONSTRAINT IF EXISTS constraint_org_invitation;
@@ -2654,9 +2653,6 @@ e2ec48a9-94a3-4e11-a4a5-1d77a13e8337	a6a86418-9deb-4ace-9ac5-10e81b1b4ce4
 
 COPY public.credential (id, salt, type, user_id, created_date, user_label, secret_data, credential_data, priority, version) FROM stdin;
 9495ad72-013b-4a17-adf3-32f2ca82e796	\N	password	4403891a-616c-43d6-b6d1-d43c13010991	1766244508774	\N	{"value":"7tivfnTum2zytu6radVXuuIUgoSmJNpfVGhMsFY9xFg=","salt":"EoRRYxZBicbzj+bzE0u0Gw==","additionalParameters":{}}	{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}	10	0
-33dbc042-c773-4618-8286-660481eaf8d2	\N	password	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	1784241662006	\N	{"value":"fSCZ7jJT8rxb0aWog17/HyZ3ly27CDuo04A8GIVJ1tc=","salt":"QnmcOl/heecNs3jO7NVo9w==","additionalParameters":{}}	{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}	10	0
-cbf88a21-c31d-4607-a0ca-7a46c299115d	\N	password	2e7ebdbe-6a8a-488d-8495-1bee73197811	1784241763055	\N	{"value":"/Vd+Xq5YmObZbyxpmYjNks74bZOBVOQ7XDHxVJkvyG8=","salt":"mrH/lVfJe8m58ecyzJDUlA==","additionalParameters":{}}	{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}	10	0
-489e63ed-0cad-4b43-ac3d-44050a94cfae	\N	password	b17cc54a-817c-4cfc-b8d6-3aa4d6c32dc2	1784243813857	\N	{"value":"+3fIO5Z1eYPftVKt9DGIWjevpBynkPjbrec5e4n+rGY=","salt":"MQGZu0J02EqOnUwjFzlRKA==","additionalParameters":{}}	{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}	10	0
 \.
 
 
@@ -3037,6 +3033,7 @@ COPY public.idp_mapper_config (idp_mapper_id, value, name) FROM stdin;
 --
 
 COPY public.jgroups_ping (address, name, cluster_name, ip, coord) FROM stdin;
+uuid://00000000-0000-0000-0000-000000000032	local-wely-auth-777d58bb57-dbrnn-60529	ISPN	10.1.2.73:7800	t
 \.
 
 
@@ -3155,10 +3152,8 @@ l4oed	26.6.3	1781045488
 --
 
 COPY public.offline_client_session (user_session_id, client_id, offline_flag, "timestamp", data, client_storage_provider, external_client_id, version, realm_id) FROM stdin;
-5rlwpY_AKwAkWEWeZTs_xOYS	8a3c298b-765d-4ce0-8feb-d70d8587de21	0	1786406322	{"authMethod":"openid-connect","redirectUri":"http://localhost:8080/admin/master/console/","notes":{"clientId":"8a3c298b-765d-4ce0-8feb-d70d8587de21","iss":"http://localhost:8080/realms/master","startedAt":"1786406321","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"c46f189f-c272-4811-8aa0-638886a13876","response_mode":"query","scope":"openid","userSessionStartedAt":"1786406321","redirect_uri":"http://localhost:8080/admin/master/console/","state":"ebb6558d-a8c9-4844-bcb0-5067b33508ba","code_challenge":"-Pc6pOBkub3PoszfZlg3UA6cCoqg7hYPFuJ-L2F9YK4"}}	local	local	1	30e57dba-b9d9-4e06-b8e3-8fdebecf4dd5
-HmTbd31NaZZWdmC7NDEG0qWH	9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	0	1786407597	{"authMethod":"openid-connect","redirectUri":"http://localhost/assets/silent-check-sso.html","notes":{"clientId":"9cbadcae-a924-47ec-8e35-e6bd8e2ee33e","iss":"http://localhost:8080/realms/calendar-app","startedAt":"1786406299","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"2c1fcd98-05de-4ddd-ab71-ce673f6910d4","response_mode":"fragment","scope":"openid","userSessionStartedAt":"1786406299","redirect_uri":"http://localhost/assets/silent-check-sso.html","state":"cffdf1f8-1398-4ee1-a022-56f98db3e7ac","code_challenge":"020NSB1Y6Aq4Vpusr1YYOABJoAVtm-zNpzKYAV5mXKI","prompt":"none","SSO_AUTH":"true"}}	local	local	7	1652565b-23ef-42a5-9b2c-1287d008e1e3
-PnFUW65dNImrGpu1l2O7V0hq	9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	0	1786407728	{"authMethod":"openid-connect","redirectUri":"http://localhost/assets/silent-check-sso.html","notes":{"clientId":"9cbadcae-a924-47ec-8e35-e6bd8e2ee33e","iss":"http://localhost:8080/realms/calendar-app","startedAt":"1786406337","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"de81fc33-2098-4660-b128-26998c0af33e","response_mode":"fragment","scope":"openid","userSessionStartedAt":"1786406337","redirect_uri":"http://localhost/assets/silent-check-sso.html","state":"a1ec2f41-fff3-4cfb-81c2-90e9f3ae061e","code_challenge":"r-mRt7QdHTQie04gvvMP0t2J6-w0y36wMMjO34L7Twg","prompt":"none","SSO_AUTH":"true"}}	local	local	8	1652565b-23ef-42a5-9b2c-1287d008e1e3
 Y9OZOYGpxNYJsZ73F4HG1Z51	8a3c298b-765d-4ce0-8feb-d70d8587de21	0	1786408265	{"authMethod":"openid-connect","redirectUri":"http://localhost:8080/admin/master/console/#/calendar-app/clients/9cbadcae-a924-47ec-8e35-e6bd8e2ee33e/settings","notes":{"clientId":"8a3c298b-765d-4ce0-8feb-d70d8587de21","iss":"http://localhost:8080/realms/master","startedAt":"1786407840","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"808f565b-4bac-42b3-bbea-de79e905bf8c","response_mode":"query","scope":"openid","userSessionStartedAt":"1786407840","redirect_uri":"http://localhost:8080/admin/master/console/#/calendar-app/clients/9cbadcae-a924-47ec-8e35-e6bd8e2ee33e/settings","state":"d2136775-1feb-4a92-82cd-38b3addccc38","code_challenge":"3RI2DU4WeT-lhAAs9zFmvSSQu4R8pfGwFNauUYLNM4Q","SSO_AUTH":"true"}}	local	local	3	\N
+9u1oTG-Up-RLZAGOzX_Ki__b	9cbadcae-a924-47ec-8e35-e6bd8e2ee33e	0	1786409960	{"authMethod":"openid-connect","redirectUri":"http://localhost/calendar","notes":{"clientId":"9cbadcae-a924-47ec-8e35-e6bd8e2ee33e","iss":"http://localhost:8080/realms/calendar-app","startedAt":"1786409960","response_type":"code","level-of-authentication":"-1","code_challenge_method":"S256","nonce":"3d34609d-a5da-44dc-b543-77be093f3644","response_mode":"fragment","scope":"openid","userSessionStartedAt":"1786409960","redirect_uri":"http://localhost/calendar","state":"14062c4f-5762-4552-a3a3-17d759248b86","code_challenge":"V2ltFou09jxEd_KPCR08S0_m6Jl-Te9Idqg0jH9EH4g"}}	local	local	0	\N
 \.
 
 
@@ -3167,10 +3162,8 @@ Y9OZOYGpxNYJsZ73F4HG1Z51	8a3c298b-765d-4ce0-8feb-d70d8587de21	0	1786408265	{"aut
 --
 
 COPY public.offline_user_session (user_session_id, user_id, realm_id, created_on, offline_flag, data, last_session_refresh, broker_session_id, version, remember_me) FROM stdin;
-5rlwpY_AKwAkWEWeZTs_xOYS	4403891a-616c-43d6-b6d1-d43c13010991	30e57dba-b9d9-4e06-b8e3-8fdebecf4dd5	1786406321	0	{"ipAddress":"10.42.0.88","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxMC40Mi4wLjg4Iiwib3MiOiJXaW5kb3dzIiwib3NWZXJzaW9uIjoiMTAiLCJicm93c2VyIjoiQ2hyb21lLzE1MS4wLjAiLCJkZXZpY2UiOiJPdGhlciIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786406321","authenticators-completed":"{\\"b1307dd7-0ee9-4196-9230-4c98d5ce2f54\\":1786406321}"},"state":"LOGGED_IN"}	1786406322	\N	1	f
-HmTbd31NaZZWdmC7NDEG0qWH	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	1652565b-23ef-42a5-9b2c-1287d008e1e3	1786406299	0	{"ipAddress":"10.42.0.88","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxMC40Mi4wLjg4Iiwib3MiOiJDaHJvbWUgT1MiLCJvc1ZlcnNpb24iOiIxNDU0MS4wLjAiLCJicm93c2VyIjoiQ2hyb21lLzE0Mi4wLjAiLCJkZXZpY2UiOiJPdGhlciIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786406299","authenticators-completed":"{\\"0d4e0843-740a-44fe-bdc4-637ac469e00a\\":1786406298,\\"35a76044-41bb-4182-8ced-d9a6dba7f03f\\":1786406907}"},"state":"LOGGED_IN"}	1786407597	\N	7	f
-PnFUW65dNImrGpu1l2O7V0hq	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	1652565b-23ef-42a5-9b2c-1287d008e1e3	1786406337	0	{"ipAddress":"10.42.0.88","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxMC40Mi4wLjg4Iiwib3MiOiJXaW5kb3dzIiwib3NWZXJzaW9uIjoiMTAiLCJicm93c2VyIjoiQ2hyb21lLzE1MS4wLjAiLCJkZXZpY2UiOiJPdGhlciIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786406337","authenticators-completed":"{\\"0d4e0843-740a-44fe-bdc4-637ac469e00a\\":1786406337,\\"35a76044-41bb-4182-8ced-d9a6dba7f03f\\":1786407035}"},"state":"LOGGED_IN"}	1786407728	\N	8	f
 Y9OZOYGpxNYJsZ73F4HG1Z51	4403891a-616c-43d6-b6d1-d43c13010991	30e57dba-b9d9-4e06-b8e3-8fdebecf4dd5	1786407840	0	{"ipAddress":"192.168.65.3","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxOTIuMTY4LjY1LjMiLCJvcyI6Ik1hYyBPUyBYIiwib3NWZXJzaW9uIjoiMTAuMTUuNyIsImJyb3dzZXIiOiJTYWZhcmkvMjcuMCIsImRldmljZSI6Ik1hYyIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786407840","authenticators-completed":"{\\"b1307dd7-0ee9-4196-9230-4c98d5ce2f54\\":1786407840,\\"0bffcf0d-199d-4a17-a062-89299cbd9d02\\":1786408265}"},"state":"LOGGED_IN"}	1786408265	\N	3	f
+9u1oTG-Up-RLZAGOzX_Ki__b	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	1652565b-23ef-42a5-9b2c-1287d008e1e3	1786409960	0	{"ipAddress":"192.168.65.3","authMethod":"openid-connect","rememberMe":false,"started":0,"notes":{"KC_DEVICE_NOTE":"eyJpcEFkZHJlc3MiOiIxOTIuMTY4LjY1LjMiLCJvcyI6Ik1hYyBPUyBYIiwib3NWZXJzaW9uIjoiMTAuMTUuNyIsImJyb3dzZXIiOiJTYWZhcmkvMjcuMCIsImRldmljZSI6Ik1hYyIsImxhc3RBY2Nlc3MiOjAsIm1vYmlsZSI6ZmFsc2V9","AUTH_TIME":"1786409960","authenticators-completed":"{\\"0d4e0843-740a-44fe-bdc4-637ac469e00a\\":1786409960}"},"state":"LOGGED_IN"}	1786409960	\N	0	f
 \.
 
 
@@ -4110,12 +4103,6 @@ JGROUPS_ADDRESS_SEQUENCE	49	49
 
 COPY public.user_attribute (name, value, user_id, id, long_value_hash, long_value_hash_lower_case, long_value) FROM stdin;
 is_temporary_admin	true	4403891a-616c-43d6-b6d1-d43c13010991	a7a62c80-c5a8-4342-b9c6-e69c94461816	\N	\N	\N
-locale	fr	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	fd124cc3-4df5-4edc-8d27-95056a44e313	\N	\N	\N
-businessId	a5f79638-abfc-4ffc-bffc-c9f1d8878e56	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	0310203d-6e65-45a3-9eb9-e96cde5755a7	\N	\N	\N
-locale	fr	2e7ebdbe-6a8a-488d-8495-1bee73197811	e3249ba7-6e0a-48a9-93c5-44f5209b8c84	\N	\N	\N
-businessId	9a28c34c-d6dd-406b-873b-e18ca6e35b64	2e7ebdbe-6a8a-488d-8495-1bee73197811	ac3ddd9a-fd8e-44ea-b2ee-a831781f3fc9	\N	\N	\N
-locale	fr	b17cc54a-817c-4cfc-b8d6-3aa4d6c32dc2	13b32fdd-b376-4a3c-a2e9-3010c3aa390a	\N	\N	\N
-businessId	74a5ab16-b4bc-4257-8842-bb3c664a4df4	b17cc54a-817c-4cfc-b8d6-3aa4d6c32dc2	0348d6cb-57d5-409c-86aa-74cd4ed280c2	\N	\N	\N
 \.
 
 
@@ -4142,9 +4129,6 @@ COPY public.user_consent_client_scope (user_consent_id, scope_id) FROM stdin;
 COPY public.user_entity (id, email, email_constraint, email_verified, enabled, federation_link, first_name, last_name, realm_id, username, created_timestamp, service_account_client_link, not_before, last_modified_timestamp) FROM stdin;
 938386eb-79ac-4a28-8ebb-a50f44a52e40	\N	ee858d4e-e03e-4fa3-abc8-4c3086233456	f	t	\N	\N	\N	1652565b-23ef-42a5-9b2c-1287d008e1e3	service-account-calendar-users-api-client	1765912069244	717a9e61-3f16-4378-b057-814ff141a9f3	0	\N
 4403891a-616c-43d6-b6d1-d43c13010991	theobanette@icloud.com	theobanette@icloud.com	f	t	\N	Théo	Banette	30e57dba-b9d9-4e06-b8e3-8fdebecf4dd5	admin	1766244508456	\N	0	\N
-93b5339f-a3a3-45b8-b343-25ca1b6f9d7b	theobanette@icloud.com	theobanette@icloud.com	f	t	\N	Théo	Banette	1652565b-23ef-42a5-9b2c-1287d008e1e3	darth	1784241661825	\N	0	1784241661825
-2e7ebdbe-6a8a-488d-8495-1bee73197811	test@test.com	test@test.com	f	t	\N	Madeline	Heyraud	1652565b-23ef-42a5-9b2c-1287d008e1e3	madie	1784241762866	\N	0	1784241762866
-b17cc54a-817c-4cfc-b8d6-3aa4d6c32dc2	test@test.fr	test@test.fr	f	t	\N	Manon	Banette	1652565b-23ef-42a5-9b2c-1287d008e1e3	manon	1784243813676	\N	0	1784243813676
 \.
 
 
@@ -4206,9 +4190,6 @@ COPY public.user_role_mapping (role_id, user_id) FROM stdin;
 5fc723c5-58b0-48c7-9e19-de74a4e7510f	938386eb-79ac-4a28-8ebb-a50f44a52e40
 bf02c521-c207-48fc-a51b-b2ca9dc134b7	4403891a-616c-43d6-b6d1-d43c13010991
 79218c9f-454f-40a1-b3f5-d9249faf72bd	4403891a-616c-43d6-b6d1-d43c13010991
-0d3dd597-b404-43bf-acd0-77a8e4341fbc	93b5339f-a3a3-45b8-b343-25ca1b6f9d7b
-0d3dd597-b404-43bf-acd0-77a8e4341fbc	2e7ebdbe-6a8a-488d-8495-1bee73197811
-0d3dd597-b404-43bf-acd0-77a8e4341fbc	b17cc54a-817c-4cfc-b8d6-3aa4d6c32dc2
 \.
 
 
@@ -4810,14 +4791,6 @@ ALTER TABLE ONLY public.protocol_mapper
 
 ALTER TABLE ONLY public.protocol_mapper_config
     ADD CONSTRAINT constraint_pmconfig PRIMARY KEY (protocol_mapper_id, name);
-
-
---
--- Name: redirect_uris constraint_redirect_uris; Type: CONSTRAINT; Schema: public; Owner: keycloak
---
-
-ALTER TABLE ONLY public.redirect_uris
-    ADD CONSTRAINT constraint_redirect_uris PRIMARY KEY (client_id, value);
 
 
 --
@@ -6429,5 +6402,5 @@ REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict zEtZ9e1ALZd7HhnRqj76DvrxD2vIcjj9PrByTdM2RPjvXNXL38JnkegUHXLN4Uv
+\unrestrict OPMVtKh18h41FXhLo4cObidAUPah6KW4NoCTuCmbheWOR6vFVfX7t1E4SHtgPXQ
 
