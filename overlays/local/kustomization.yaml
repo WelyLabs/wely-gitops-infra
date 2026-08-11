@@ -34,7 +34,7 @@ patches:
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/0/value
-      value: "http://localhost:8081"
+      value: "http://local-wely-gateway-service.wely-local.svc.cluster.local:8081"
     - op: add
       path: /spec/template/spec/containers/0/env/-
       value:
