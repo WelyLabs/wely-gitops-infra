@@ -10,7 +10,27 @@ namespace: wely-local
 
 namePrefix: local-
 
+configMapGenerator:
+- name: keycloak-init-sql
+  files:
+  - keycloak-init.sql
+
 patches:
+- patch: |-
+    - op: add
+      path: /spec/template/spec/volumes
+      value:
+      - name: keycloak-init-volume
+        configMap:
+          name: keycloak-init-sql
+    - op: add
+      path: /spec/template/spec/containers/0/volumeMounts/-
+      value:
+        name: keycloak-init-volume
+        mountPath: /docker-entrypoint-initdb.d
+  target:
+    kind: StatefulSet
+    name: wely-postgres-auth
 - patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/env/0/value
