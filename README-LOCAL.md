@@ -17,7 +17,7 @@ Ce guide permet de faire tourner **toute l'infrastructure Wely en local sur ton 
 Dans le terminal de ton Mac, à la racine du projet `wely-gitops-infra` :
 
 ```bash
-kubectl apply -k overlays/local
+kubectl apply -k overlays/local --server-side
 ```
 
 > **Ce qui se passe en arrière-plan** :
