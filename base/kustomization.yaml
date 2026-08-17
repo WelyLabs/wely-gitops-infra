@@ -16,3 +16,4 @@ resources:
   - wely-postgres-users.yaml
   - wely-kafka.yaml
   - wely-kafka-ui.yaml
+  - wely-tailscale.yaml
