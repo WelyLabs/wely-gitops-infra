@@ -233,6 +233,20 @@ patches:
   target:
     kind: Deployment
     name: wely-kafka-ui
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        kubernetes.io/hostname: docker-desktop
+  target:
+    kind: Deployment
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        kubernetes.io/hostname: docker-desktop
+  target:
+    kind: StatefulSet
 patchesJson6902:
 - target:
     group: ""
