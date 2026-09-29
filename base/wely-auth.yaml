@@ -55,6 +55,13 @@ spec:
             secretKeyRef:
               name: dev-wely-secrets-dev
               key: auth-db-password
+        # Read by the BusinessIdMapper plugin when it calls users-api to resolve
+        # a businessId. Must match app.internal-secret on the users-api side.
+        - name: INTERNAL_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: internal-secret
       volumes:
       - name: import-vol
         configMap:

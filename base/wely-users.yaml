@@ -65,6 +65,11 @@ spec:
               key: kafka-secret
         - name: SPRING_R2DBC_PROPERTIES_SSLMODE
           value: "disable"
+        - name: INTERNAL_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: internal-secret
 ---
 apiVersion: v1
 kind: Service
