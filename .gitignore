@@ -1,3 +1,7 @@
+# Plaintext secrets never belong in this repo. Only the sealed variants and the
+# documented example are tracked.
 wely-secrets*.yaml
+!wely-secrets.example.yaml
+!base/wely-secrets.example.yaml
 !overlays/local/wely-secrets-local.yaml
 *.patch
