@@ -378,6 +378,18 @@ patches:
             # first — the binder is not allowed to.
             - name: CHAT_BROADCAST_TOPIC
               value: "DEV_MESSAGE_BROADCAST"
+            # The in-cluster broker, like wely-social and wely-users. The base still carries the
+            # Confluent Cloud address, which is what wely-chat was pointed at by mistake: the
+            # value was copied from the base without noticing this overlay had already moved the
+            # other two off it. Nothing in dev reaches Confluent any more.
+            - name: KAFKA_BOOTSTRAP_SERVER
+              value: "dev-wely-kafka-service:9092"
+            # The in-cluster broker speaks PLAINTEXT; the SASL settings in application.properties
+            # are for Confluent and are ignored once the protocol is not SASL_SSL.
+            - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-chat
