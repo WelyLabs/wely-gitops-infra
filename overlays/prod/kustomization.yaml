@@ -23,6 +23,9 @@ images:
 - name: ghcr.io/welylabs/wely-gateway
   newName: ghcr.io/welylabs/wely-gateway
   newTag: latest
+- name: ghcr.io/welylabs/wely-keycloak
+  newName: ghcr.io/welylabs/wely-keycloak
+  newTag: latest
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
   newTag: latest
