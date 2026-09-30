@@ -114,6 +114,18 @@ namePrefix: dev-
             # user ids on the records come from the same Keycloak realm, and a dev pod
             # reading prod's topic would deliver prod messages to a dev client. Create it
             # first — the binder is not allowed to.
+            # namePrefix renames the Service but not a value that merely spells its name, so
+            # the prefix has to be written out here or the gateway looks up a host that does
+            # not exist.
+            # MONGO_USERNAME and MONGO_PASSWORD are repeated here, unchanged from the base,
+            # only to pin their position. Kubernetes expands $(VAR) from variables declared
+            # *earlier* in the list and leaves a forward reference as literal text, and a merge
+            # patch puts the entries it names first — so without these two, MONGODB_URI would
+            # be patched to the front and the pod would try to log in as "$(MONGO_USERNAME)".
+            # dev and prod share one Confluent cluster, so they need separate topics: the
+            # user ids on the records come from the same Keycloak realm, and a dev pod
+            # reading prod's topic would deliver prod messages to a dev client. Create it
+            # first — the binder is not allowed to.
 patches:
 - patch: |-
     - op: replace
@@ -319,7 +331,7 @@ images:
   newTag: sha-a6602d52115ebfb314d26ce509745d8c454ed19c
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
-  newTag: sha-d4012dbe83c842bf7dceb20199f54b70ab64b593
+  newTag: sha-84c3e0769dfbc1d4b098010185d57a79e7d9ecc9
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
   newTag: sha-b520f5f666be627f3d3d8355f28f470d90acc7d8
