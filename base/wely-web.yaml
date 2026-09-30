@@ -15,6 +15,13 @@ spec:
       labels:
         app: wely-web
     spec:
+      # uid 101 is what nginxinc/nginx-unprivileged runs as.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       imagePullSecrets:
       - name: wely-registry
       containers:
@@ -22,10 +29,39 @@ spec:
         image: ghcr.io/welylabs/wely-web:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80
+        - containerPort: 8080
         env:
         - name: GATEWAY_URL
           value: "http://wely-gateway-service:8081"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          # No readOnlyRootFilesystem here, unlike the Java services: entrypoint.sh
+          # rewrites index.html in place at start to inject KEYCLOAK_URL, and nginx
+          # writes its own cache and pid. Serving the config from a ConfigMap instead
+          # of mutating the built artifact would let this be locked down too.
+        # Static files, so no slow start and no startupProbe: nginx either serves or
+        # it does not.
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          periodSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
 ---
 apiVersion: v1
 kind: Service
@@ -37,5 +73,6 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      # nginx unprivileged écoute 8080 : le port exposé reste 80 pour les appelants.
+      targetPort: 8080
   type: ClusterIP

@@ -147,10 +147,9 @@ argocd app diff wely-dev                # écart entre Git et le cluster
 
 ## Limites connues
 
-- **Pas de health checks.** Aucun `livenessProbe` ni `readinessProbe` — Kubernetes ne peut ni détecter un pod bloqué, ni retarder le routage vers un pod en cours de démarrage, ni garantir un rolling update sans coupure. Prérequis : ajouter Actuator aux services.
-- **Pas de `resources`.** Ni requests ni limits : tous les pods sont en QoS `BestEffort`, donc les premiers évincés sous pression mémoire.
-- **Services en `NodePort`.** Les services internes devraient être en `ClusterIP` ; seule la gateway a vocation à être jointe de l'extérieur.
-- **Pas de `securityContext`.** Les conteneurs tournent en root, sans `runAsNonRoot` ni `readOnlyRootFilesystem`, et aucune `NetworkPolicy` ne restreint le trafic entre pods.
+- **Keycloak n'a pas de probes.** Ses endpoints de santé ont changé de port en version 25 (`:9000/health/ready` au lieu de `:8080/health/ready`), et l'image est construite sur `quay.io/keycloak/keycloak:latest` : impossible de savoir lequel s'applique avant d'épingler le tag. Une probe sur le mauvais port mettrait l'IdP en `CrashLoopBackOff` et couperait toute la plateforme. **Prérequis : épingler l'image.**
+- **Le frontend n'a pas `readOnlyRootFilesystem`.** `entrypoint.sh` réécrit `index.html` au démarrage pour injecter `KEYCLOAK_URL`, et nginx écrit son cache. Servir cette configuration depuis un ConfigMap au lieu de muter l'artefact permettrait de verrouiller ce conteneur aussi.
+- **Pas de `NetworkPolicy`** : tout pod peut joindre tout autre pod, y compris les bases.
 - **L'overlay `prod` n'est pas opérationnel** : il utilise `newTag: latest` — non reproductible et indétectable par ArgoCD — et ne définit aucun Secret, alors que la base y fait référence.
 - **Les patches de l'overlay `dev` sont positionnels** (`/env/0/value`, `/env/1/value`…). Insérer une variable d'environnement dans la base décale tous les indices et réaffecte silencieusement les mauvaises valeurs. À remplacer par des patches stratégiques nommés.
 - **La base référence un Secret préfixé `dev-`**, ce qui inverse la logique Kustomize : la base ne devrait rien savoir des overlays.

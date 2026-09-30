@@ -22,6 +22,15 @@ spec:
         image: ghcr.io/welylabs/wely-keycloak:latest
         imagePullPolicy: IfNotPresent
         args: ["start"]
+        # No probes here yet, deliberately. Keycloak's health endpoints moved to a
+        # separate management port in version 25 (:9000/health/ready) from the main
+        # port before it (:8080/health/ready), and this image is built from
+        # quay.io/keycloak/keycloak:latest — so which of the two applies is unknown
+        # until the tag is pinned. A liveness probe on the wrong port would put the
+        # identity provider in CrashLoopBackOff and take the whole platform with it.
+        #
+        # Prerequisite: pin the base image. Then set KC_HEALTH_ENABLED=true and point
+        # the probes at the port that version actually uses.
         env:
         - name: KC_BOOTSTRAP_ADMIN_USERNAME
           valueFrom:

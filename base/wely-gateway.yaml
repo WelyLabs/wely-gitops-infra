@@ -15,6 +15,15 @@ spec:
       labels:
         app: wely-gateway
     spec:
+      # Non-root, matching the uid baked into the images. A pod that does not need
+      # root should not run as it.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
       imagePullSecrets:
       - name: wely-registry
       containers:
@@ -44,6 +53,49 @@ spec:
           value: "http://localhost:8085"
         - name: CORS_ALLOWED_ORIGIN
           value: "https://web.welylabs.app"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        # startupProbe carries the slow first boot on this cluster — Raspberry Pi
+        # nodes need well over the 30s a bare initialDelaySeconds would allow. While
+        # it runs, liveness is suspended, so a slow start is not mistaken for a hang.
+        startupProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8081
+          periodSeconds: 5
+          failureThreshold: 36
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8081
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8081
+          periodSeconds: 5
+          failureThreshold: 3
+        # Requests sized for a Raspberry Pi node. Without them every pod lands in
+        # BestEffort, which is the first thing evicted under memory pressure.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 320Mi
+          limits:
+            cpu: "1"
+            memory: 512Mi
+        # readOnlyRootFilesystem needs a writable /tmp: the JVM puts its perf data
+        # and any temporary file there.
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
