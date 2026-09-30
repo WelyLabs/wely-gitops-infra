@@ -6,7 +6,10 @@ metadata:
     app: wely
     component: chat
 spec:
-  replicas: 1
+  # Two replicas, which is the point of the whole broadcast change: message delivery used
+  # to go through an in-process sink, so a second pod would have silently dropped every
+  # message whose recipient was connected to the other one. See KafkaMessageBroadcaster.
+  replicas: 2
   selector:
     matchLabels:
       app: wely-chat
@@ -47,6 +50,31 @@ spec:
               key: mongo-root-password
         - name: MONGODB_URI
           value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@wely-mongodb-service:27017/chat_db?authSource=admin"
+        # kafka: fan out through the broker, so a message reaches the recipient whichever
+        # pod holds their stream. local reverts to in-process delivery and is only correct
+        # at replicas: 1.
+        - name: CHAT_BROADCAST_MODE
+          value: "kafka"
+        # The consumer group name is derived from this, and a group per pod is what makes
+        # every pod receive every record. HOSTNAME is the pod name, so a restarted pod gets
+        # a new group and starts from the topic's latest offset — correct here, because a
+        # live-update channel has no interest in a backlog.
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KAFKA_BOOTSTRAP_SERVER
+          value: "pkc-e0zxq.eu-west-3.aws.confluent.cloud:9092"
+        - name: KAFKA_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: kafka-key
+        - name: KAFKA_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: kafka-secret
         - name: KEYCLOAK_ISSUER_URI
           value: "https://auth.welylabs.app/realms/calendar-app"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI

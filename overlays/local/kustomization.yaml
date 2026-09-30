@@ -169,16 +169,38 @@ patches:
   target:
     kind: Deployment
     name: wely-social
+# Keyed by environment-variable name rather than by index, unlike the patches above.
+# The base gained CHAT_BROADCAST_MODE and its Kafka settings, which shifted every index
+# after MONGODB_URI: /env/4 stopped being the Keycloak issuer and this overlay silently
+# rewrote the wrong variable. A merge patch has no positions to get out of date.
 - patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/3/value
-      value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/chat_db?authSource=admin"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/4/value
-      value: "http://localhost:8080/realms/calendar-app"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/5/value
-      value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-chat
+    spec:
+      # One replica here, which is the only configuration in which in-process delivery is
+      # correct. The alternative would be broadcast mode kafka against the local broker,
+      # and that needs MESSAGE_BROADCAST created by hand because the binder is not allowed
+      # to create topics.
+      replicas: 1
+      template:
+        spec:
+          containers:
+          - name: chat
+            env:
+            - name: CHAT_BROADCAST_MODE
+              value: "local"
+            # Unused at mode local, since no binder is created. Overridden anyway so that
+            # nothing in the local overlay points at cloud infrastructure.
+            - name: KAFKA_BOOTSTRAP_SERVER
+              value: "local-wely-kafka-service:9092"
+            - name: MONGODB_URI
+              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/chat_db?authSource=admin"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "http://localhost:8080/realms/calendar-app"
+            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
   target:
     kind: Deployment
     name: wely-chat
