@@ -531,6 +531,10 @@ patches:
             # not exist.
             - name: REDIS_HOST
               value: "dev-wely-redis-service"
+            # Swagger UI on, for this environment only. The gateway is the one process the
+            # tunnel reaches, so its documentation defaults to off in application.properties.
+            - name: SPRINGDOC_ENABLED
+              value: "true"
   target:
     kind: Deployment
     name: wely-gateway

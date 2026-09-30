@@ -49,8 +49,6 @@ spec:
           value: "ws://wely-chat-service:8084"
         - name: EVENTS_API_URL
           value: "http://wely-events-service:8086"
-        - name: MEDIA_API_URL
-          value: "http://localhost:8085"
         - name: CORS_ALLOWED_ORIGIN
           value: "https://web.welylabs.app"
         # Holds the rate-limit counters. Not a hard dependency: RedisRateLimiter catches a
