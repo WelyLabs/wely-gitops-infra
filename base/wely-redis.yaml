@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-redis
+  labels:
+    app: wely
+    component: redis
+spec:
+  # A Deployment and not a StatefulSet, with no volume: this Redis holds nothing but the
+  # gateway's rate-limit counters. Losing them on a restart resets a few callers' quotas,
+  # which is not worth a PersistentVolume on a Raspberry Pi node.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-redis
+  template:
+    metadata:
+      labels:
+        app: wely-redis
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: redis
+        image: redis:7.4-alpine
+        imagePullPolicy: IfNotPresent
+        # No persistence, and a hard memory ceiling with an eviction policy. Rate-limit keys
+        # expire on their own, but a gateway under attack creates one key per caller: without
+        # allkeys-lru, Redis would answer OOM and the limiter would fail open exactly when it
+        # is most needed.
+        args:
+        - "--save"
+        - ""
+        - "--appendonly"
+        - "no"
+        - "--maxmemory"
+        - "64mb"
+        - "--maxmemory-policy"
+        - "allkeys-lru"
+        ports:
+        - containerPort: 6379
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        startupProbe:
+          tcpSocket:
+            port: 6379
+          periodSeconds: 3
+          failureThreshold: 20
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          periodSeconds: 10
+          failureThreshold: 3
+        # exec rather than tcpSocket: a Redis that accepts connections but answers nothing is
+        # exactly the state readiness is supposed to catch.
+        readinessProbe:
+          exec:
+            command: ["redis-cli", "ping"]
+          periodSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 250m
+            memory: 96Mi
+        # readOnlyRootFilesystem: Redis writes its pid and any temporary file under /data.
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-redis-service
+spec:
+  selector:
+    app: wely-redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP

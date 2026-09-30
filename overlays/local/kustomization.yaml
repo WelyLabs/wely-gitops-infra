@@ -83,31 +83,42 @@ patches:
   target:
     kind: Service
     name: wely-auth-service
+# Keyed by environment-variable name rather than by index, like the wely-chat patch below
+# and unlike the rest of this file. The gateway's env list grew when Redis was added, and an
+# index patch says nothing about which variable it means — it silently rewrites whatever
+# happens to sit at that position.
 - patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/1/value
-      value: "http://localhost:8080/realms/calendar-app"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/2/value
-      value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/3/value
-      value: "http://local-wely-users-service:8082"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/4/value
-      value: "http://local-wely-social-service:8083"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/5/value
-      value: "http://local-wely-chat-service:8084"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/6/value
-      value: "ws://local-wely-chat-service:8084"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/7/value
-      value: "http://local-wely-events-service:8086"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/9/value
-      value: "http://localhost,http://localhost:80,http://localhost:4200"
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-gateway
+    spec:
+      template:
+        spec:
+          containers:
+          - name: gateway
+            env:
+            - name: KEYCLOAK_ISSUER_URI
+              value: "http://localhost:8080/realms/calendar-app"
+            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+            - name: USERS_API_URL
+              value: "http://local-wely-users-service:8082"
+            - name: SOCIAL_API_URL
+              value: "http://local-wely-social-service:8083"
+            - name: CHAT_API_URL
+              value: "http://local-wely-chat-service:8084"
+            - name: CHAT_RSOCKET_URL
+              value: "ws://local-wely-chat-service:8084"
+            - name: EVENTS_API_URL
+              value: "http://local-wely-events-service:8086"
+            - name: CORS_ALLOWED_ORIGIN
+              value: "http://localhost,http://localhost:80,http://localhost:4200"
+            # namePrefix renames the Service but not a value that merely spells its name, so
+            # the prefix has to be written out here or the gateway looks up a host that does
+            # not exist.
+            - name: REDIS_HOST
+              value: "local-wely-redis-service"
   target:
     kind: Deployment
     name: wely-gateway
@@ -195,6 +206,21 @@ patches:
             # nothing in the local overlay points at cloud infrastructure.
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
+            # MONGO_USERNAME and MONGO_PASSWORD are repeated here, unchanged from the base,
+            # only to pin their position. Kubernetes expands $(VAR) from variables declared
+            # *earlier* in the list and leaves a forward reference as literal text, and a merge
+            # patch puts the entries it names first — so without these two, MONGODB_URI would
+            # be patched to the front and the pod would try to log in as "$(MONGO_USERNAME)".
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: dev-wely-secrets-dev
+                  key: mongo-root-username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dev-wely-secrets-dev
+                  key: mongo-root-password
             - name: MONGODB_URI
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/chat_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI

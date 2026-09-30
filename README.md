@@ -47,6 +47,7 @@ Deux conséquences :
 │   ├── wely-mongodb.yaml          │  (StatefulSets)
 │   ├── wely-neo4j.yaml           ─┘
 │   ├── wely-kafka.yaml           broker + UI
+│   ├── wely-redis.yaml           compteurs de quota de la gateway (sans persistance)
 │   ├── cloudflared.yaml          tunnel Cloudflare (exposition publique)
 │   └── wely-tailscale.yaml       opérateur Tailscale (accès administrateur)
 └── overlays/

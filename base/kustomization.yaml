@@ -14,6 +14,7 @@ resources:
   - wely-neo4j.yaml
   - wely-postgres-auth.yaml
   - wely-postgres-users.yaml
+  - wely-redis.yaml
   - wely-kafka.yaml
   - wely-kafka-ui.yaml
   - wely-tailscale.yaml

@@ -53,6 +53,13 @@ spec:
           value: "http://localhost:8085"
         - name: CORS_ALLOWED_ORIGIN
           value: "https://web.welylabs.app"
+        # Holds the rate-limit counters. Not a hard dependency: RedisRateLimiter catches a
+        # Redis failure and lets the request through rather than rejecting it, so an outage
+        # here means unmetered traffic for its duration, not an unreachable platform.
+        - name: REDIS_HOST
+          value: "wely-redis-service"
+        - name: REDIS_PORT
+          value: "6379"
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
