@@ -1028,14 +1028,20 @@ namePrefix: dev-
             # are for Confluent and are ignored once the protocol is not SASL_SSL.
 patches:
 - patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/0/value
-      value: "http://dev-wely-gateway-service.wely-dev.svc.cluster.local:8081"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: KEYCLOAK_URL
-        value: "https://dev-auth.welylabs.app"
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-web
+    spec:
+      template:
+        spec:
+          containers:
+          - name: angular-app
+            env:
+            - name: GATEWAY_URL
+              value: "http://dev-wely-gateway-service.wely-dev.svc.cluster.local:8081"
+            - name: KEYCLOAK_URL
+              value: "https://dev-auth.welylabs.app"
   target:
     kind: Deployment
     name: wely-web
@@ -1079,60 +1085,58 @@ patches:
     kind: Deployment
     name: wely-gateway
 - patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/1/value
-      value: "r2dbc:postgresql://dev-wely-postgres-users-service:5432/users"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/3/value
-      value: "https://dev-auth.welylabs.app/realms/calendar-app"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/4/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/5/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/6/value
-      value: "http://dev-wely-auth-service:8080"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/9/value
-      value: "dev-wely-kafka-service:9092"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
-        value: "PLAINTEXT"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
-        value: "PLAINTEXT"
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-users
+    spec:
+      template:
+        spec:
+          containers:
+          - name: users-api
+            env:
+            - name: DB_URL
+              value: "r2dbc:postgresql://dev-wely-postgres-users-service:5432/users"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "https://dev-auth.welylabs.app/realms/calendar-app"
+            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+            - name: KEYCLOAK_INTERNAL_TOKEN_URI
+              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
+            - name: KEYCLOAK_BASE_URL
+              value: "http://dev-wely-auth-service:8080"
+            - name: KAFKA_BOOTSTRAP_SERVER
+              value: "dev-wely-kafka-service:9092"
+            - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-users
 - patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/1/value
-      value: "neo4j://dev-wely-neo4j-service:7687"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/4/value
-      value: "dev-wely-kafka-service:9092"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/7/value
-      value: "https://dev-auth.welylabs.app/realms/calendar-app"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/8/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
-        value: "PLAINTEXT"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
-        value: "PLAINTEXT"
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-social
+    spec:
+      template:
+        spec:
+          containers:
+          - name: social
+            env:
+            - name: NEO4J_URI
+              value: "neo4j://dev-wely-neo4j-service:7687"
+            - name: KAFKA_BOOTSTRAP_SERVER
+              value: "dev-wely-kafka-service:9092"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "https://dev-auth.welylabs.app/realms/calendar-app"
+            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+            - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-social
@@ -1190,47 +1194,86 @@ patches:
     kind: Deployment
     name: wely-chat
 - patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/3/value
-      value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/events_db?authSource=admin"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/4/value
-      value: "https://dev-auth.welylabs.app/realms/calendar-app"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/5/value
-      value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-events
+    spec:
+      template:
+        spec:
+          containers:
+          - name: events-api
+            env:
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: mongo-root-username
+                  name: dev-wely-secrets-dev
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: mongo-root-password
+                  name: dev-wely-secrets-dev
+            - name: MONGODB_URI
+              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/events_db?authSource=admin"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "https://dev-auth.welylabs.app/realms/calendar-app"
+            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
   target:
     kind: Deployment
     name: wely-events
 - patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/4/value
-      value: "https://dev-auth.welylabs.app"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/5/value
-      value: "true"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/7/value
-      value: "jdbc:postgresql://dev-wely-postgres-auth-service:5432/keycloak"
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: USERS_API_URL
-        value: "http://dev-wely-users-service:8082"
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-auth
+    spec:
+      template:
+        spec:
+          containers:
+          - name: keycloak
+            env:
+            - name: KC_HOSTNAME
+              value: "https://dev-auth.welylabs.app"
+            - name: KC_HOSTNAME_STRICT_HTTPS
+              value: "true"
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://dev-wely-postgres-auth-service:5432/keycloak"
+            - name: USERS_API_URL
+              value: "http://dev-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-auth
 - patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/3/value
-      value: "PLAINTEXT://dev-wely-kafka-service:9092"
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-kafka
+    spec:
+      template:
+        spec:
+          containers:
+          - name: kafka
+            env:
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "PLAINTEXT://dev-wely-kafka-service:9092"
   target:
     kind: Deployment
     name: wely-kafka
 - patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/2/value
-      value: "dev-wely-kafka-service:9092"
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-kafka-ui
+    spec:
+      template:
+        spec:
+          containers:
+          - name: kafka-ui
+            env:
+            - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+              value: "dev-wely-kafka-service:9092"
   target:
     kind: Deployment
     name: wely-kafka-ui
