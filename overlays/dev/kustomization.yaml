@@ -1097,9 +1097,9 @@ patches:
           - name: gateway
             env:
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-auth.welylabs.app/realms/calendar-app"
+              value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
             - name: USERS_API_URL
               value: "http://dev-wely-users-service:8082"
             - name: SOCIAL_API_URL
@@ -1138,11 +1138,11 @@ patches:
             - name: DB_URL
               value: "r2dbc:postgresql://dev-wely-postgres-users-service:5432/users"
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-auth.welylabs.app/realms/calendar-app"
+              value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
             - name: KEYCLOAK_INTERNAL_TOKEN_URI
-              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
+              value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/token"
             - name: KEYCLOAK_BASE_URL
               value: "http://dev-wely-auth-service:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
@@ -1170,9 +1170,9 @@ patches:
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-auth.welylabs.app/realms/calendar-app"
+              value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
             - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
               value: "PLAINTEXT"
             - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
@@ -1209,9 +1209,9 @@ patches:
             - name: MONGODB_URI
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/chat_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-auth.welylabs.app/realms/calendar-app"
+              value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
             # dev and prod share one Confluent cluster, so they need separate topics: the
             # user ids on the records come from the same Keycloak realm, and a dev pod
             # reading prod's topic would deliver prod messages to a dev client. Create it
@@ -1257,9 +1257,9 @@ patches:
             - name: MONGODB_URI
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/events_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-auth.welylabs.app/realms/calendar-app"
+              value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://dev-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
   target:
     kind: Deployment
     name: wely-events

@@ -105,9 +105,9 @@ patches:
           - name: gateway
             env:
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/calendar-app"
+              value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
             - name: USERS_API_URL
               value: "http://local-wely-users-service:8082"
             - name: SOCIAL_API_URL
@@ -146,11 +146,11 @@ patches:
             - name: DB_URL
               value: "r2dbc:postgresql://local-wely-postgres-users-service:5432/users"
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/calendar-app"
+              value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
             - name: KEYCLOAK_INTERNAL_TOKEN_URI
-              value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/token"
+              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/token"
             - name: KEYCLOAK_BASE_URL
               value: "http://local-wely-auth-service:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
@@ -178,9 +178,9 @@ patches:
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/calendar-app"
+              value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
             - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
               value: "PLAINTEXT"
             - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
@@ -232,9 +232,9 @@ patches:
             - name: MONGODB_URI
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/chat_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/calendar-app"
+              value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
   target:
     kind: Deployment
     name: wely-chat
@@ -262,9 +262,9 @@ patches:
             - name: MONGODB_URI
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/events_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/calendar-app"
+              value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
   target:
     kind: Deployment
     name: wely-events

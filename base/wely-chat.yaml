@@ -76,9 +76,9 @@ spec:
               name: dev-wely-secrets-dev
               key: kafka-secret
         - name: KEYCLOAK_ISSUER_URI
-          value: "https://auth.welylabs.app/realms/calendar-app"
+          value: "https://auth.welylabs.app/realms/wely-realm"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-          value: "http://wely-auth-service:8080/realms/calendar-app/protocol/openid-connect/certs"
+          value: "http://wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
