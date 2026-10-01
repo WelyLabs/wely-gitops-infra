@@ -1206,6 +1206,26 @@ namePrefix: dev-
             # other two off it. Nothing in dev reaches Confluent any more.
             # The in-cluster broker speaks PLAINTEXT; the SASL settings in application.properties
             # are for Confluent and are ignored once the protocol is not SASL_SSL.
+            # namePrefix renames the Service but not a value that merely spells its name, so
+            # the prefix has to be written out here or the gateway looks up a host that does
+            # not exist.
+            # Swagger UI on, for this environment only. The gateway is the one process the
+            # tunnel reaches, so its documentation defaults to off in application.properties.
+            # MONGO_USERNAME and MONGO_PASSWORD are repeated here, unchanged from the base,
+            # only to pin their position. Kubernetes expands $(VAR) from variables declared
+            # *earlier* in the list and leaves a forward reference as literal text, and a merge
+            # patch puts the entries it names first — so without these two, MONGODB_URI would
+            # be patched to the front and the pod would try to log in as "$(MONGO_USERNAME)".
+            # dev and prod share one Confluent cluster, so they need separate topics: the
+            # user ids on the records come from the same Keycloak realm, and a dev pod
+            # reading prod's topic would deliver prod messages to a dev client. Create it
+            # first — the binder is not allowed to.
+            # The in-cluster broker, like wely-social and wely-users. The base still carries the
+            # Confluent Cloud address, which is what wely-chat was pointed at by mistake: the
+            # value was copied from the base without noticing this overlay had already moved the
+            # other two off it. Nothing in dev reaches Confluent any more.
+            # The in-cluster broker speaks PLAINTEXT; the SASL settings in application.properties
+            # are for Confluent and are ignored once the protocol is not SASL_SSL.
 patches:
 - patch: |-
     apiVersion: apps/v1
@@ -1470,7 +1490,7 @@ images:
   newTag: sha-56744f16e75c730b9c549f8a4ac64a76a7401f05
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
-  newTag: sha-599c35a5fdfc3901088c2dc52f9d270a07aff9e8
+  newTag: sha-c27beab55cd1508a3bd4654b181b63abdb5b0d77
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
   newTag: sha-672f5cafc766e8b5e2d0381c4861e4c294a4e276
