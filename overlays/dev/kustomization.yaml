@@ -806,6 +806,26 @@ namePrefix: dev-
             # other two off it. Nothing in dev reaches Confluent any more.
             # The in-cluster broker speaks PLAINTEXT; the SASL settings in application.properties
             # are for Confluent and are ignored once the protocol is not SASL_SSL.
+            # namePrefix renames the Service but not a value that merely spells its name, so
+            # the prefix has to be written out here or the gateway looks up a host that does
+            # not exist.
+            # Swagger UI on, for this environment only. The gateway is the one process the
+            # tunnel reaches, so its documentation defaults to off in application.properties.
+            # MONGO_USERNAME and MONGO_PASSWORD are repeated here, unchanged from the base,
+            # only to pin their position. Kubernetes expands $(VAR) from variables declared
+            # *earlier* in the list and leaves a forward reference as literal text, and a merge
+            # patch puts the entries it names first — so without these two, MONGODB_URI would
+            # be patched to the front and the pod would try to log in as "$(MONGO_USERNAME)".
+            # dev and prod share one Confluent cluster, so they need separate topics: the
+            # user ids on the records come from the same Keycloak realm, and a dev pod
+            # reading prod's topic would deliver prod messages to a dev client. Create it
+            # first — the binder is not allowed to.
+            # The in-cluster broker, like wely-social and wely-users. The base still carries the
+            # Confluent Cloud address, which is what wely-chat was pointed at by mistake: the
+            # value was copied from the base without noticing this overlay had already moved the
+            # other two off it. Nothing in dev reaches Confluent any more.
+            # The in-cluster broker speaks PLAINTEXT; the SASL settings in application.properties
+            # are for Confluent and are ignored once the protocol is not SASL_SSL.
 patches:
 - patch: |-
     - op: replace
@@ -1024,7 +1044,7 @@ images:
   newTag: sha-76aa28c154681c2ad45bdde9e0c4d2767923c32c
 - name: ghcr.io/welylabs/wely-gateway
   newName: ghcr.io/welylabs/wely-gateway
-  newTag: sha-285ccb54a1017cd82d13558abba832514956bebd
+  newTag: sha-0b2a1e7bfc240ee11e304beacbe22e43cf7882f7
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
   newTag: sha-c7fa9622209a7dcdaedfd66627fbb10c498b604b
