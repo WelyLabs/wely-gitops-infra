@@ -1,0 +1,96 @@
+# Puts the public demo account back in its initial state every night.
+#
+# Its credentials are published, so anyone can add events, send friend requests or chat from
+# it. Each script removes what the demo users organised, joined or wrote — including what a
+# visitor did towards real users — and inserts the dataset again. Real users' own data is not
+# touched.
+#
+# The demo Keycloak user is not reset: it has no role on the account console, so a visitor
+# can change neither its password nor its username.
+#
+# The Secret is named in full: it comes from a SealedSecret, which kustomize does not know
+# is a Secret, so namePrefix does not rewrite references to it.
+#
+# The three steps run in order (init containers), each with the image of the database it
+# talks to, so the client always matches the server and the Pi already has the image.
+# Run it by hand with:
+#   kubectl create job -n wely-dev --from=cronjob/dev-wely-demo-reset demo-reset-manual
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wely-demo-reset
+spec:
+  schedule: "0 4 * * *"
+  timeZone: Europe/Paris
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          restartPolicy: OnFailure
+          volumes:
+            - name: scripts
+              configMap:
+                name: wely-demo-seed
+          initContainers:
+            - name: users
+              image: postgres:17
+              command:
+                - psql
+                - --host=dev-wely-postgres-users-service
+                - --dbname=users
+                - --set=demo_keycloak_id=$(DEMO_KEYCLOAK_ID)
+                - --file=/scripts/seed-users.sql
+              env:
+                # Id of the Keycloak user "camille" (login: demo@welylabs.app) in wely-realm.
+                - name: DEMO_KEYCLOAK_ID
+                  value: be30df9c-665b-4f3f-91fc-d00b0a1cf47a
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: users-db-username }
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: users-db-password }
+              volumeMounts: [{ name: scripts, mountPath: /scripts }]
+              resources:
+                requests: { cpu: 10m, memory: 32Mi }
+                limits: { memory: 128Mi }
+            - name: social
+              image: neo4j:5
+              command:
+                - sh
+                - -c
+                - cypher-shell -a bolt://dev-wely-neo4j-service:7687 -u "$NEO4J_USERNAME" -p "$NEO4J_PASSWORD" -f /scripts/seed-social.cypher
+              env:
+                - name: NEO4J_USERNAME
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: neo4j-username }
+                - name: NEO4J_PASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: neo4j-password }
+              volumeMounts: [{ name: scripts, mountPath: /scripts }]
+              resources:
+                requests: { cpu: 50m, memory: 128Mi }
+                limits: { memory: 384Mi }
+          containers:
+            - name: events-and-chat
+              image: mongo:6.0
+              command:
+                - sh
+                - -c
+                - mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin" -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD" --file /scripts/seed-mongo.js
+              env:
+                - name: MONGO_USERNAME
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: mongo-root-username }
+                - name: MONGO_PASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: mongo-root-password }
+              volumeMounts: [{ name: scripts, mountPath: /scripts }]
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                limits: { memory: 256Mi }

@@ -5,6 +5,15 @@ resources:
 - ../../base
 - namespace.yaml
 - wely-sealed-secrets-dev.yaml
+- demo/demo-reset.yaml
+
+# Dataset of the public demo account, replayed nightly by demo/demo-reset.yaml.
+configMapGenerator:
+- name: wely-demo-seed
+  files:
+  - demo/seed-users.sql
+  - demo/seed-social.cypher
+  - demo/seed-mongo.js
 
 namespace: wely-dev
 
