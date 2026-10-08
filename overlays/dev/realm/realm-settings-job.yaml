@@ -5,7 +5,11 @@
 # reaches dev on its own. This hook carries the settings the login screen needs:
 #   - displayName / displayNameHtml: the brand panel of the calendar-app login theme;
 #   - French as the only locale. Internationalisation stays ENABLED on purpose: with it off,
-#     Keycloak ignores the default locale and renders the whole screen in English.
+#     Keycloak ignores the default locale and renders the whole screen in English;
+#   - login events (LOGIN, LOGIN_ERROR, REGISTER, REGISTER_ERROR, LOGOUT), to see whether
+#     visitors actually try the demo account: Realm settings -> Events in the admin console.
+#     They record the client's IP address, hence the 30-day expiration (2592000 s). The
+#     event listeners are not set here, so the default jboss-logging one stays.
 #
 # realm-settings.json DUPLICATES those keys from wely-identity/wely-realm.json and must follow
 # them. kcadm merges it into the live realm, so every other setting is left alone.
