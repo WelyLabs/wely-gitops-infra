@@ -1656,6 +1656,8 @@ patches:
               value: "http://dev-wely-gateway-service.wely-dev.svc.cluster.local:8081"
             - name: KEYCLOAK_URL
               value: "https://dev-auth.welylabs.app"
+            - name: PUBLIC_URL
+              value: "https://dev-web.welylabs.app"
   target:
     kind: Deployment
     name: wely-web

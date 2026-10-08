@@ -33,6 +33,9 @@ spec:
         env:
         - name: GATEWAY_URL
           value: "http://wely-gateway-service:8081"
+        # The site's own origin, for the absolute URLs of the link-preview tags (og:image).
+        - name: PUBLIC_URL
+          value: "https://web.welylabs.app"
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
