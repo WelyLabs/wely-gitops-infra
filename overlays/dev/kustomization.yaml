@@ -6,6 +6,7 @@ resources:
 - namespace.yaml
 - wely-sealed-secrets-dev.yaml
 - demo/demo-reset.yaml
+- realm/realm-settings-job.yaml
 
 # Dataset of the public demo account, replayed nightly by demo/demo-reset.yaml.
 configMapGenerator:
@@ -14,6 +15,10 @@ configMapGenerator:
   - demo/seed-social.cypher
   - demo/seed-mongo.js
   name: wely-demo-seed
+# Display settings of wely-realm, applied by realm/realm-settings-job.yaml after each sync.
+- files:
+  - realm/realm-settings.json
+  name: wely-realm-settings
 
 namespace: wely-dev
 
