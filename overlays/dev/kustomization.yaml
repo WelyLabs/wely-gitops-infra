@@ -2016,6 +2016,9 @@ patches:
               value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+            # namePrefix renames the Service, not a value that spells its name.
+            - name: SOCIAL_API_URL
+              value: "http://dev-wely-social-service:8083"
   target:
     kind: Deployment
     name: wely-events

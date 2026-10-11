@@ -35,6 +35,9 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
+        # Asked for the user's friends before a free-slot search.
+        - name: SOCIAL_API_URL
+          value: "http://wely-social-service:8083"
         - name: MONGO_USERNAME
           valueFrom:
             secretKeyRef:
