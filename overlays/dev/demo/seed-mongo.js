@@ -197,12 +197,44 @@ const disclosure = [
 ];
 demoEvents.push(...disclosure);
 
+// Where the demo events take place, [latitude, longitude], for the map. Fictional venues sit in
+// their neighbourhood; an online event has no place.
+const PLACES = {
+  'Café Mokxa, Lyon 1er': [45.7690, 4.8337],
+  'La Cordée Guillotière, Lyon': [45.7556, 4.8434],
+  'Les Berges du Rhône, Lyon': [45.7575, 4.8395],
+  'Le Transbordeur, Villeurbanne': [45.7840, 4.8608],
+  'La Cordée Liberté, Lyon': [45.7573, 4.8429],
+  'Mont Thou, Saint-Cyr-au-Mont-d\'Or': [45.8416, 4.7973],
+  'Chez Nathan, Croix-Rousse': [45.7765, 4.8290],
+  'Disquaire Sofa, Lyon 4e': [45.7775, 4.8305],
+  'Départ quai Saint-Vincent, Lyon': [45.7680, 4.8235],
+  'Domaine des Côtes, Villié-Morgon': [46.1567, 4.6842],
+  'Biarritz': [43.4833, -1.5593],
+  'Studio Ahimsa, Lyon 7e': [45.7480, 4.8420],
+  'Studio Mix, Villeurbanne': [45.7660, 4.8800],
+  'Stade de Gerland, Lyon 7e': [45.7267, 4.8310],
+  'Caluire-et-Cuire': [45.7970, 4.8423],
+  'Atelier Terre & Feu, Lyon 1er': [45.7690, 4.8295],
+  'Rue Paul Bert, Lyon 3e': [45.7568, 4.8490],
+  'Théâtre des Célestins, Lyon 2e': [45.7600, 4.8313],
+  'Le Ninkasi Gerland': [45.7322, 4.8326],
+  'Boulevard de la Croix-Rousse': [45.7744, 4.8326],
+  'Péniche Loupika, quai Augagneur': [45.7600, 4.8410],
+  'Villefranche-sur-Saône': [45.9865, 4.7266],
+  'Gymnase Jean Zay, Lyon 8e': [45.7340, 4.8700],
+  'Lyon 6e': [45.7681, 4.8528],
+  'Lyon 3e': [45.7555, 4.8623],
+};
+
 events.insertMany(demoEvents.map(e => ({
   title: e.title,
   organizerId: U[e.organizer],
   startDate: e.start,
   ...(e.end ? { endDate: e.end } : {}),
   location: e.location,
+  // GeoJSON, longitude first, as wely-events stores it.
+  ...(PLACES[e.location] ? { coordinates: { type: 'Point', coordinates: [PLACES[e.location][1], PLACES[e.location][0]] } } : {}),
   image: '/demo/events/' + e.image,
   description: e.description,
   participantIds: e.participants.map(p => U[p]),
