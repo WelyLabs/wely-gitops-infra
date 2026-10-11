@@ -1,0 +1,44 @@
+# Creates the Kafka topics the services use. The binders run with auto-create-topics=false,
+# so a topic that is not listed here does not exist. Idempotent (--if-not-exists): it runs at
+# every Argo CD sync, and plain kubectl apply (local) runs it once.
+#
+# Overlays set KAFKA_BOOTSTRAP to the prefixed Service name, and add their environment's
+# topics to KAFKA_TOPICS (dev: DEV_MESSAGE_BROADCAST for the chat).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wely-kafka-topics
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: topics
+        image: apache/kafka:3.8.0
+        command:
+        - sh
+        - -c
+        - |
+          set -e
+          T=/opt/kafka/bin/kafka-topics.sh
+          for i in $(seq 1 30); do
+            $T --bootstrap-server "$KAFKA_BOOTSTRAP" --list > /dev/null 2>&1 && break
+            sleep 10
+          done
+          for topic in $KAFKA_TOPICS; do
+            $T --bootstrap-server "$KAFKA_BOOTSTRAP" --create --if-not-exists \
+               --topic "$topic" --partitions 1 --replication-factor 1
+          done
+          $T --bootstrap-server "$KAFKA_BOOTSTRAP" --list
+        env:
+        - name: KAFKA_BOOTSTRAP
+          value: "wely-kafka-service:9092"
+        - name: KAFKA_TOPICS
+          value: "USER_CREATED USER_DELETED"
+        resources:
+          requests: { cpu: 50m, memory: 128Mi }
+          limits: { memory: 384Mi }

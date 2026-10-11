@@ -295,7 +295,7 @@ patches:
     name: wely-auth
 - patch: |-
     apiVersion: apps/v1
-    kind: Deployment
+    kind: StatefulSet
     metadata:
       name: wely-kafka
     spec:
@@ -307,8 +307,27 @@ patches:
             - name: KAFKA_ADVERTISED_LISTENERS
               value: "PLAINTEXT://local-wely-kafka-service:9092"
   target:
-    kind: Deployment
+    kind: StatefulSet
     name: wely-kafka
+- patch: |-
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: wely-kafka-topics
+    spec:
+      template:
+        spec:
+          containers:
+          - name: topics
+            env:
+            # namePrefix renames the Service, not a value that spells its name.
+            - name: KAFKA_BOOTSTRAP
+              value: "local-wely-kafka-service:9092"
+            - name: KAFKA_TOPICS
+              value: "USER_CREATED USER_DELETED"
+  target:
+    kind: Job
+    name: wely-kafka-topics
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment

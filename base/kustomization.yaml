@@ -16,5 +16,6 @@ resources:
   - wely-postgres-users.yaml
   - wely-redis.yaml
   - wely-kafka.yaml
+  - wely-kafka-topics.yaml
   - wely-kafka-ui.yaml
   - wely-tailscale.yaml
