@@ -11,9 +11,11 @@
 #     They record the client's IP address, hence the 30-day expiration (2592000 s). The
 #     event listeners are not set here, so the default jboss-logging one stays.
 #
-#   - the wely-users-registration step at the end of the "registration form" flow, which
-#     creates the wely-users user during registration (wely-identity, BusinessUserRegistration).
-#     Added once, then left alone; retried while the Keycloak pod that has the provider starts.
+#   - the wely-users-registration step, which creates the wely-users user during registration
+#     (wely-identity, BusinessUserRegistration). Keycloak refuses executions on its built-in
+#     "registration" flow, so the hook copies it to "wely registration", adds the step to the
+#     copy's form, and makes the copy the realm's registration flow. Each part is done once and
+#     left alone; the step is retried while the Keycloak pod that has the provider starts.
 #
 # realm-settings.json DUPLICATES those keys from wely-identity/wely-realm.json and must follow
 # them. kcadm merges it into the live realm, so every other setting is left alone.
@@ -59,7 +61,11 @@ spec:
               $K update realms/wely-realm --config $C -f /settings/realm-settings.json
               $K get realms/wely-realm --config $C --fields displayName,supportedLocales,defaultLocale
 
-              F="authentication/flows/registration%20form/executions"
+              FLOW="wely registration"
+              F="authentication/flows/wely%20registration%20registration%20form/executions"
+              $K get authentication/flows -r wely-realm --config $C --fields alias --format csv --noquotes \
+                | grep -qx "$FLOW" \
+                || $K create authentication/flows/registration/copy -r wely-realm --config $C -s "newName=$FLOW"
               step() { $K get $F -r wely-realm --config $C --fields id,providerId --format csv --noquotes \
                          | grep ',wely-users-registration$' | cut -d, -f1; }
               for i in $(seq 1 30); do
@@ -69,6 +75,8 @@ spec:
               done
               [ -n "$(step)" ] || { echo "wely-users-registration could not be added"; exit 1; }
               $K update $F -r wely-realm --config $C -b "{\"id\":\"$(step)\",\"requirement\":\"REQUIRED\"}"
+              $K update realms/wely-realm --config $C -s "registrationFlow=$FLOW"
+              $K get realms/wely-realm --config $C --fields registrationFlow
               $K get $F -r wely-realm --config $C --fields displayName,providerId,requirement
           env:
             - name: KC_ADMIN_USER
