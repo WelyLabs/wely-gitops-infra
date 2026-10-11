@@ -247,6 +247,9 @@ patches:
               value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+            # namePrefix renames the Service, not a value that spells its name.
+            - name: SOCIAL_API_URL
+              value: "http://local-wely-social-service:8083"
   target:
     kind: Deployment
     name: wely-events
