@@ -34,18 +34,24 @@ WITH {
   emma:    'f4be7974-0ed3-457e-80d3-8aa08e0c5197'
 } AS id
 UNWIND [
-  // [from, to, status, days ago]
-  ['camille', 'lea', 'ACCEPTED', 80], ['camille', 'hugo', 'ACCEPTED', 70],
-  ['camille', 'ines', 'ACCEPTED', 60], ['camille', 'lucas', 'ACCEPTED', 50],
-  ['camille', 'sarah', 'ACCEPTED', 40], ['nathan', 'camille', 'ACCEPTED', 25],
-  ['lea', 'hugo', 'ACCEPTED', 85], ['sarah', 'nathan', 'ACCEPTED', 30],
-  ['ines', 'lucas', 'ACCEPTED', 55], ['lea', 'emma', 'ACCEPTED', 8],
+  // [from, to, status, days ago, closeness, proposed closeness, proposed by]
+  // camille shows each level: lea is intimate, hugo close, the others plain friends, and
+  // sarah has proposed to become close, waiting for camille's answer.
+  ['camille', 'lea', 'ACCEPTED', 80, 'INTIMATE', null, null], ['camille', 'hugo', 'ACCEPTED', 70, 'CLOSE', null, null],
+  ['camille', 'ines', 'ACCEPTED', 60, null, null, null], ['camille', 'lucas', 'ACCEPTED', 50, null, null, null],
+  ['camille', 'sarah', 'ACCEPTED', 40, null, 'CLOSE', 'sarah'], ['nathan', 'camille', 'ACCEPTED', 25, null, null, null],
+  ['lea', 'hugo', 'ACCEPTED', 85, null, null, null], ['sarah', 'nathan', 'ACCEPTED', 30, null, null, null],
+  ['ines', 'lucas', 'ACCEPTED', 55, null, null, null], ['lea', 'emma', 'ACCEPTED', 8, null, null, null],
+  ['hugo', 'emma', 'ACCEPTED', 6, null, null, null],
   // Pending, one in each direction so both sides of the flow are visible:
   // jules waits for camille's answer, camille waits for emma's.
-  ['jules', 'camille', 'PENDING', 1], ['camille', 'emma', 'PENDING', 2]
+  ['jules', 'camille', 'PENDING', 1, null, null, null], ['camille', 'emma', 'PENDING', 2, null, null, null]
 ] AS r
 MATCH (a:User {userId: id[r[0]]}), (b:User {userId: id[r[1]]})
 CREATE (a)-[rel:RELATIONSHIP {status: r[2], createdAt: datetime() - duration({days: r[3], hours: 3})}]->(b)
-SET rel.acceptedAt = CASE r[2] WHEN 'ACCEPTED' THEN datetime() - duration({days: r[3]}) END;
+SET rel.acceptedAt = CASE r[2] WHEN 'ACCEPTED' THEN datetime() - duration({days: r[3]}) END,
+    rel.closeness = r[4],
+    rel.proposedCloseness = r[5],
+    rel.proposedBy = CASE WHEN r[6] IS NULL THEN null ELSE id[r[6]] END;
 
 // chloe has no relationship at all: she is the user to find through search.
