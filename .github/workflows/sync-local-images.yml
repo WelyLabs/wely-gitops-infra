@@ -1,0 +1,58 @@
+name: Sync local image tags
+on:
+  push:
+    branches: [main]
+    paths: [overlays/dev/kustomization.yaml]
+  workflow_dispatch:
+
+# The service CDs only bump overlays/dev; this copies those tags to overlays/local so the local
+# cluster runs the same images. Runs here are serialised, but the service CDs still push to main.
+concurrency:
+  group: sync-local-images
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Copy dev image tags to local
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tags and push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          # Only the newTag line is rewritten: `kustomize edit` re-serialises the whole file and
+          # duplicates the comments inside the patches on every run.
+          for attempt in 1 2 3 4 5; do
+            for image in $(yq '.images[] | .name + "=" + .newTag' overlays/dev/kustomization.yaml); do
+              NAME="${image%%=*}" TAG="${image#*=}" perl -0pi -e \
+                's/(- name: \Q$ENV{NAME}\E\n(?:  .*\n)*?  newTag: ).*/${1}$ENV{TAG}/' \
+                overlays/local/kustomization.yaml
+            done
+
+            if [ -z "$(git status --porcelain)" ]; then
+              echo "Local already runs dev's images; nothing to push."
+              exit 0
+            fi
+
+            git add overlays/local/kustomization.yaml
+            git commit -m "chore(local): follow dev image tags"
+
+            if git push; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+
+            echo "Push rejected on attempt $attempt — a service CD pushed first. Replaying."
+            git fetch origin main
+            git reset --hard origin/main
+            sleep $(( RANDOM % 5 + attempt * 2 ))
+          done
+
+          echo "::error::Could not push the local image tags after 5 attempts."
+          exit 1
