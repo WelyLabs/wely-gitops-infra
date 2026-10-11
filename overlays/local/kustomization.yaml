@@ -15,6 +15,11 @@ configMapGenerator:
 - name: users-init-sql
   files:
   - users-init.sql
+# The realm imported at startup: a copy of wely-identity's export, with the client URLs
+# pointed at localhost (nginx on :80, ng serve on :4200).
+- name: keycloak-realm
+  files:
+  - keycloak/wely-realm.json
 
 patches:
 - patch: |-
@@ -269,13 +274,17 @@ patches:
         spec:
           containers:
           - name: keycloak
-            # Local is the only environment that imports the realm. The export ships in the
-            # image, under /opt/keycloak/data/import/, and replaces a 357 KB dump of a
-            # Keycloak database that used to seed Postgres here — four RSA private keys and
-            # a CREDENTIAL table, in a public repository. Keycloak skips a realm that
-            # already exists, so the flag would be harmless in dev and prod; it stays out of
-            # them because their realm holds state nothing should overwrite on a restart.
+            # Local is the only environment that imports the realm, from keycloak/wely-realm.json.
+            # It replaces a 357 KB dump of a Keycloak database that used to seed Postgres here —
+            # four RSA private keys and a CREDENTIAL table, in a public repository. Keycloak skips
+            # a realm that already exists, so the flag would be harmless in dev and prod; it stays
+            # out of them because their realm holds state nothing should overwrite on a restart.
             args: ["start", "--import-realm"]
+            # Mounted over the whole directory, so the export baked into the image is hidden.
+            volumeMounts:
+            - name: import-vol
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
             env:
             - name: KC_HOSTNAME
               value: "localhost"
@@ -293,6 +302,14 @@ patches:
                 secretKeyRef:
                   name: dev-wely-secrets-dev
                   key: kc-client-secret
+          volumes:
+          - name: import-vol
+            configMap:
+              name: keycloak-realm
+              items:
+              - key: wely-realm.json
+                # Keycloak only imports a file named <realm>-realm.json.
+                path: wely-realm-realm.json
   target:
     kind: Deployment
     name: wely-auth
