@@ -112,11 +112,12 @@ const demoEvents = [
   { title: 'Écoute de vinyles', organizer: 'jules', start: at(4, 19), end: at(4, 22),
     location: 'Disquaire Sofa, Lyon 4e', image: 'vinyles.jpg',
     description: 'Chacun apporte un disque qui l\'a marqué et raconte pourquoi.',
-    participants: ['jules'] },
+    participants: ['jules'], visibility: 'PUBLIC' },
   { title: 'Balade à vélo le long de la Saône', organizer: 'emma', start: at(sat + 1, 10), end: at(sat + 1, 13),
     location: 'Départ quai Saint-Vincent, Lyon', image: 'velo.jpg',
     description: '25 km tranquilles jusqu\'à l\'Île Barbe et retour. Vélos en libre-service possibles.',
-    participants: ['emma', 'lea'] },
+    // Public: emma is not camille's friend, and this one belongs in her feed.
+    participants: ['emma', 'lea'], visibility: 'PUBLIC' },
   { title: 'Vendanges dans le Beaujolais', organizer: 'lea', start: at(sat + 7, 8), end: at(sat + 7, 18),
     location: 'Domaine des Côtes, Villié-Morgon', image: 'vendanges.jpg',
     description: 'Une journée à cueillir avec le domaine d\'un ami, repas des vendangeurs le midi.',
@@ -180,6 +181,22 @@ const routine = [
 ];
 demoEvents.push(...routine);
 
+// What camille sees of her friends' calendars depends on how close they are. Events organised
+// by people she does not know (emma, chloe) show as busy with lucas (friend), by title with
+// hugo (close) and in full with lea (intimate); a private event stays busy even for lea.
+const disclosure = [
+  { title: 'Atelier céramique', organizer: 'emma', start: at(mon + 1, 18), end: at(mon + 1, 20),
+    location: 'Atelier Terre & Feu, Lyon 1er', image: 'atelier-code.jpg',
+    description: 'Initiation au tournage, deux places.', participants: ['emma', 'hugo'] },
+  { title: 'Dîner chez Chloé', organizer: 'chloe', start: at(mon + 4, 20), end: at(mon + 4, 23),
+    location: 'Lyon 6e', image: 'brunch.jpg',
+    description: 'Raclette, on apporte le vin.', participants: ['chloe', 'lucas'] },
+  { title: 'Rendez-vous médical', organizer: 'lea', start: at(mon + 3, 12), end: at(mon + 3, 13),
+    location: 'Lyon 3e', image: 'cafe.jpg', description: 'Contrôle annuel.',
+    participants: ['lea'], visibility: 'PRIVATE' },
+];
+demoEvents.push(...disclosure);
+
 events.insertMany(demoEvents.map(e => ({
   title: e.title,
   organizerId: U[e.organizer],
@@ -189,6 +206,8 @@ events.insertMany(demoEvents.map(e => ({
   image: '/demo/events/' + e.image,
   description: e.description,
   participantIds: e.participants.map(p => U[p]),
+  // Shared with the organizer's friends unless said otherwise, as the application defaults.
+  visibility: e.visibility || 'FRIENDS',
   _class: EVENT_CLASS,
 })));
 
