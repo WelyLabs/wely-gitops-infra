@@ -14,7 +14,8 @@
 #   - the wely-users-registration step, which creates the wely-users user during registration
 #     (wely-identity, BusinessUserRegistration). Keycloak refuses executions on its built-in
 #     "registration" flow, so the hook copies it to "wely registration", adds the step to the
-#     copy's form after the step that creates the Keycloak user (a new execution lands first),
+#     copy's form with an explicit priority, so it runs after the step that creates the Keycloak
+#     user (a new execution lands first, and updating one resets its priority unless given),
 #     and makes the copy the realm's registration flow. Each part is done once and
 #     left alone; the step is retried while the Keycloak pod that has the provider starts.
 #
@@ -75,13 +76,12 @@ spec:
                 sleep 10
               done
               [ -n "$(step)" ] || { echo "wely-users-registration could not be added"; exit 1; }
-              $K update $F -r wely-realm --config $C -b "{\"id\":\"$(step)\",\"requirement\":\"REQUIRED\"}"
-              # A new execution lands first; it must run after the step that creates the Keycloak user.
+              # An execution update always sets the priority too (0 when omitted), and the copied
+              # steps share low priorities: an explicit, much higher one keeps this step last,
+              # after the step that creates the Keycloak user.
+              $K update $F -r wely-realm --config $C \
+                -b "{\"id\":\"$(step)\",\"requirement\":\"REQUIRED\",\"priority\":1000}"
               last() { $K get $F -r wely-realm --config $C --fields providerId --format csv --noquotes | tail -1; }
-              for i in $(seq 1 10); do
-                [ "$(last)" = "wely-users-registration" ] && break
-                $K create authentication/executions/$(step)/lower-priority -r wely-realm --config $C
-              done
               [ "$(last)" = "wely-users-registration" ] || { echo "wely-users-registration is not last"; exit 1; }
               $K update realms/wely-realm --config $C -s "registrationFlow=$FLOW"
               $K get realms/wely-realm --config $C --fields registrationFlow
