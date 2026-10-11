@@ -11,6 +11,10 @@
 #     They record the client's IP address, hence the 30-day expiration (2592000 s). The
 #     event listeners are not set here, so the default jboss-logging one stays.
 #
+#   - the wely-users-registration step at the end of the "registration form" flow, which
+#     creates the wely-users user during registration (wely-identity, BusinessUserRegistration).
+#     Added once, then left alone; retried while the Keycloak pod that has the provider starts.
+#
 # realm-settings.json DUPLICATES those keys from wely-identity/wely-realm.json and must follow
 # them. kcadm merges it into the live realm, so every other setting is left alone.
 #
@@ -54,6 +58,18 @@ spec:
               done
               $K update realms/wely-realm --config $C -f /settings/realm-settings.json
               $K get realms/wely-realm --config $C --fields displayName,supportedLocales,defaultLocale
+
+              F="authentication/flows/registration%20form/executions"
+              step() { $K get $F -r wely-realm --config $C --fields id,providerId --format csv --noquotes \
+                         | grep ',wely-users-registration$' | cut -d, -f1; }
+              for i in $(seq 1 30); do
+                [ -n "$(step)" ] && break
+                $K create $F/execution -r wely-realm --config $C -s provider=wely-users-registration && break
+                sleep 10
+              done
+              [ -n "$(step)" ] || { echo "wely-users-registration could not be added"; exit 1; }
+              $K update $F -r wely-realm --config $C -b "{\"id\":\"$(step)\",\"requirement\":\"REQUIRED\"}"
+              $K get $F -r wely-realm --config $C --fields displayName,providerId,requirement
           env:
             - name: KC_ADMIN_USER
               valueFrom:
