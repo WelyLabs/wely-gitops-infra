@@ -127,11 +127,64 @@ const demoEvents = [
     participants: ['sarah', 'nathan'] },
 ];
 
+// Next week's routine of camille's friends, so that "find a slot" has real gaps to find.
+// Most evenings are blocked by someone: with lea, hugo and lucas, the evenings left are
+// Wednesday after 20:00, Thursday before 19:00, Saturday and Sunday after 18:00 (camille's
+// own events, placed relative to today, may take some of them).
+const mon = next(1, 1);
+const routine = [
+  { title: 'Cours de yoga', organizer: 'lea', start: at(mon, 18, 30), end: at(mon, 20),
+    location: 'Studio Ahimsa, Lyon 7e', image: 'cafe.jpg',
+    description: 'Vinyasa niveau intermédiaire. Tapis fournis.', participants: ['lea'] },
+  { title: 'Répétition du groupe', organizer: 'hugo', start: at(mon, 19, 30), end: at(mon, 22, 30),
+    location: 'Studio Mix, Villeurbanne', image: 'concert.jpg',
+    description: 'On cale la setlist du concert de décembre.', participants: ['hugo', 'nathan'] },
+  { title: 'Entraînement de foot', organizer: 'lucas', start: at(mon + 1, 19), end: at(mon + 1, 21),
+    location: 'Stade de Gerland, Lyon 7e', image: 'randonnee.jpg',
+    description: 'Foot à 7, on cherche toujours un gardien.', participants: ['lucas', 'hugo'] },
+  { title: 'Dîner chez mes parents', organizer: 'ines', start: at(mon + 1, 19, 30), end: at(mon + 1, 22, 30),
+    location: 'Caluire-et-Cuire', image: 'brunch.jpg',
+    description: 'Anniversaire de ma mère, gâteau maison.', participants: ['ines'] },
+  { title: 'Cours de poterie', organizer: 'sarah', start: at(mon + 2, 18), end: at(mon + 2, 20),
+    location: 'Atelier Terre & Feu, Lyon 1er', image: 'atelier-code.jpg',
+    description: 'Troisième séance : on attaque le tour.', participants: ['sarah', 'lea'] },
+  // No end: lasts the default hour, 18:00 to 19:00.
+  { title: 'Visite d\'appartement', organizer: 'hugo', start: at(mon + 2, 18),
+    location: 'Rue Paul Bert, Lyon 3e', image: 'cafe.jpg',
+    description: 'T3 lumineux, croisons les doigts.', participants: ['hugo'] },
+  { title: 'Raid en ligne', organizer: 'nathan', start: at(mon + 2, 21), end: at(mon + 2, 23, 30),
+    location: 'Discord', image: 'soiree-jeux.jpg',
+    description: 'Raid hebdo, micro obligatoire.', participants: ['nathan'] },
+  { title: 'Théâtre : Cyrano', organizer: 'lea', start: at(mon + 3, 20), end: at(mon + 3, 23),
+    location: 'Théâtre des Célestins, Lyon 2e', image: 'concert.jpg',
+    description: 'Deux places achetées, Hugo vient avec moi.', participants: ['lea', 'hugo'] },
+  { title: 'Entraînement de foot', organizer: 'lucas', start: at(mon + 3, 19), end: at(mon + 3, 21),
+    location: 'Stade de Gerland, Lyon 7e', image: 'randonnee.jpg',
+    description: 'Match amical contre l\'équipe du jeudi.', participants: ['lucas'] },
+  { title: 'Pot de départ de Julien', organizer: 'lucas', start: at(mon + 4, 18), end: at(mon + 4, 20, 30),
+    location: 'Le Ninkasi Gerland', image: 'afterwork.jpg',
+    description: 'Julien part à Montréal, on lui fait ses adieux.', participants: ['lucas', 'ines'] },
+  { title: 'Marché de la Croix-Rousse', organizer: 'ines', start: at(mon + 5, 9, 30), end: at(mon + 5, 11, 30),
+    location: 'Boulevard de la Croix-Rousse', image: 'brunch.jpg',
+    description: 'Courses de la semaine puis café au Rond-Point.', participants: ['ines', 'lea'] },
+  // Crosses midnight: sarah is busy until 2 am Sunday.
+  { title: 'Anniversaire de Mathilde', organizer: 'sarah', start: at(mon + 5, 20), end: at(mon + 6, 2),
+    location: 'Péniche Loupika, quai Augagneur', image: 'afterwork.jpg',
+    description: 'Thème années 80, déguisement fortement conseillé.', participants: ['sarah', 'nathan', 'lucas'] },
+  { title: 'Repas de famille', organizer: 'lea', start: at(mon + 6, 12), end: at(mon + 6, 16),
+    location: 'Villefranche-sur-Saône', image: 'brunch.jpg',
+    description: 'Gratin dauphinois de mamie, présence obligatoire.', participants: ['lea'] },
+  { title: 'Tournoi de badminton', organizer: 'nathan', start: at(mon + 6, 14), end: at(mon + 6, 18),
+    location: 'Gymnase Jean Zay, Lyon 8e', image: 'velo.jpg',
+    description: 'Double mixte, il me manque un partenaire.', participants: ['nathan', 'hugo'] },
+];
+demoEvents.push(...routine);
+
 events.insertMany(demoEvents.map(e => ({
   title: e.title,
   organizerId: U[e.organizer],
   startDate: e.start,
-  endDate: e.end,
+  ...(e.end ? { endDate: e.end } : {}),
   location: e.location,
   image: '/demo/events/' + e.image,
   description: e.description,
