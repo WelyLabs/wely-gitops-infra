@@ -15,6 +15,11 @@ configMapGenerator:
 - name: users-init-sql
   files:
   - users-init.sql
+# The realm imported at startup: a copy of wely-identity's export, with the client URLs
+# pointed at localhost (nginx on :80, ng serve on :4200).
+- name: keycloak-realm
+  files:
+  - keycloak/wely-realm.json
 
 patches:
 - patch: |-
@@ -269,13 +274,17 @@ patches:
         spec:
           containers:
           - name: keycloak
-            # Local is the only environment that imports the realm. The export ships in the
-            # image, under /opt/keycloak/data/import/, and replaces a 357 KB dump of a
-            # Keycloak database that used to seed Postgres here — four RSA private keys and
-            # a CREDENTIAL table, in a public repository. Keycloak skips a realm that
-            # already exists, so the flag would be harmless in dev and prod; it stays out of
-            # them because their realm holds state nothing should overwrite on a restart.
+            # Local is the only environment that imports the realm, from keycloak/wely-realm.json.
+            # It replaces a 357 KB dump of a Keycloak database that used to seed Postgres here —
+            # four RSA private keys and a CREDENTIAL table, in a public repository. Keycloak skips
+            # a realm that already exists, so the flag would be harmless in dev and prod; it stays
+            # out of them because their realm holds state nothing should overwrite on a restart.
             args: ["start", "--import-realm"]
+            # Mounted over the whole directory, so the export baked into the image is hidden.
+            volumeMounts:
+            - name: import-vol
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
             env:
             - name: KC_HOSTNAME
               value: "localhost"
@@ -293,6 +302,14 @@ patches:
                 secretKeyRef:
                   name: dev-wely-secrets-dev
                   key: kc-client-secret
+          volumes:
+          - name: import-vol
+            configMap:
+              name: keycloak-realm
+              items:
+              - key: wely-realm.json
+                # Keycloak only imports a file named <realm>-realm.json.
+                path: wely-realm-realm.json
   target:
     kind: Deployment
     name: wely-auth
@@ -372,29 +389,29 @@ patchesJson6902:
       path: /metadata/name
       value: wely-users-service
 
+# Copied from overlays/dev by the sync-local-images workflow; not edited by hand.
 images:
 - name: ghcr.io/welylabs/wely-chat
   newName: ghcr.io/welylabs/wely-chat
-  newTag: sha-fc2bdc5424ac9e4e5b4f668aa8cb578d805b73f4
+  newTag: sha-cf2c201e6045f1442746d9a4fcb0b19ce349f9cd
 - name: ghcr.io/welylabs/wely-events
   newName: ghcr.io/welylabs/wely-events
-  newTag: sha-16bc7fea8a482a70a37d28f512423b49841cb996
+  newTag: sha-df9db1cbfc3d8de2e78601c4bf9bec45264b83e0
 - name: ghcr.io/welylabs/wely-gateway
   newName: ghcr.io/welylabs/wely-gateway
-  newTag: sha-894eb6976a24bb09b56d0ff7a0200b16c3a9ae14
+  newTag: sha-d62b350290b5b4b131b6c4b75bac4899616f7a7c
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
   # Bumped with the realm import: the export now travels inside the image, so a tag older
   # than that commit has nothing under /opt/keycloak/data/import and --import-realm is a
-  # no-op. Local image tags are not updated by the CD, unlike dev's — they are pinned here
-  # by hand, which is why this one had drifted far behind.
-  newTag: sha-6ef971234ad9262d3c7456624b07882bdf676cb2
+  # no-op.
+  newTag: sha-b5464912adfa0cc9a8528662bba6d725e506a5f2
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
-  newTag: sha-d4741cd539fb8fbda90761b4b4d6e41dd617234f
+  newTag: sha-57fbfa85973714d663813c0cb0c424a6773a1eb4
 - name: ghcr.io/welylabs/wely-users
   newName: ghcr.io/welylabs/wely-users
-  newTag: sha-c1d55374e1d178fc55b6344c74ae72c74b8a4d9b
+  newTag: sha-8e1867d25c51394e26bebf261474bff897103011
 - name: ghcr.io/welylabs/wely-web
   newName: ghcr.io/welylabs/wely-web
-  newTag: sha-8a5fb9a083142d5fd91d5a44cd9f6acc6f451182
+  newTag: sha-7083b7c564e7ce81bc5227a851fc41620a02798b
