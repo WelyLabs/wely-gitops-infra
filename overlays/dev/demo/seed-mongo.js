@@ -51,12 +51,9 @@ function next(weekday, min = 1) {
   return delta;
 }
 
-/**
- * Message timestamps are a LocalDateTime taken by wely-chat with LocalDateTime.now(). Its
- * container runs in UTC, so the stored wall-clock time is UTC: match it, not Paris time.
- */
-function localDateTime(minutesAgo) {
-  return new Date(Date.now() - minutesAgo * 60000);
+/** A message time: wely-chat stores instants, which a JS Date is, so no zone to adjust for. */
+function minutesAgo(minutes) {
+  return new Date(Date.now() - minutes * 60000);
 }
 
 // --- Cleanup --------------------------------------------------------------------------------
@@ -302,12 +299,12 @@ const conversations = [
 
 for (const c of conversations) {
   const conversationId = new ObjectId();
-  const messages = c.messages.map(([from, text, minutesAgo]) => ({
+  const messages = c.messages.map(([from, text, age]) => ({
     m_id: null, // what the application writes too: see ConversationMapper in wely-chat
     s_id: U[from],
     s_un: from,
     txt: text,
-    ts: localDateTime(minutesAgo),
+    ts: minutesAgo(age),
   }));
   const last = messages[messages.length - 1];
   chat.conversations.insertOne({
@@ -334,8 +331,8 @@ const gamesMessages = [
   ['chloe', 'Moi Dixit ! Jules, tu as toujours Azul ?', 180],
   ['jules', 'Oui, je le prends. On mange sur place ?', 175],
   ['ines', 'Ils font des planches, on commande en arrivant', 120],
-].map(([from, text, minutesAgo]) => ({
-  m_id: null, s_id: U[from], s_un: from, txt: text, ts: localDateTime(minutesAgo),
+].map(([from, text, age]) => ({
+  m_id: null, s_id: U[from], s_un: from, txt: text, ts: minutesAgo(age),
 }));
 const gamesLast = gamesMessages[gamesMessages.length - 1];
 chat.conversations.updateOne(
