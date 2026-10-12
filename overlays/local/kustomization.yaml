@@ -255,6 +255,10 @@ patches:
             # namePrefix renames the Service, not a value that spells its name.
             - name: SOCIAL_API_URL
               value: "http://local-wely-social-service:8083"
+            - name: KAFKA_BOOTSTRAP_SERVER
+              value: "local-wely-kafka-service:9092"
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-events
@@ -344,7 +348,7 @@ patches:
             - name: KAFKA_BOOTSTRAP
               value: "local-wely-kafka-service:9092"
             - name: KAFKA_TOPICS
-              value: "USER_CREATED USER_DELETED"
+              value: "USER_CREATED USER_DELETED EVENT_GROUP_CHANGED"
   target:
     kind: Job
     name: wely-kafka-topics

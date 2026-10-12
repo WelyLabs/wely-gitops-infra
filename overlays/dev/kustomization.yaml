@@ -231,6 +231,11 @@ patches:
             # namePrefix renames the Service, not a value that spells its name.
             - name: SOCIAL_API_URL
               value: "http://dev-wely-social-service:8083"
+            # Publishes EVENT_GROUP_CHANGED to the in-cluster broker, like wely-users.
+            - name: KAFKA_BOOTSTRAP_SERVER
+              value: "dev-wely-kafka-service:9092"
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-events
@@ -287,7 +292,7 @@ patches:
             - name: KAFKA_BOOTSTRAP
               value: "dev-wely-kafka-service:9092"
             - name: KAFKA_TOPICS
-              value: "USER_CREATED USER_DELETED DEV_MESSAGE_BROADCAST"
+              value: "USER_CREATED USER_DELETED DEV_MESSAGE_BROADCAST EVENT_GROUP_CHANGED"
   target:
     kind: Job
     name: wely-kafka-topics
