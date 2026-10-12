@@ -399,7 +399,7 @@ images:
   newTag: sha-df9db1cbfc3d8de2e78601c4bf9bec45264b83e0
 - name: ghcr.io/welylabs/wely-gateway
   newName: ghcr.io/welylabs/wely-gateway
-  newTag: sha-d62b350290b5b4b131b6c4b75bac4899616f7a7c
+  newTag: sha-86768da4cd4e422765a4ef8cb0786d2563418123
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
   # Bumped with the realm import: the export now travels inside the image, so a tag older
