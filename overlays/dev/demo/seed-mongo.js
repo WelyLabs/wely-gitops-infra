@@ -73,6 +73,9 @@ function last(weekday) {
   return -(((dow - weekday + 7) % 7) || 7);
 }
 
+// Fixed, because seed-social.cypher points the pending friend requests at it.
+const QUIZ_ID = ObjectId('66f1a2b3c4d5e6f7a8b9c0d1');
+
 const sat = next(6, 2);
 const fri = next(5, 2);
 const demoEvents = [
@@ -81,6 +84,19 @@ const demoEvents = [
     location: 'Café Mokxa, Lyon 1er', image: 'brunch.jpg',
     description: 'Pancakes, café filtre et le récap de la semaine.',
     participants: ['camille', 'lea', 'ines', 'sarah'] },
+
+  // Two days ago, with people camille does not know yet: the event page invites her to add
+  // them, and the pending requests from jules and to emma say they were sent from here.
+  { id: QUIZ_ID, title: 'Quiz musical au Ninkasi', organizer: 'lucas', start: at(-2, 20), end: at(-2, 23),
+    location: 'Le Ninkasi Gerland', image: 'concert.jpg',
+    description: 'Blind test par équipes de quatre. On a fini troisièmes, revanche le mois prochain !',
+    participants: ['lucas', 'camille', 'ines', 'chloe', 'jules', 'emma'] },
+
+  // Tonight: the event page shows its « jour J » header all day, whenever the reset ran.
+  { title: 'Soirée jeux de société', organizer: 'ines', start: at(0, 19, 30), end: at(0, 23, 30),
+    location: 'Bar à jeux Le Dé, Lyon 1er', image: 'soiree-jeux.jpg',
+    description: 'Ramenez vos jeux ! On a réservé la grande table du fond, au nom d\'Inès.',
+    participants: ['ines', 'camille', 'hugo', 'chloe', 'jules'] },
 
   // This week and next, joined by camille: they fill her calendar.
   { title: 'Session coworking', organizer: 'ines', start: at(0, 9, 30), end: at(0, 12),
@@ -225,9 +241,11 @@ const PLACES = {
   'Gymnase Jean Zay, Lyon 8e': [45.7340, 4.8700],
   'Lyon 6e': [45.7681, 4.8528],
   'Lyon 3e': [45.7555, 4.8623],
+  'Bar à jeux Le Dé, Lyon 1er': [45.7675, 4.8320],
 };
 
 events.insertMany(demoEvents.map(e => ({
+  ...(e.id ? { _id: e.id } : {}),
   title: e.title,
   organizerId: U[e.organizer],
   startDate: e.start,

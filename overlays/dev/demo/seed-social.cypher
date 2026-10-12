@@ -54,4 +54,12 @@ SET rel.acceptedAt = CASE r[2] WHEN 'ACCEPTED' THEN datetime() - duration({days:
     rel.proposedCloseness = r[5],
     rel.proposedBy = CASE WHEN r[6] IS NULL THEN null ELSE id[r[6]] END;
 
-// chloe has no relationship at all: she is the user to find through search.
+// Both pending requests come from the quiz camille went to two days ago, the event with the
+// fixed id in seed-mongo.js: the friends page says where they met.
+MATCH (:User {userId: '66e332e6-8d98-49c6-ac22-27095c35cf9d'})-[r:RELATIONSHIP {status: 'PENDING'}]->(:User {userId: '89a380b8-f66a-44d0-b9d9-616241080430'})
+SET r.viaEventId = '66f1a2b3c4d5e6f7a8b9c0d1';
+MATCH (:User {userId: '89a380b8-f66a-44d0-b9d9-616241080430'})-[r:RELATIONSHIP {status: 'PENDING'}]->(:User {userId: 'f4be7974-0ed3-457e-80d3-8aa08e0c5197'})
+SET r.viaEventId = '66f1a2b3c4d5e6f7a8b9c0d1';
+
+// chloe has no relationship at all: she is the user to find through search, and the one to
+// add from the quiz.
