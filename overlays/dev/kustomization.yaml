@@ -316,7 +316,7 @@ patches:
 images:
 - name: ghcr.io/welylabs/wely-chat
   newName: ghcr.io/welylabs/wely-chat
-  newTag: sha-ba01a73397f9cf4cd23ca6e51fc22864d52276de
+  newTag: sha-26f6ec83ea77da47309ba6fe7cad1e824ef5772a
 - name: ghcr.io/welylabs/wely-events
   newName: ghcr.io/welylabs/wely-events
   newTag: sha-834a767e232bb0720be04979b47048fd42c2b0cc
