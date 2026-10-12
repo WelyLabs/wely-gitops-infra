@@ -59,6 +59,17 @@ function localDateTime(minutesAgo) {
   return new Date(Date.now() - minutesAgo * 60000);
 }
 
+// --- Cleanup --------------------------------------------------------------------------------
+
+// Conversations first: inserting the events below wakes wely-events' group relay, and a group
+// it creates for a demo event must not then be wiped by this cleanup — it would not come back.
+const chat = db.getSiblingDB('chat_db');
+
+const touched = chat.conversations.find({ participantIds: { $in: DEMO_IDS } }, { _id: 1 })
+  .toArray().map(c => c._id.toString());
+chat.message_buckets.deleteMany({ conversationId: { $in: touched } });
+chat.conversations.deleteMany({ participantIds: { $in: DEMO_IDS } });
+
 // --- Events ---------------------------------------------------------------------------------
 
 const events = db.getSiblingDB('events_db').events;
@@ -75,6 +86,8 @@ function last(weekday) {
 
 // Fixed, because seed-social.cypher points the pending friend requests at it.
 const QUIZ_ID = ObjectId('66f1a2b3c4d5e6f7a8b9c0d1');
+// Fixed too: its group conversation below is keyed by it.
+const GAMES_ID = ObjectId('66f1a2b3c4d5e6f7a8b9c0d2');
 
 const sat = next(6, 2);
 const fri = next(5, 2);
@@ -93,7 +106,7 @@ const demoEvents = [
     participants: ['lucas', 'camille', 'ines', 'chloe', 'jules', 'emma'] },
 
   // Tonight: the event page shows its « jour J » header all day, whenever the reset ran.
-  { title: 'Soirée jeux de société', organizer: 'ines', start: at(0, 19, 30), end: at(0, 23, 30),
+  { id: GAMES_ID, title: 'Soirée jeux de société', organizer: 'ines', start: at(0, 19, 30), end: at(0, 23, 30),
     location: 'Bar à jeux Le Dé, Lyon 1er', image: 'soiree-jeux.jpg',
     description: 'Ramenez vos jeux ! On a réservé la grande table du fond, au nom d\'Inès.',
     participants: ['ines', 'camille', 'hugo', 'chloe', 'jules'] },
@@ -263,13 +276,6 @@ events.insertMany(demoEvents.map(e => ({
 
 // --- Conversations --------------------------------------------------------------------------
 
-const chat = db.getSiblingDB('chat_db');
-
-const touched = chat.conversations.find({ participantIds: { $in: DEMO_IDS } }, { _id: 1 })
-  .toArray().map(c => c._id.toString());
-chat.message_buckets.deleteMany({ conversationId: { $in: touched } });
-chat.conversations.deleteMany({ participantIds: { $in: DEMO_IDS } });
-
 const conversations = [
   { with: 'lea', messages: [
     ['lea', 'Tu viens toujours à la rando samedi ?', 1450],
@@ -318,6 +324,35 @@ for (const c of conversations) {
     _class: BUCKET_CLASS,
   });
 }
+
+// The group of tonight's board games. wely-events' relay sends its members too, possibly before
+// this line runs, so it is upserted on the event id rather than inserted. Camille has not written
+// yet: the first message from the demo account is hers to send.
+const gamesMessages = [
+  ['ines', 'J\'ai réservé la grande table du fond pour 19h30 🎲', 300],
+  ['hugo', 'Je ramène Codenames et Skull', 240],
+  ['chloe', 'Moi Dixit ! Jules, tu as toujours Azul ?', 180],
+  ['jules', 'Oui, je le prends. On mange sur place ?', 175],
+  ['ines', 'Ils font des planches, on commande en arrivant', 120],
+].map(([from, text, minutesAgo]) => ({
+  m_id: null, s_id: U[from], s_un: from, txt: text, ts: localDateTime(minutesAgo),
+}));
+const gamesLast = gamesMessages[gamesMessages.length - 1];
+chat.conversations.updateOne(
+  { eventId: GAMES_ID.toString() },
+  {
+    $set: { lastMessage: gamesLast, updatedAt: gamesLast.ts },
+    $setOnInsert: {
+      participantIds: ['ines', 'camille', 'hugo', 'chloe', 'jules'].map(p => U[p]),
+      type: 'EVENT', title: 'Soirée jeux de société', _class: CONVERSATION_CLASS,
+    },
+  },
+  { upsert: true });
+const gamesConversationId = chat.conversations.findOne({ eventId: GAMES_ID.toString() })._id.toString();
+chat.message_buckets.updateOne(
+  { conversationId: gamesConversationId, bucketIndex: 0 },
+  { $set: { messages: gamesMessages, _class: BUCKET_CLASS } },
+  { upsert: true });
 
 print(`events: ${events.countDocuments({ organizerId: { $in: DEMO_IDS } })}, ` +
       `conversations: ${chat.conversations.countDocuments({ participantIds: { $in: DEMO_IDS } })}`);

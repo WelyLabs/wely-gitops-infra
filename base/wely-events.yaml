@@ -54,6 +54,19 @@ spec:
           value: "https://auth.welylabs.app/realms/wely-realm"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
           value: "http://wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+        # Publishes EVENT_GROUP_CHANGED, which wely-chat follows to keep each event's group.
+        - name: KAFKA_BOOTSTRAP_SERVER
+          value: "pkc-e0zxq.eu-west-3.aws.confluent.cloud:9092"
+        - name: KAFKA_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: kafka-key
+        - name: KAFKA_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: kafka-secret
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
