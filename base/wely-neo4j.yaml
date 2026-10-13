@@ -19,22 +19,10 @@ spec:
       containers:
       - name: neo4j
         image: neo4j:5
-        resources:
-          requests:
-            memory: 384Mi
-          limits:
-            memory: 640Mi
         ports:
         - containerPort: 7687
         - containerPort: 7474
         env:
-        # A small graph: a fixed heap and page cache instead of sizing both from the node.
-        - name: NEO4J_server_memory_heap_initial__size
-          value: "192m"
-        - name: NEO4J_server_memory_heap_max__size
-          value: "256m"
-        - name: NEO4J_server_memory_pagecache_size
-          value: "128m"
         - name: MY_NEO4J_PASSWORD
           valueFrom:
             secretKeyRef:

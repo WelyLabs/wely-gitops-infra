@@ -22,19 +22,9 @@ spec:
       containers:
       - name: kafka
         image: apache/kafka:3.8.0
-        resources:
-          # The broker would otherwise size its heap from the whole Pi (1 GiB by default),
-          # and nothing here needs more than a few hundred megabytes of heap.
-          requests:
-            memory: 512Mi
-          limits:
-            memory: 768Mi
         ports:
         - containerPort: 9092
         env:
-        # A fixed heap: the JVM default ignores the container limit for Kafka's own scripts.
-        - name: KAFKA_HEAP_OPTS
-          value: "-Xms384m -Xmx384m"
         - name: KAFKA_NODE_ID
           value: "1"
         - name: KAFKA_PROCESS_ROLES
