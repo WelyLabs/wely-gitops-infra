@@ -292,7 +292,7 @@ patches:
             - name: KAFKA_BOOTSTRAP
               value: "dev-wely-kafka-service:9092"
             - name: KAFKA_TOPICS
-              value: "USER_CREATED USER_DELETED DEV_MESSAGE_BROADCAST EVENT_GROUP_CHANGED"
+              value: "USER_CREATED USER_DELETED USER_MODIFIED DEV_MESSAGE_BROADCAST EVENT_GROUP_CHANGED"
   target:
     kind: Job
     name: wely-kafka-topics

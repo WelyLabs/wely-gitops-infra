@@ -11,6 +11,10 @@
 #     They record the client's IP address, hence the 30-day expiration (2592000 s). The
 #     event listeners are not set here, so the default jboss-logging one stays.
 #
+#   - editUsernameAllowed, and realm-management's manage-users role for the wely-users service
+#     account: editing a profile renames the Keycloak user through the Admin API. add-roles is
+#     idempotent, so it runs at every sync like the rest.
+#
 #   - the wely-users-registration step, which creates the wely-users user during registration
 #     (wely-identity, BusinessUserRegistration). Keycloak refuses executions on its built-in
 #     "registration" flow, so the hook copies it to "wely registration", adds the step to the
@@ -61,7 +65,12 @@ spec:
                 sleep 10
               done
               $K update realms/wely-realm --config $C -f /settings/realm-settings.json
-              $K get realms/wely-realm --config $C --fields displayName,supportedLocales,defaultLocale
+              $K get realms/wely-realm --config $C --fields displayName,supportedLocales,defaultLocale,editUsernameAllowed
+              $K add-roles -r wely-realm --config $C --uusername service-account-wely-users-api-client \
+                --cclientid realm-management --rolename manage-users
+              $K get-roles -r wely-realm --config $C --uusername service-account-wely-users-api-client \
+                --cclientid realm-management --effective | grep -q '"manage-users"' \
+                || { echo "manage-users is missing on the wely-users service account"; exit 1; }
 
               FLOW="wely registration"
               F="authentication/flows/wely%20registration%20registration%20form/executions"
