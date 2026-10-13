@@ -41,7 +41,9 @@ metadata:
     app: wely
     component: tailscale-operator
 spec:
-  replicas: 1
+  # Off until fixed: it crash-loops (its projected service-account token is not mounted), and an
+  # unhealthy Deployment holds every Argo sync before its PostSync hooks. Set 1 once repaired.
+  replicas: 0
   selector:
     matchLabels:
       app: wely-tailscale-operator
