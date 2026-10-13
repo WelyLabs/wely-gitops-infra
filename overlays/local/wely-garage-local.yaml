@@ -13,3 +13,5 @@ stringData:
   garage-users-secret-key: "8a8b08e472319e2bed02a6c37f20e055567a35b884889f49de15603039401f43"
   garage-reset-access-key: "GK107f2e8c8c52ec8b6b146dd1"
   garage-reset-secret-key: "af26b2107b61ae07cdb13311b5c31d90f14fe77160668ee9b839631c1992c767"
+  garage-chat-access-key: "GK9e5f8b4ea5e32d0a5a3ff52d"
+  garage-chat-secret-key: "948f283bcf506a68ff0cf67a9696a724441f4594b382a29a93e88f82a2c235d6"
