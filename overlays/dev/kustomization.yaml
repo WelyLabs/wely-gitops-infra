@@ -5,6 +5,9 @@ resources:
 - ../../base
 - namespace.yaml
 - wely-sealed-secrets-dev.yaml
+# Garage's RPC secret, admin token and keys, sealed apart from the shared secret (see
+# base/wely-secrets.example.yaml, second document).
+- wely-sealed-garage-dev.yaml
 - demo/demo-reset.yaml
 - realm/realm-settings-job.yaml
 
@@ -115,6 +118,12 @@ patches:
               value: "PLAINTEXT"
             - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
               value: "PLAINTEXT"
+            - name: MEDIA_INTERNAL_ENDPOINT
+              value: "http://dev-wely-garage-service:3900"
+            # Through the Cloudflare tunnel (hostname set in the Cloudflare dashboard). Signed URLs
+            # name this host, and the signature covers it.
+            - name: MEDIA_PUBLIC_ENDPOINT
+              value: "https://dev-media.welylabs.app"
   target:
     kind: Deployment
     name: wely-users
@@ -277,6 +286,23 @@ patches:
   target:
     kind: StatefulSet
     name: wely-kafka
+- patch: |-
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: wely-garage-setup
+    spec:
+      template:
+        spec:
+          containers:
+          - name: setup
+            env:
+            # namePrefix renames the Services, not a value that spells their names.
+            - name: GARAGE_ADMIN
+              value: "dev-wely-garage-0.dev-wely-garage-admin:3903"
+  target:
+    kind: Job
+    name: wely-garage-setup
 - patch: |-
     apiVersion: batch/v1
     kind: Job

@@ -1,0 +1,15 @@
+# Garage secrets for the local cluster only: random values, in plaintext like
+# wely-secrets-local.yaml. The name matches what base references; namePrefix makes it
+# local-dev-wely-garage and rewrites the references.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dev-wely-garage
+type: Opaque
+stringData:
+  garage-rpc-secret: "fa11e21e5daf33038b9ed87de2d601bd6d4df6097c202ed7d8366446ca7cff36"
+  garage-admin-token: "8c550943dbd6214b332e156b57941d49ab97bf2243fde82c"
+  garage-users-access-key: "GK43d63b1b9b3560f3d27e381b"
+  garage-users-secret-key: "8a8b08e472319e2bed02a6c37f20e055567a35b884889f49de15603039401f43"
+  garage-reset-access-key: "GK107f2e8c8c52ec8b6b146dd1"
+  garage-reset-secret-key: "af26b2107b61ae07cdb13311b5c31d90f14fe77160668ee9b839631c1992c767"

@@ -18,4 +18,6 @@ resources:
   - wely-kafka.yaml
   - wely-kafka-topics.yaml
   - wely-kafka-ui.yaml
+  - wely-garage.yaml
+  - wely-garage-setup.yaml
   - wely-tailscale.yaml
