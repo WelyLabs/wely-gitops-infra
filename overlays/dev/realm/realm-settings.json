@@ -6,6 +6,7 @@
     "fr"
   ],
   "defaultLocale": "fr",
+  "editUsernameAllowed": true,
   "eventsEnabled": true,
   "eventsExpiration": 2592000,
   "enabledEventTypes": [
