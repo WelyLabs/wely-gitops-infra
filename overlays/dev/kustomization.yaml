@@ -116,12 +116,6 @@ patches:
               value: "http://dev-wely-auth-service:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
-            - name: MEDIA_INTERNAL_ENDPOINT
-              value: "http://dev-wely-garage-service:3900"
-            # Through the Cloudflare tunnel (hostname set in the Cloudflare dashboard). Signed URLs
-            # name this host, and the signature covers it.
-            - name: MEDIA_PUBLIC_ENDPOINT
-              value: "https://dev-media.welylabs.app"
   target:
     kind: Deployment
     name: wely-users
@@ -191,11 +185,6 @@ patches:
               value: "DEV_MESSAGE_BROADCAST"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
-            - name: MEDIA_INTERNAL_ENDPOINT
-              value: "http://dev-wely-garage-service:3900"
-            # The same public host as the avatars: signed URLs name it, and the signature covers it.
-            - name: MEDIA_PUBLIC_ENDPOINT
-              value: "https://dev-media.welylabs.app"
   target:
     kind: Deployment
     name: wely-chat

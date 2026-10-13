@@ -9,12 +9,8 @@ type: Opaque
 stringData:
   garage-rpc-secret: "fa11e21e5daf33038b9ed87de2d601bd6d4df6097c202ed7d8366446ca7cff36"
   garage-admin-token: "8c550943dbd6214b332e156b57941d49ab97bf2243fde82c"
-  garage-users-access-key: "GK43d63b1b9b3560f3d27e381b"
-  garage-users-secret-key: "8a8b08e472319e2bed02a6c37f20e055567a35b884889f49de15603039401f43"
   garage-reset-access-key: "GK107f2e8c8c52ec8b6b146dd1"
   garage-reset-secret-key: "af26b2107b61ae07cdb13311b5c31d90f14fe77160668ee9b839631c1992c767"
-  garage-chat-access-key: "GK9e5f8b4ea5e32d0a5a3ff52d"
-  garage-chat-secret-key: "948f283bcf506a68ff0cf67a9696a724441f4594b382a29a93e88f82a2c235d6"
   garage-media-access-key: GK2c91ce17ced0f00f9248971c
   garage-media-secret-key: 9e9b96bdbfbcf96ea2efdda29a5d5ae9daffc03a5eb3498c1cd6002c99a21177
   media-secret-users: 9b608f679c31941e2cba455dee860afb9b641fef4e3487f4c97be67e20c757e6
