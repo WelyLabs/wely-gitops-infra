@@ -409,7 +409,7 @@ images:
   # Bumped with the realm import: the export now travels inside the image, so a tag older
   # than that commit has nothing under /opt/keycloak/data/import and --import-realm is a
   # no-op.
-  newTag: sha-6b62aebb6ef3f9a0108676de2c116b1591891be0
+  newTag: sha-2d66fddc21673c8722422ee56de43d8d36795f4f
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
   newTag: sha-0c0152838e90b9c68bdbe0022397ccb931b12167
