@@ -1,0 +1,91 @@
+# Sets Garage up, idempotently, after every sync: the single node's layout, the wely-avatars bucket,
+# and the keys that may use it, imported from the Secret so the services and this Job agree on them.
+#
+# Garage grants access per bucket, not per path: one bucket per use (avatars now, event photos
+# later), each with its own key. The keys are Garage keys, never AWS ones, and never leave the
+# cluster. Rotating one means a new access key id: Garage refuses to re-import a known id.
+#
+#   wely-users        read + write on wely-avatars: stores pictures, signs URLs to read them
+#   wely-demo-reset   read + write on wely-avatars: the nightly reset removes the demo uploads
+#
+# 409 from CreateBucket or ImportKey means it already exists: that is the second run.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wely-garage-setup
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      # Numeric: the image names its user (curl_user), which runAsNonRoot cannot verify.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: setup
+        image: curlimages/curl:8.22.0
+        command:
+        - sh
+        - -c
+        - |
+          set -e
+          A="http://$GARAGE_ADMIN/v2"
+          call() { curl -s -o /tmp/out -w '%{http_code}' -H "Authorization: Bearer $GARAGE_ADMIN_TOKEN" \
+                        -H 'Content-Type: application/json' "$A/$1" ${2:+-d "$2"}; }
+          ok() { case "$1" in 200|409) ;; *) echo "$2 failed ($1): $(cat /tmp/out)"; exit 1;; esac; }
+
+          for i in $(seq 1 30); do [ "$(call GetClusterStatus)" = 200 ] && break; sleep 10; done
+          NODE=$(sed -n 's/.*"id": *"\([0-9a-f]\{64\}\)".*/\1/p' /tmp/out | head -1)
+          [ -n "$NODE" ] || { echo "no Garage node found"; exit 1; }
+
+          ok "$(call GetClusterLayout)" GetClusterLayout
+          if tr -d ' \n' < /tmp/out | grep -q '"roles":\[\]'; then
+            ok "$(call UpdateClusterLayout "{\"roles\":[{\"id\":\"$NODE\",\"zone\":\"pi\",\"capacity\":$CAPACITY_BYTES,\"tags\":[]}]}")" UpdateClusterLayout
+            ok "$(call ApplyClusterLayout '{"version":1}')" ApplyClusterLayout
+          fi
+
+          ok "$(call CreateBucket '{"globalAlias":"wely-avatars"}')" CreateBucket
+          ok "$(call 'GetBucketInfo?globalAlias=wely-avatars')" GetBucketInfo
+          BUCKET=$(sed -n 's/^ *"id": *"\([0-9a-f]*\)".*/\1/p' /tmp/out | head -1)
+
+          grant() {
+            ok "$(call ImportKey "{\"accessKeyId\":\"$1\",\"secretAccessKey\":\"$2\",\"name\":\"$3\"}")" "ImportKey $3"
+            ok "$(call AllowBucketKey "{\"bucketId\":\"$BUCKET\",\"accessKeyId\":\"$1\",\"permissions\":{\"read\":true,\"write\":true,\"owner\":false}}")" "AllowBucketKey $3"
+          }
+          grant "$USERS_ACCESS_KEY" "$USERS_SECRET_KEY" wely-users
+          grant "$RESET_ACCESS_KEY" "$RESET_SECRET_KEY" wely-demo-reset
+          echo "Garage ready: bucket wely-avatars, keys wely-users and wely-demo-reset"
+        env:
+        - name: GARAGE_ADMIN
+          value: "wely-garage-0.wely-garage-admin:3903"
+        - name: CAPACITY_BYTES
+          value: "5000000000"
+        - name: GARAGE_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: garage-admin-token }
+        - name: USERS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: garage-users-access-key }
+        - name: USERS_SECRET_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: garage-users-secret-key }
+        - name: RESET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: garage-reset-access-key }
+        - name: RESET_SECRET_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: garage-reset-secret-key }
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+        resources:
+          requests: { cpu: 20m, memory: 16Mi }
+          limits: { memory: 64Mi }

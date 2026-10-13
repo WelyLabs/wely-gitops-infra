@@ -1,0 +1,146 @@
+# Garage: S3-compatible object storage, for pictures. Private: nothing is readable without a URL
+# signed by the service that owns the picture (wely-users for avatars). Chosen over MinIO, whose
+# community edition stopped shipping images in October 2025 and was archived in February 2026.
+#
+# One node, one replica: the cluster is one Raspberry Pi. The secrets (RPC secret, admin token)
+# come from the environment, so this ConfigMap holds none. Keys and buckets are created by the
+# wely-garage-setup Job, through the admin API.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wely-garage-config
+data:
+  garage.toml: |
+    metadata_dir = "/var/lib/garage/meta"
+    data_dir = "/var/lib/garage/data"
+    db_engine = "sqlite"
+    replication_factor = 1
+    rpc_bind_addr = "[::]:3901"
+    rpc_public_addr = "127.0.0.1:3901"
+
+    [s3_api]
+    s3_region = "garage"
+    api_bind_addr = "[::]:3900"
+
+    [admin]
+    api_bind_addr = "[::]:3903"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wely-garage
+spec:
+  # The headless Service: it is what gives the pod its DNS name, which the setup Job calls.
+  serviceName: wely-garage-admin
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-garage
+  template:
+    metadata:
+      labels:
+        app: wely-garage
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: garage
+        image: dxflrs/garage:v2.4.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3900
+          name: s3
+        - containerPort: 3903
+          name: admin
+        env:
+        - name: GARAGE_RPC_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-garage
+              key: garage-rpc-secret
+        - name: GARAGE_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-garage
+              key: garage-admin-token
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        # /health answers 503 until the layout is applied, which the setup Job does after the
+        # pod is up: TCP for startup and liveness, so the pod is not killed before it is set up.
+        startupProbe:
+          tcpSocket:
+            port: 3900
+          periodSeconds: 3
+          failureThreshold: 20
+        livenessProbe:
+          tcpSocket:
+            port: 3900
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 3900
+          periodSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/garage.toml
+          subPath: garage.toml
+          readOnly: true
+        - name: garage-data
+          mountPath: /var/lib/garage
+      volumes:
+      - name: config
+        configMap:
+          name: wely-garage-config
+  volumeClaimTemplates:
+  - metadata:
+      name: garage-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 5Gi
+---
+# The S3 API only. The admin port stays off the Service: the setup Job reaches it by the pod's
+# own DNS name through the headless Service below.
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-garage-service
+spec:
+  type: ClusterIP
+  selector:
+    app: wely-garage
+  ports:
+  - name: s3
+    port: 3900
+    targetPort: 3900
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-garage-admin
+spec:
+  clusterIP: None
+  selector:
+    app: wely-garage
+  ports:
+  - name: admin
+    port: 3903
+    targetPort: 3903

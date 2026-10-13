@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
 - ../../base
 - wely-secrets-local.yaml
+- wely-garage-local.yaml
 - namespace.yaml
 - wely-users-alias.yaml
 
@@ -55,6 +56,29 @@ patches:
   target:
     kind: Deployment
     name: wely-web
+- patch: |-
+    - op: replace
+      path: /spec/type
+      value: LoadBalancer
+  target:
+    kind: Service
+    name: wely-garage-service
+- patch: |-
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: wely-garage-setup
+    spec:
+      template:
+        spec:
+          containers:
+          - name: setup
+            env:
+            - name: GARAGE_ADMIN
+              value: "local-wely-garage-0.local-wely-garage-admin:3903"
+  target:
+    kind: Job
+    name: wely-garage-setup
 - patch: |-
     - op: replace
       path: /spec/type
@@ -146,6 +170,11 @@ patches:
               value: "PLAINTEXT"
             - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
               value: "PLAINTEXT"
+            - name: MEDIA_INTERNAL_ENDPOINT
+              value: "http://local-wely-garage-service:3900"
+            # The Service is a LoadBalancer on localhost: the browser reads pictures there.
+            - name: MEDIA_PUBLIC_ENDPOINT
+              value: "http://localhost:3900"
   target:
     kind: Deployment
     name: wely-users

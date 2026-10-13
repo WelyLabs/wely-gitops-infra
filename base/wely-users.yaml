@@ -79,6 +79,22 @@ spec:
             secretKeyRef:
               name: dev-wely-secrets-dev
               key: internal-secret
+        # Pictures, in Garage: uploads through the Service, signed URLs for the public hostname
+        # (a signature covers the host). The key is a Garage key scoped to the wely-avatars bucket.
+        - name: MEDIA_INTERNAL_ENDPOINT
+          value: "http://wely-garage-service:3900"
+        - name: MEDIA_PUBLIC_ENDPOINT
+          value: "https://media.welylabs.app"
+        - name: MEDIA_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-garage
+              key: garage-users-access-key
+        - name: MEDIA_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-garage
+              key: garage-users-secret-key
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
