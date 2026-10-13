@@ -29,6 +29,9 @@ images:
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
   newTag: latest
+- name: ghcr.io/welylabs/wely-media
+  newName: ghcr.io/welylabs/wely-media
+  newTag: latest
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
   newTag: latest

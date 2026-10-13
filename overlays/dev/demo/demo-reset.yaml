@@ -79,8 +79,8 @@ spec:
               resources:
                 requests: { cpu: 50m, memory: 128Mi }
                 limits: { memory: 384Mi }
-            # The conversations a demo account takes part in, before the cleanup below loses them:
-            # photos sent there by visitors go with the demo, like the rest of their messages.
+            # The conversations a demo account takes part in, and the events it organizes, before the
+            # cleanup below loses them: photos, covers and receipts go with the demo, like the rest.
             - name: chat-photos
               image: mongo:6.0
               command:
@@ -91,6 +91,10 @@ spec:
                   -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD"
                   --eval 'db.getSiblingDB("chat_db").conversations.find({ participantIds: { $in: process.env.DEMO_USER_IDS.trim().split(/\s+/) } }, { _id: 1 }).forEach(c => print(c._id.toString()))'
                   > /work/conversations && echo "$(wc -l < /work/conversations) demo conversations"
+                  && mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin"
+                  -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD"
+                  --eval 'db.getSiblingDB("events_db").events.find({ organizerId: { $in: process.env.DEMO_USER_IDS.trim().split(/\s+/) } }, { _id: 1 }).forEach(e => print(e._id.toString()))'
+                  > /work/events && echo "$(wc -l < /work/events) demo events"
               env:
                 - name: DEMO_USER_IDS
                   value: >-
@@ -124,7 +128,9 @@ spec:
                   for id in $DEMO_USER_IDS; do rclone purge "$R/$id"; done
                   C=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-chat-media/chat"
                   while read -r conversation; do rclone purge "$C/$conversation"; done < /work/conversations
-                  echo "demo pictures and photos removed"
+                  E=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-event-media/events"
+                  while read -r event; do rclone purge "$E/$event"; done < /work/events
+                  echo "demo pictures, photos, covers and receipts removed"
               env:
                 # The demo users' ids, as in seed-mongo.js.
                 - name: DEMO_USER_IDS

@@ -102,6 +102,8 @@ patches:
           containers:
           - name: users-api
             env:
+            - name: MEDIA_API_URL
+              value: "http://dev-wely-media-service:8085"
             - name: DB_URL
               value: "r2dbc:postgresql://dev-wely-postgres-users-service:5432/users"
             - name: KEYCLOAK_ISSUER_URI
@@ -160,6 +162,8 @@ patches:
           containers:
           - name: chat
             env:
+            - name: MEDIA_API_URL
+              value: "http://dev-wely-media-service:8085"
             # MONGO_USERNAME and MONGO_PASSWORD are repeated here, unchanged from the base,
             # only to pin their position. Kubernetes expands $(VAR) from variables declared
             # *earlier* in the list and leaves a forward reference as literal text, and a merge
@@ -206,6 +210,8 @@ patches:
           containers:
           - name: events-api
             env:
+            - name: MEDIA_API_URL
+              value: "http://dev-wely-media-service:8085"
             - name: MONGO_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -333,6 +339,25 @@ patches:
     kind: Deployment
     name: wely-kafka-ui
 
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-media
+    spec:
+      template:
+        spec:
+          containers:
+          - name: media
+            env:
+            - name: MEDIA_INTERNAL_ENDPOINT
+              value: "http://dev-wely-garage-service:3900"
+            # The public host the signed URLs name: the signature covers it.
+            - name: MEDIA_PUBLIC_ENDPOINT
+              value: "https://dev-media.welylabs.app"
+  target:
+    kind: Deployment
+    name: wely-media
 images:
 - name: ghcr.io/welylabs/wely-chat
   newName: ghcr.io/welylabs/wely-chat
@@ -346,6 +371,9 @@ images:
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
   newTag: sha-2d66fddc21673c8722422ee56de43d8d36795f4f
+- name: ghcr.io/welylabs/wely-media
+  newName: ghcr.io/welylabs/wely-media
+  newTag: latest
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
   newTag: sha-0c7cc10a1aee2c6ab77b881efa9b9eb228fc5673

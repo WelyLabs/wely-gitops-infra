@@ -1,0 +1,111 @@
+# Every picture's bytes: avatars, chat photos, event covers and receipts. The services that own
+# them keep the access rules and call this one over HTTP; it normalizes, stores in Garage and signs
+# read URLs for the public media host. Not routed by the gateway: only the cluster reaches it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-media
+  labels:
+    app: wely
+    component: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-media
+  template:
+    metadata:
+      labels:
+        app: wely-media
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+      - name: wely-registry
+      containers:
+      - name: media
+        image: ghcr.io/welylabs/wely-media:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8085
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: MEDIA_INTERNAL_ENDPOINT
+          value: "http://wely-garage-service:3900"
+        - name: MEDIA_PUBLIC_ENDPOINT
+          value: "https://media.welylabs.app"
+        # Its Garage key, on the avatar, chat and event buckets. Optional like every key sealed
+        # apart: without it the service runs and answers MED-TEC-001.
+        - name: MEDIA_ACCESS_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: garage-media-access-key, optional: true }
+        - name: MEDIA_SECRET_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: garage-media-secret-key, optional: true }
+        # One secret per caller, each tied to its own key prefix. A missing one turns that caller
+        # away (401) without affecting the others.
+        - name: INTERNAL_SECRET_USERS
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: media-secret-users, optional: true }
+        - name: INTERNAL_SECRET_CHAT
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: media-secret-chat, optional: true }
+        - name: INTERNAL_SECRET_EVENTS
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: media-secret-events, optional: true }
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        startupProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8085
+          periodSeconds: 5
+          failureThreshold: 36
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8085
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8085
+          periodSeconds: 5
+          failureThreshold: 3
+        # Decoding holds a whole image in memory (40 MP at most, about 160 MiB of raster).
+        resources:
+          requests:
+            cpu: 100m
+            memory: 320Mi
+          limits:
+            cpu: "1"
+            memory: 512Mi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-media-service
+spec:
+  selector:
+    app: wely-media
+  ports:
+    - protocol: TCP
+      port: 8085
+      targetPort: 8085
+  type: ClusterIP

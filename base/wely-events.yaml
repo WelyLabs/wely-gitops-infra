@@ -35,6 +35,12 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
+        # Pictures go through wely-media, which knows this service by its secret.
+        - name: MEDIA_API_URL
+          value: "http://wely-media-service:8085"
+        - name: MEDIA_API_SECRET
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: media-secret-events, optional: true }
         # Asked for the user's friends before a free-slot search.
         - name: SOCIAL_API_URL
           value: "http://wely-social-service:8083"

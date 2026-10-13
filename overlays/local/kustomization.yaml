@@ -165,6 +165,8 @@ patches:
           containers:
           - name: users-api
             env:
+            - name: MEDIA_API_URL
+              value: "http://local-wely-media-service:8085"
             - name: DB_URL
               value: "r2dbc:postgresql://local-wely-postgres-users-service:5432/users"
             - name: KEYCLOAK_ISSUER_URI
@@ -227,6 +229,8 @@ patches:
           containers:
           - name: chat
             env:
+            - name: MEDIA_API_URL
+              value: "http://local-wely-media-service:8085"
             - name: CHAT_BROADCAST_MODE
               value: "local"
             # Unused at mode local, since no binder is created. Overridden anyway so that
@@ -272,6 +276,8 @@ patches:
           containers:
           - name: events-api
             env:
+            - name: MEDIA_API_URL
+              value: "http://local-wely-media-service:8085"
             - name: MONGO_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -416,6 +422,26 @@ patches:
         kubernetes.io/hostname: docker-desktop
   target:
     kind: StatefulSet
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-media
+    spec:
+      template:
+        spec:
+          containers:
+          - name: media
+            env:
+            - name: MEDIA_INTERNAL_ENDPOINT
+              value: "http://local-wely-garage-service:3900"
+            # The public host the signed URLs name: the signature covers it.
+            - name: MEDIA_PUBLIC_ENDPOINT
+              value: "http://localhost:3900"
+  target:
+    kind: Deployment
+    name: wely-media
+
 patchesJson6902:
 - target:
     group: ""
@@ -444,6 +470,9 @@ images:
   # than that commit has nothing under /opt/keycloak/data/import and --import-realm is a
   # no-op.
   newTag: sha-2d66fddc21673c8722422ee56de43d8d36795f4f
+- name: ghcr.io/welylabs/wely-media
+  newName: ghcr.io/welylabs/wely-media
+  newTag: latest
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
   newTag: sha-0c7cc10a1aee2c6ab77b881efa9b9eb228fc5673

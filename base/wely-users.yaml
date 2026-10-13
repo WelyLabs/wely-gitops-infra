@@ -35,6 +35,12 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
+        # Pictures go through wely-media, which knows this service by its secret.
+        - name: MEDIA_API_URL
+          value: "http://wely-media-service:8085"
+        - name: MEDIA_API_SECRET
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: media-secret-users, optional: true }
         - name: DB_URL
           value: "r2dbc:postgresql://wely-postgres-users-service:5432/users"
         - name: DB_USERNAME
