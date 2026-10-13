@@ -39,7 +39,7 @@ spec:
           A="http://$GARAGE_ADMIN/v2"
           call() { curl -s -o /tmp/out -w '%{http_code}' -H "Authorization: Bearer $GARAGE_ADMIN_TOKEN" \
                         -H 'Content-Type: application/json' "$A/$1" ${2:+-d "$2"}; }
-          ok() { case "$1" in 200|409) ;; *) echo "$2 failed ($1): $(cat /tmp/out)"; exit 1;; esac; }
+          ok() { case "$1" in 200|409) ;; *) echo "$2 failed ($1): $(cat /tmp/out)" >&2; exit 1;; esac; }
 
           for i in $(seq 1 30); do [ "$(call GetClusterStatus)" = 200 ] && break; sleep 10; done
           NODE=$(sed -n 's/.*"id": *"\([0-9a-f]\{64\}\)".*/\1/p' /tmp/out | head -1)
@@ -51,17 +51,33 @@ spec:
             ok "$(call ApplyClusterLayout '{"version":1}')" ApplyClusterLayout
           fi
 
-          ok "$(call CreateBucket '{"globalAlias":"wely-avatars"}')" CreateBucket
-          ok "$(call 'GetBucketInfo?globalAlias=wely-avatars')" GetBucketInfo
-          BUCKET=$(sed -n 's/^ *"id": *"\([0-9a-f]*\)".*/\1/p' /tmp/out | head -1)
-
-          grant() {
-            ok "$(call ImportKey "{\"accessKeyId\":\"$1\",\"secretAccessKey\":\"$2\",\"name\":\"$3\"}")" "ImportKey $3"
-            ok "$(call AllowBucketKey "{\"bucketId\":\"$BUCKET\",\"accessKeyId\":\"$1\",\"permissions\":{\"read\":true,\"write\":true,\"owner\":false}}")" "AllowBucketKey $3"
+          bucket() {
+            ok "$(call CreateBucket "{\"globalAlias\":\"$1\"}")" "CreateBucket $1"
+            ok "$(call "GetBucketInfo?globalAlias=$1")" "GetBucketInfo $1"
+            sed -n 's/^ *"id": *"\([0-9a-f]*\)".*/\1/p' /tmp/out | head -1
           }
-          grant "$USERS_ACCESS_KEY" "$USERS_SECRET_KEY" wely-users
-          grant "$RESET_ACCESS_KEY" "$RESET_SECRET_KEY" wely-demo-reset
-          echo "Garage ready: bucket wely-avatars, keys wely-users and wely-demo-reset"
+          AVATARS=$(bucket wely-avatars)
+          CHAT=$(bucket wely-chat-media)
+
+          key() {
+            ok "$(call ImportKey "{\"accessKeyId\":\"$1\",\"secretAccessKey\":\"$2\",\"name\":\"$3\"}")" "ImportKey $3"
+          }
+          allow() {
+            ok "$(call AllowBucketKey "{\"bucketId\":\"$1\",\"accessKeyId\":\"$2\",\"permissions\":{\"read\":true,\"write\":true,\"owner\":false}}")" "AllowBucketKey $3"
+          }
+          key "$USERS_ACCESS_KEY" "$USERS_SECRET_KEY" wely-users
+          allow "$AVATARS" "$USERS_ACCESS_KEY" wely-users
+          key "$RESET_ACCESS_KEY" "$RESET_SECRET_KEY" wely-demo-reset
+          allow "$AVATARS" "$RESET_ACCESS_KEY" wely-demo-reset
+          allow "$CHAT" "$RESET_ACCESS_KEY" wely-demo-reset
+          # The chat's key is sealed separately and may not be deployed yet.
+          if [ -n "${CHAT_ACCESS_KEY:-}" ]; then
+            key "$CHAT_ACCESS_KEY" "$CHAT_SECRET_KEY" wely-chat
+            allow "$CHAT" "$CHAT_ACCESS_KEY" wely-chat
+          else
+            echo "no key for wely-chat yet: its photos stay off"
+          fi
+          echo "Garage ready: buckets wely-avatars and wely-chat-media"
         env:
         - name: GARAGE_ADMIN
           value: "wely-garage-0.wely-garage-admin:3903"
@@ -82,6 +98,12 @@ spec:
         - name: RESET_SECRET_KEY
           valueFrom:
             secretKeyRef: { name: dev-wely-garage, key: garage-reset-secret-key }
+        - name: CHAT_ACCESS_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: garage-chat-access-key, optional: true }
+        - name: CHAT_SECRET_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: garage-chat-secret-key, optional: true }
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

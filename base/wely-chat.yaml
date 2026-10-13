@@ -38,6 +38,25 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
+        # Photos, in Garage's wely-chat-media bucket: uploads through the Service, signed URLs for
+        # the public hostname. The key is optional: until it is sealed, the chat runs and refuses
+        # photos (CHT-TEC-001) rather than failing to start.
+        - name: MEDIA_INTERNAL_ENDPOINT
+          value: "http://wely-garage-service:3900"
+        - name: MEDIA_PUBLIC_ENDPOINT
+          value: "https://media.welylabs.app"
+        - name: MEDIA_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-garage
+              key: garage-chat-access-key
+              optional: true
+        - name: MEDIA_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-garage
+              key: garage-chat-secret-key
+              optional: true
         - name: MONGO_USERNAME
           valueFrom:
             secretKeyRef:

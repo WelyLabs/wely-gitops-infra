@@ -36,6 +36,9 @@ spec:
             - name: scripts
               configMap:
                 name: wely-demo-seed
+            # The demo conversations' ids, listed before seed-mongo.js deletes them, for the photo purge.
+            - name: work
+              emptyDir: {}
           initContainers:
             - name: users
               image: postgres:17
@@ -76,9 +79,40 @@ spec:
               resources:
                 requests: { cpu: 50m, memory: 128Mi }
                 limits: { memory: 384Mi }
+            # The conversations a demo account takes part in, before the cleanup below loses them:
+            # photos sent there by visitors go with the demo, like the rest of their messages.
+            - name: chat-photos
+              image: mongo:6.0
+              command:
+                - sh
+                - -c
+                - >-
+                  mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin"
+                  -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD"
+                  --eval 'db.getSiblingDB("chat_db").conversations.find({ participantIds: { $in: process.env.DEMO_USER_IDS.trim().split(/\s+/) } }, { _id: 1 }).forEach(c => print(c._id.toString()))'
+                  > /work/conversations && echo "$(wc -l < /work/conversations) demo conversations"
+              env:
+                - name: DEMO_USER_IDS
+                  value: >-
+                    89a380b8-f66a-44d0-b9d9-616241080430 a0cac685-c593-415d-bd73-6530e25a1f53
+                    9de75282-095c-41a9-ab17-2d58b02445da 50c7b996-ebf8-40e1-a0a5-5dc634f9b793
+                    0fa728fe-fd0e-4997-b226-fd049c6b0659 15d05360-522a-4ff1-93a9-07d63346e4c1
+                    4d6501b7-caed-4a98-b960-199db1bd4106 66e332e6-8d98-49c6-ac22-27095c35cf9d
+                    f4be7974-0ed3-457e-80d3-8aa08e0c5197 cdc6f71d-065c-4af5-9775-692411fc9504
+                - name: MONGO_USERNAME
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: mongo-root-username }
+                - name: MONGO_PASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: mongo-root-password }
+              volumeMounts: [{ name: work, mountPath: /work }]
+              resources:
+                requests: { cpu: 20m, memory: 64Mi }
+                limits: { memory: 256Mi }
             # Pictures a visitor uploaded on a demo account: removed, so the next visitor sees the
-            # seeded avatars, which seed-users.sql has just put back. rclone, with the
-            # wely-demo-reset Garage key; purge succeeds when there is nothing to remove.
+            # seeded avatars, which seed-users.sql has just put back; and the photos sent in the
+            # demo conversations. rclone, with the wely-demo-reset Garage key; purge succeeds when
+            # there is nothing to remove.
             - name: avatars
               image: rclone/rclone:1.75.2
               command:
@@ -88,7 +122,9 @@ spec:
                   set -e
                   R=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-avatars/avatars"
                   for id in $DEMO_USER_IDS; do rclone purge "$R/$id"; done
-                  echo "demo pictures removed"
+                  C=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-chat-media/chat"
+                  while read -r conversation; do rclone purge "$C/$conversation"; done < /work/conversations
+                  echo "demo pictures and photos removed"
               env:
                 # The demo users' ids, as in seed-mongo.js.
                 - name: DEMO_USER_IDS
@@ -104,6 +140,7 @@ spec:
                 - name: SECRET_KEY
                   valueFrom:
                     secretKeyRef: { name: dev-wely-garage, key: garage-reset-secret-key }
+              volumeMounts: [{ name: work, mountPath: /work }]
               resources:
                 requests: { cpu: 20m, memory: 32Mi }
                 limits: { memory: 128Mi }
