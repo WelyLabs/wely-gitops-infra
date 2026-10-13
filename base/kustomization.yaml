@@ -20,4 +20,5 @@ resources:
   - wely-kafka-ui.yaml
   - wely-garage.yaml
   - wely-garage-setup.yaml
+  - wely-garage-backup.yaml
   - wely-tailscale.yaml

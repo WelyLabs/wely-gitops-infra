@@ -102,6 +102,18 @@ Le cluster tourne sur un ensemble de Raspberry Pi derrière une connexion résid
 
 ---
 
+## Sauvegardes de Garage
+
+Les photos (avatars aujourd'hui) vivent dans Garage, sur le disque du Pi. `base/wely-garage-backup.yaml` les sauvegarde chaque nuit à 03:00 UTC, sans clé S3 ni interruption :
+
+1. un conteneur demande à Garage un **snapshot cohérent de ses métadonnées** (`CreateMetadataSnapshot`, API d'administration) ;
+2. un second monte le volume de Garage **en lecture seule** et recopie dans `wely-garage-backup` (10 Gio) le snapshot, la clé du nœud et le layout, puis les **blocs** : ils sont adressés par leur contenu et jamais réécrits, donc chaque jour reprend ceux de la veille par **lien dur** et ne copie que les nouveaux ; un bloc n'est jamais écrasé (ce qui modifierait aussi les jours précédents à travers le lien) ;
+3. 7 jours sont gardés.
+
+Restaurer : passer le StatefulSet `dev-wely-garage` à 0 réplica, recopier `<jour>/meta/*` dans `meta/` (le snapshot devient `db.sqlite`) et `<jour>/data/` dans `data/` du volume `garage-data-dev-wely-garage-0`, repasser à 1.
+
+> **Même disque.** Ce volume protège d'une suppression malheureuse, d'un bug ou d'une base corrompue, pas de la perte du disque du Pi. Une copie hors du Pi de `wely-garage-backup` reste à décider (machine de la maison via Tailscale, ou stockage externe).
+
 ## Environnement local
 
 Toute la plateforme démarre en une commande sur un Kubernetes local.

@@ -265,6 +265,17 @@ patches:
     kind: StatefulSet
     name: wely-kafka
 - patch: |-
+    # namePrefix renames the Service and the StatefulSet's claim, not values that spell their names.
+    - op: replace
+      path: /spec/jobTemplate/spec/template/spec/initContainers/0/env/0/value
+      value: "dev-wely-garage-0.dev-wely-garage-admin:3903"
+    - op: replace
+      path: /spec/jobTemplate/spec/template/spec/volumes/0/persistentVolumeClaim/claimName
+      value: "garage-data-dev-wely-garage-0"
+  target:
+    kind: CronJob
+    name: wely-garage-backup
+- patch: |-
     apiVersion: batch/v1
     kind: Job
     metadata:
