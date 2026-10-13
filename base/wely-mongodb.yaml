@@ -19,6 +19,13 @@ spec:
       containers:
       - name: mongodb
         image: mongo:6.0
+        # WiredTiger would take half of (RAM - 1 GiB) of the node; a quarter of a gigabyte is plenty here.
+        args: ["--wiredTigerCacheSizeGB", "0.25"]
+        resources:
+          requests:
+            memory: 128Mi
+          limits:
+            memory: 512Mi
         ports:
         - containerPort: 27017
         env:
