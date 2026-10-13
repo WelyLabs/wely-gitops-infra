@@ -77,10 +77,13 @@ spec:
           else
             echo "no key for wely-media yet: it answers MED-TEC-001"
           fi
-          # Best effort: a leftover key is harmless enough not to fail the sync over.
-          if [ "$(call ListKeys)" = 200 ]; then
+          # Best effort: a leftover key is harmless enough not to fail the sync over. The answer is
+          # pretty-printed, so it is joined, then split one key per line.
+          code=$(call ListKeys) || true
+          echo "ListKeys: $code"
+          if [ "$code" = 200 ]; then
             for name in wely-users wely-chat; do
-              for id in $(sed 's/}/}\n/g' /tmp/out | grep "\"name\": *\"$name\"" | sed -n 's/.*"id": *"\(GK[0-9a-f]*\)".*/\1/p'); do
+              for id in $(tr -d '\n' < /tmp/out | sed 's/}/}\n/g' | grep "\"name\": *\"$name\"" | sed -n 's/.*"id": *"\(GK[0-9a-f]*\)".*/\1/p'); do
                 code=$(curl -s -o /tmp/del -w '%{http_code}' -X POST -H "Authorization: Bearer $GARAGE_ADMIN_TOKEN" "$A/DeleteKey?id=$id") || true
                 echo "DeleteKey $name: $code"
               done
