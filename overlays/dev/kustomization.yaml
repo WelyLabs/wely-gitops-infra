@@ -114,10 +114,6 @@ patches:
               value: "http://dev-wely-auth-service:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
-            - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
-            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
             - name: MEDIA_INTERNAL_ENDPOINT
               value: "http://dev-wely-garage-service:3900"
             # Through the Cloudflare tunnel (hostname set in the Cloudflare dashboard). Signed URLs
@@ -146,10 +142,6 @@ patches:
               value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
-            - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
-            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-social
@@ -189,24 +181,12 @@ patches:
               value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
-            # dev and prod share one Confluent cluster, so they need separate topics: the
-            # user ids on the records come from the same Keycloak realm, and a dev pod
-            # reading prod's topic would deliver prod messages to a dev client. Create it
-            # first — the binder is not allowed to.
+            # A topic per environment, so two environments sharing a broker never read each
+            # other's records. Created by the topics Job: the binder is not allowed to.
             - name: CHAT_BROADCAST_TOPIC
               value: "DEV_MESSAGE_BROADCAST"
-            # The in-cluster broker, like wely-social and wely-users. The base still carries the
-            # Confluent Cloud address, which is what wely-chat was pointed at by mistake: the
-            # value was copied from the base without noticing this overlay had already moved the
-            # other two off it. Nothing in dev reaches Confluent any more.
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
-            # The in-cluster broker speaks PLAINTEXT; the SASL settings in application.properties
-            # are for Confluent and are ignored once the protocol is not SASL_SSL.
-            - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
-            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-chat
@@ -243,8 +223,6 @@ patches:
             # Publishes EVENT_GROUP_CHANGED to the in-cluster broker, like wely-users.
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
-            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-events

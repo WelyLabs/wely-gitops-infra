@@ -48,17 +48,7 @@ spec:
               name: dev-wely-secrets-dev
               key: neo4j-password
         - name: KAFKA_BOOTSTRAP_SERVER
-          value: "pkc-e0zxq.eu-west-3.aws.confluent.cloud:9092"
-        - name: KAFKA_KEY
-          valueFrom:
-            secretKeyRef:
-              name: dev-wely-secrets-dev
-              key: kafka-key
-        - name: KAFKA_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: dev-wely-secrets-dev
-              key: kafka-secret
+          value: "wely-kafka-service:9092"
         - name: KEYCLOAK_ISSUER_URI
           value: "https://auth.welylabs.app/realms/wely-realm"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
