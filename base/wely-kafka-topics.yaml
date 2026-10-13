@@ -38,7 +38,7 @@ spec:
         - name: KAFKA_BOOTSTRAP
           value: "wely-kafka-service:9092"
         - name: KAFKA_TOPICS
-          value: "USER_CREATED USER_DELETED USER_MODIFIED EVENT_GROUP_CHANGED"
+          value: "USER_CREATED USER_DELETED USER_MODIFIED EVENT_GROUP_CHANGED EVENT_DATE_FIXED"
         resources:
           requests: { cpu: 50m, memory: 128Mi }
           limits: { memory: 384Mi }
