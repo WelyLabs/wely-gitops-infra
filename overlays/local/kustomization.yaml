@@ -166,10 +166,6 @@ patches:
               value: "http://local-wely-auth-service:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
-            - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
-            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
             - name: MEDIA_INTERNAL_ENDPOINT
               value: "http://local-wely-garage-service:3900"
             # The Service is a LoadBalancer on localhost: the browser reads pictures there.
@@ -197,10 +193,6 @@ patches:
               value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
-            - name: SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
-            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-social
@@ -286,8 +278,6 @@ patches:
               value: "http://local-wely-social-service:8083"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
-            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SECURITY_PROTOCOL
-              value: "PLAINTEXT"
   target:
     kind: Deployment
     name: wely-events
