@@ -179,11 +179,6 @@ patches:
               value: "http://local-wely-auth-service:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
-            - name: MEDIA_INTERNAL_ENDPOINT
-              value: "http://local-wely-garage-service:3900"
-            # The Service is a LoadBalancer on localhost: the browser reads pictures there.
-            - name: MEDIA_PUBLIC_ENDPOINT
-              value: "http://localhost:3900"
   target:
     kind: Deployment
     name: wely-users
@@ -258,10 +253,6 @@ patches:
               value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
-            - name: MEDIA_INTERNAL_ENDPOINT
-              value: "http://local-wely-garage-service:3900"
-            - name: MEDIA_PUBLIC_ENDPOINT
-              value: "http://localhost:3900"
   target:
     kind: Deployment
     name: wely-chat
