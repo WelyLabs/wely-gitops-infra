@@ -38,6 +38,12 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
+        # Pictures go through wely-media, which knows this service by its secret.
+        - name: MEDIA_API_URL
+          value: "http://wely-media-service:8085"
+        - name: MEDIA_API_SECRET
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: media-secret-chat, optional: true }
         # Photos, in Garage's wely-chat-media bucket: uploads through the Service, signed URLs for
         # the public hostname. The key is optional: until it is sealed, the chat runs and refuses
         # photos (CHT-TEC-001) rather than failing to start.

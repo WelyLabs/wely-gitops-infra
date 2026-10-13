@@ -39,6 +39,7 @@ Deux conséquences :
 │   ├── wely-users.yaml            │  services applicatifs
 │   ├── wely-social.yaml           │
 │   ├── wely-chat.yaml             │
+│   ├── wely-media.yaml            │  (interne : octets des photos)
 │   ├── wely-events.yaml           │
 │   ├── wely-web.yaml             ─┘
 │   ├── wely-auth.yaml            Keycloak
@@ -104,7 +105,7 @@ Le cluster tourne sur un ensemble de Raspberry Pi derrière une connexion résid
 
 ## Sauvegardes de Garage
 
-Les photos (avatars aujourd'hui) vivent dans Garage, sur le disque du Pi. `base/wely-garage-backup.yaml` les sauvegarde chaque nuit à 03:00 UTC, sans clé S3 ni interruption :
+Les photos (avatars, photos des conversations, couvertures et tickets d'événement) vivent dans Garage, sur le disque du Pi. `base/wely-garage-backup.yaml` les sauvegarde chaque nuit à 03:00 UTC, sans clé S3 ni interruption :
 
 1. un conteneur demande à Garage un **snapshot cohérent de ses métadonnées** (`CreateMetadataSnapshot`, API d'administration) ;
 2. un second monte le volume de Garage **en lecture seule** et recopie dans `wely-garage-backup` (10 Gio) le snapshot, la clé du nœud et le layout, puis les **blocs** : ils sont adressés par leur contenu et jamais réécrits, donc chaque jour reprend ceux de la veille par **lien dur** et ne copie que les nouveaux ; un bloc n'est jamais écrasé (ce qui modifierait aussi les jours précédents à travers le lien) ;

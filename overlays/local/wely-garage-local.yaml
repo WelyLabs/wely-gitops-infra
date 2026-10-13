@@ -15,3 +15,8 @@ stringData:
   garage-reset-secret-key: "af26b2107b61ae07cdb13311b5c31d90f14fe77160668ee9b839631c1992c767"
   garage-chat-access-key: "GK9e5f8b4ea5e32d0a5a3ff52d"
   garage-chat-secret-key: "948f283bcf506a68ff0cf67a9696a724441f4594b382a29a93e88f82a2c235d6"
+  garage-media-access-key: GK2c91ce17ced0f00f9248971c
+  garage-media-secret-key: 9e9b96bdbfbcf96ea2efdda29a5d5ae9daffc03a5eb3498c1cd6002c99a21177
+  media-secret-users: 9b608f679c31941e2cba455dee860afb9b641fef4e3487f4c97be67e20c757e6
+  media-secret-chat: 40670af2a0d5c9c8008fa4457f2ebbf12c4e941e300130967cb51825cb69e26d
+  media-secret-events: 4f80f6509f2bd712104aad60fe624f047cdeddf19130a3bc12eae5da01495d99
