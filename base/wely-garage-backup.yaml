@@ -1,0 +1,147 @@
+# Nightly backup of Garage: what restoring the pictures takes, kept 7 days.
+#
+# No S3 key and no downtime. The Job asks Garage for a consistent snapshot of its metadata
+# (admin API), then reads Garage's own volume, mounted read-only on the same node:
+#   meta/  the latest snapshot as db.sqlite, plus the node key and layout files a restore needs;
+#   data/  the blocks. They are content-addressed and never rewritten, so each day hard-links
+#          the previous day's copies and only new blocks take space; a block is never
+#          overwritten in place, which would change the older backups through the shared link.
+#
+# The backup volume sits on the same disk as Garage: it protects against a bad deletion, a bug
+# or a corrupted database, not against losing the Pi's disk. An off-site copy of /backup is the
+# next step (see the README).
+#
+# Restore (dev): scale the Garage StatefulSet to 0, copy <day>/meta/* into meta/ and
+# <day>/data/ into data/ on the garage-data volume, scale back to 1.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wely-garage-backup
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wely-garage-backup
+spec:
+  # 03:00 UTC, before the demo reset at 04:00 and outside anyone's evening.
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 3600
+      template:
+        spec:
+          restartPolicy: Never
+          # Garage's own user: its files are readable as they are, and new ones belong to it.
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+          - name: snapshot
+            image: curlimages/curl:8.22.0
+            command:
+            - sh
+            - -c
+            - |
+              set -e
+              code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST \
+                -H "Authorization: Bearer $GARAGE_ADMIN_TOKEN" "http://$GARAGE_ADMIN/v2/CreateMetadataSnapshot?node=*")
+              [ "$code" = 200 ] || { echo "snapshot failed ($code): $(cat /tmp/out)"; exit 1; }
+              echo "metadata snapshot taken"
+            env:
+            - name: GARAGE_ADMIN
+              value: "wely-garage-0.wely-garage-admin:3903"
+            - name: GARAGE_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef: { name: dev-wely-garage, key: garage-admin-token }
+            resources:
+              requests: { memory: 16Mi }
+              limits: { memory: 64Mi }
+            securityContext:
+              runAsUser: 100
+              runAsGroup: 101
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+          containers:
+          - name: copy
+            image: busybox:1.37.0
+            command:
+            - sh
+            - -c
+            - |
+              set -eu
+              DAY=$(date -u +%F)
+              DEST=/backup/$DAY
+              TMP=/backup/.partial-$DAY
+              PREV=$(ls -1d /backup/20*/ 2>/dev/null | sed 's:/$::' | grep -v "/$DAY\$" | sort | tail -1 || true)
+              rm -rf "$TMP"
+              mkdir -p "$TMP/meta" "$TMP/data"
+
+              # Metadata: the newest snapshot (just taken), never the live database.
+              SNAP=$(ls -1d /garage/meta/snapshots/*/ | sort | tail -1)
+              cp -a "${SNAP}db.sqlite" "$TMP/meta/db.sqlite"
+              for f in node_key node_key.pub cluster_layout data_layout peer_list; do
+                if [ -e "/garage/meta/$f" ]; then cp -a "/garage/meta/$f" "$TMP/meta/"; fi
+              done
+
+              # Blocks: yesterday's by hard link, then only the new ones, never over an existing file.
+              if [ -n "$PREV" ] && [ -d "$PREV/data" ]; then cp -al "$PREV/data/." "$TMP/data/"; fi
+              cd /garage/data
+              find . -type d > /tmp/dirs
+              while IFS= read -r d; do mkdir -p "$TMP/data/$d"; done < /tmp/dirs
+              NEW=0
+              find . -type f > /tmp/blocks
+              while IFS= read -r f; do
+                if [ ! -e "$TMP/data/$f" ]; then cp -a "$f" "$TMP/data/$f"; NEW=$((NEW + 1)); fi
+              done < /tmp/blocks
+              # Blocks Garage deleted leave the backup too (unlinking spares the older days).
+              cd "$TMP/data"
+              find . -type f > /tmp/kept
+              while IFS= read -r f; do if [ ! -e "/garage/data/$f" ]; then rm -f "$f"; fi; done < /tmp/kept
+
+              rm -rf "$DEST"
+              mv "$TMP" "$DEST"
+              echo "backup $DAY: $(wc -l < /tmp/blocks) blocks, $NEW new, from snapshot $(basename "$SNAP")"
+
+              # Keep the last 7 days.
+              ls -1d /backup/20*/ | sort > /tmp/days
+              EXCESS=$(( $(wc -l < /tmp/days) - 7 ))
+              if [ "$EXCESS" -gt 0 ]; then head -n "$EXCESS" /tmp/days | xargs rm -rf; fi
+              du -sh /backup
+            resources:
+              requests: { memory: 16Mi }
+              limits: { memory: 128Mi }
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            volumeMounts:
+            - { name: garage-data, mountPath: /garage, readOnly: true }
+            - { name: backup, mountPath: /backup }
+            - { name: tmp, mountPath: /tmp }
+          volumes:
+          # The StatefulSet's claim: same node, so a second read-only mount is allowed.
+          - name: garage-data
+            persistentVolumeClaim:
+              claimName: garage-data-wely-garage-0
+              readOnly: true
+          - name: backup
+            persistentVolumeClaim:
+              claimName: wely-garage-backup
+          - name: tmp
+            emptyDir: {}
