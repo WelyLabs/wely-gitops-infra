@@ -6,10 +6,9 @@ metadata:
     app: wely
     component: chat
 spec:
-  # Two replicas, which is the point of the whole broadcast change: message delivery used
-  # to go through an in-process sink, so a second pod would have silently dropped every
-  # message whose recipient was connected to the other one. See KafkaMessageBroadcaster.
-  replicas: 2
+  # One replica to spare the Pi's memory (about 315 MiB a pod). Delivery goes through Kafka
+  # (KafkaMessageBroadcaster), so raising it again needs no code change.
+  replicas: 1
   selector:
     matchLabels:
       app: wely-chat

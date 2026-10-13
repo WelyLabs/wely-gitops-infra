@@ -19,11 +19,6 @@ spec:
       containers:
       - name: postgres
         image: postgres:17
-        resources:
-          requests:
-            memory: 64Mi
-          limits:
-            memory: 256Mi
         ports:
         - containerPort: 5432
         env:
