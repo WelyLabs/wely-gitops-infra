@@ -20,6 +20,13 @@ spec:
       containers:
       - name: keycloak
         image: ghcr.io/welylabs/wely-keycloak:latest
+        resources:
+          # Keycloak sizes its heap from the container limit (MaxRAMPercentage); without a limit it
+          # reads the whole node and grows as far as it likes.
+          requests:
+            memory: 512Mi
+          limits:
+            memory: 896Mi
         imagePullPolicy: IfNotPresent
         args: ["start"]
         # No probes here yet, deliberately. Keycloak's health endpoints moved to a
@@ -32,6 +39,9 @@ spec:
         # Prerequisite: pin the base image. Then set KC_HEALTH_ENABLED=true and point
         # the probes at the port that version actually uses.
         env:
+        # Heap at most 55% of the limit, leaving room for metaspace and threads under 896Mi.
+        - name: JAVA_OPTS_KC_HEAP
+          value: "-XX:MaxRAMPercentage=55 -XX:InitialRAMPercentage=30"
         - name: KC_BOOTSTRAP_ADMIN_USERNAME
           valueFrom:
             secretKeyRef:
