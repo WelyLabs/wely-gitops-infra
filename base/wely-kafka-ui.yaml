@@ -6,7 +6,9 @@ metadata:
     app: wely
     component: kafka-ui
 spec:
-  replicas: 1
+  # Off by default: a debugging tool, about 300 MiB of JVM on a Pi with 8 GiB for everything.
+  # To use it, set 1 here and let Argo sync (a manual scale would be reverted by selfHeal).
+  replicas: 0
   selector:
     matchLabels:
       app: wely-kafka-ui
@@ -18,9 +20,16 @@ spec:
       containers:
       - name: kafka-ui
         image: provectuslabs/kafka-ui:latest
+        resources:
+          requests:
+            memory: 256Mi
+          limits:
+            memory: 512Mi
         ports:
         - containerPort: 8085
         env:
+        - name: JAVA_OPTS
+          value: "-Xmx256m"
         - name: SERVER_PORT
           value: "8085"
         - name: KAFKA_CLUSTERS_0_NAME
