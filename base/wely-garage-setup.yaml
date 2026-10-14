@@ -20,6 +20,9 @@ metadata:
 spec:
   backoffLimit: 3
   template:
+    metadata:
+      labels:
+        app: wely-garage-setup
     spec:
       restartPolicy: OnFailure
       # Numeric: the image names its user (curl_user), which runAsNonRoot cannot verify.
