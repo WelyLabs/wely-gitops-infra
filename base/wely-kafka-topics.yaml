@@ -3,7 +3,7 @@
 # every Argo CD sync, and plain kubectl apply (local) runs it once.
 #
 # Overlays set KAFKA_BOOTSTRAP to the prefixed Service name, and add their environment's
-# topics to KAFKA_TOPICS (dev: DEV_MESSAGE_BROADCAST for the chat).
+# topics to KAFKA_TOPICS (dev: DEV_MESSAGE_BROADCAST and DEV_CALL_EVENTS for the chat).
 apiVersion: batch/v1
 kind: Job
 metadata:

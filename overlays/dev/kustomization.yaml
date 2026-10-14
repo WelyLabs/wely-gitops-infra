@@ -187,6 +187,8 @@ patches:
             # other's records. Created by the topics Job: the binder is not allowed to.
             - name: CHAT_BROADCAST_TOPIC
               value: "DEV_MESSAGE_BROADCAST"
+            - name: CHAT_CALL_TOPIC
+              value: "DEV_CALL_EVENTS"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
   target:
@@ -311,7 +313,7 @@ patches:
             - name: KAFKA_BOOTSTRAP
               value: "dev-wely-kafka-service:9092"
             - name: KAFKA_TOPICS
-              value: "USER_CREATED USER_DELETED USER_MODIFIED DEV_MESSAGE_BROADCAST EVENT_GROUP_CHANGED EVENT_DATE_FIXED"
+              value: "USER_CREATED USER_DELETED USER_MODIFIED DEV_MESSAGE_BROADCAST DEV_CALL_EVENTS EVENT_GROUP_CHANGED EVENT_DATE_FIXED"
   target:
     kind: Job
     name: wely-kafka-topics

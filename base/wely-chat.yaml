@@ -43,6 +43,20 @@ spec:
         - name: MEDIA_API_SECRET
           valueFrom:
             secretKeyRef: { name: dev-wely-garage, key: media-secret-chat, optional: true }
+        # Calls go through Cloudflare Realtime (SFU and TURN); only this service holds its keys.
+        # Optional: without them the service starts, calls answer CHT-TEC-002 and ICE is STUN only.
+        - name: CLOUDFLARE_REALTIME_APP_ID
+          valueFrom:
+            secretKeyRef: { name: dev-wely-calls, key: realtime-app-id, optional: true }
+        - name: CLOUDFLARE_REALTIME_APP_SECRET
+          valueFrom:
+            secretKeyRef: { name: dev-wely-calls, key: realtime-app-secret, optional: true }
+        - name: CLOUDFLARE_TURN_KEY_ID
+          valueFrom:
+            secretKeyRef: { name: dev-wely-calls, key: turn-key-id, optional: true }
+        - name: CLOUDFLARE_TURN_API_TOKEN
+          valueFrom:
+            secretKeyRef: { name: dev-wely-calls, key: turn-api-token, optional: true }
         - name: MONGO_USERNAME
           valueFrom:
             secretKeyRef:
