@@ -1,0 +1,15 @@
+# events: reached only through the gateway.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-events
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-events
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }
+      ports:
+        - { protocol: TCP, port: 8086 }

@@ -1,0 +1,16 @@
+# users: reached by the gateway, and by Keycloak's businessId mapper at login.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-users
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-users
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }      # /api/v1/user-service
+        - podSelector: { matchLabels: { app: wely-auth } }         # businessId mapper, during token minting
+      ports:
+        - { protocol: TCP, port: 8082 }

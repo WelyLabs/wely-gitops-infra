@@ -1,0 +1,17 @@
+# MongoDB: conversations/messages (chat) and events. Clients: chat, events, reset.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mongodb
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-mongodb
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-chat } }         # conversations / messages
+        - podSelector: { matchLabels: { app: wely-events } }       # events
+        - podSelector: { matchLabels: { app: wely-demo-reset } }   # nightly reset
+      ports:
+        - { protocol: TCP, port: 27017 }

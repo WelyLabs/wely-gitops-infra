@@ -1,0 +1,16 @@
+# Neo4j: the friendship graph. Clients: wely-social + the nightly reset.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-neo4j
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-neo4j
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-social } }       # friendship graph
+        - podSelector: { matchLabels: { app: wely-demo-reset } }   # nightly reset
+      ports:
+        - { protocol: TCP, port: 7687 }                            # Bolt

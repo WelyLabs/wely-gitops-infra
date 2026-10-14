@@ -1,0 +1,16 @@
+# Postgres (users): the user profiles. Clients: wely-users + the nightly reset.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-users
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-postgres-users
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-users } }        # owns the users profiles
+        - podSelector: { matchLabels: { app: wely-demo-reset } }   # nightly reset
+      ports:
+        - { protocol: TCP, port: 5432 }

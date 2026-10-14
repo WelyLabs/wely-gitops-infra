@@ -1,0 +1,23 @@
+# Garage (S3): picture bytes. Clients: media + the services that store media,
+# plus the reset, the bucket/key bootstrap and the backup job.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-garage
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-garage
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-media } }        # owns picture bytes
+        - podSelector: { matchLabels: { app: wely-users } }        # avatars
+        - podSelector: { matchLabels: { app: wely-chat } }         # chat media
+        - podSelector: { matchLabels: { app: wely-events } }       # event media
+        - podSelector: { matchLabels: { app: wely-demo-reset } }   # nightly reset of demo media
+        - podSelector: { matchLabels: { app: wely-garage-setup } } # buckets + keys bootstrap
+        - podSelector: { matchLabels: { app: wely-garage-backup } }# backup / restore
+      ports:
+        - { protocol: TCP, port: 3900 }                            # S3 API
+        - { protocol: TCP, port: 3903 }                            # admin API (setup)

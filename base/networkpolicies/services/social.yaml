@@ -1,0 +1,17 @@
+# social: gateway, plus events (SocialApiAdapter) and users.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-social
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-social
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }
+        - podSelector: { matchLabels: { app: wely-events } }       # SocialApiAdapter
+        - podSelector: { matchLabels: { app: wely-users } }
+      ports:
+        - { protocol: TCP, port: 8083 }
