@@ -1,4 +1,6 @@
 # web (nginx reverse proxy): public app hostname, entered via cloudflared.
+# nginx listens on 8080; the Service maps 80 -> 8080. A NetworkPolicy filters
+# the POD port, so this must be 8080 (the container port), not the Service's 80.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -12,4 +14,4 @@ spec:
     - from:
         - podSelector: { matchLabels: { app: cloudflared } }       # public app hostname
       ports:
-        - { protocol: TCP, port: 80 }
+        - { protocol: TCP, port: 8080 }                            # nginx container port (Service 80 -> 8080)
