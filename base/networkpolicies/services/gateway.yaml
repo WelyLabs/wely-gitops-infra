@@ -1,0 +1,16 @@
+# gateway: single API entry point. web's nginx proxies /api + /rsocket here.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-gateway
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-web } }          # nginx proxies /api + /rsocket here
+        - podSelector: { matchLabels: { app: cloudflared } }       # belt-and-suspenders on the critical path
+      ports:
+        - { protocol: TCP, port: 8081 }

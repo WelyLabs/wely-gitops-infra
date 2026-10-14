@@ -1,0 +1,23 @@
+# auth (Keycloak): JWKS for every service, admin API for users, browser login,
+# and the realm configuration job.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-auth
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-auth
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }        # JWT validation (JWKS)
+        - podSelector: { matchLabels: { app: wely-users } }          # JWKS + admin API
+        - podSelector: { matchLabels: { app: wely-social } }         # JWKS
+        - podSelector: { matchLabels: { app: wely-chat } }           # JWKS
+        - podSelector: { matchLabels: { app: wely-events } }         # JWKS
+        - podSelector: { matchLabels: { app: wely-media } }          # JWKS
+        - podSelector: { matchLabels: { app: cloudflared } }         # browser login
+        - podSelector: { matchLabels: { app: wely-realm-settings } } # realm configuration job
+      ports:
+        - { protocol: TCP, port: 8080 }

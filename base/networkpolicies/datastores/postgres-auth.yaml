@@ -1,0 +1,15 @@
+# Postgres (auth): Keycloak's own database. Only Keycloak talks to it.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-auth
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-postgres-auth
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-auth } }         # Keycloak's own database
+      ports:
+        - { protocol: TCP, port: 5432 }

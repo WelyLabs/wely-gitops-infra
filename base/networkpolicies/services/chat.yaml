@@ -1,0 +1,16 @@
+# chat: gateway, plus events (event group conversations).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-chat
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-chat
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }
+        - podSelector: { matchLabels: { app: wely-events } }       # event group conversations
+      ports:
+        - { protocol: TCP, port: 8084 }

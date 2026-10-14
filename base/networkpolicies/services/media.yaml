@@ -1,0 +1,18 @@
+# media: the services that store pictures, plus public signed-URL reads.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-media
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-media
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-users } }        # avatars
+        - podSelector: { matchLabels: { app: wely-chat } }         # chat media
+        - podSelector: { matchLabels: { app: wely-events } }       # event media
+        - podSelector: { matchLabels: { app: cloudflared } }       # public signed-URL reads
+      ports:
+        - { protocol: TCP, port: 8085 }

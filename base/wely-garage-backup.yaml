@@ -38,6 +38,9 @@ spec:
       backoffLimit: 1
       activeDeadlineSeconds: 3600
       template:
+        metadata:
+          labels:
+            app: wely-garage-backup
         spec:
           restartPolicy: Never
           # Garage's own user: its files are readable as they are, and new ones belong to it.
