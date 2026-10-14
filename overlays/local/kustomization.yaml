@@ -167,6 +167,8 @@ patches:
             env:
             - name: MEDIA_API_URL
               value: "http://local-wely-media-service:8085"
+            - name: SOCIAL_API_URL
+              value: "http://local-wely-social-service:8083"
             - name: DB_URL
               value: "r2dbc:postgresql://local-wely-postgres-users-service:5432/users"
             - name: KEYCLOAK_ISSUER_URI

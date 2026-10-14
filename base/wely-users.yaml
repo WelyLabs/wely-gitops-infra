@@ -35,6 +35,9 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
+        # Asked whether two users are friends before one sees the other's profile.
+        - name: SOCIAL_API_URL
+          value: "http://wely-social-service:8083"
         # Pictures go through wely-media, which knows this service by its secret.
         - name: MEDIA_API_URL
           value: "http://wely-media-service:8085"
