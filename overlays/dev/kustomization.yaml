@@ -108,6 +108,8 @@ patches:
               value: "http://dev-wely-social-service:8083"
             - name: DB_URL
               value: "r2dbc:postgresql://dev-wely-postgres-users-service:5432/users"
+            - name: DB_JDBC_URL
+              value: "jdbc:postgresql://dev-wely-postgres-users-service:5432/users?sslmode=disable"
             - name: KEYCLOAK_ISSUER_URI
               value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI

@@ -46,6 +46,9 @@ spec:
             secretKeyRef: { name: dev-wely-garage, key: media-secret-users, optional: true }
         - name: DB_URL
           value: "r2dbc:postgresql://wely-postgres-users-service:5432/users"
+        # Same database over JDBC, for the Flyway migrations run at startup.
+        - name: DB_JDBC_URL
+          value: "jdbc:postgresql://wely-postgres-users-service:5432/users?sslmode=disable"
         - name: DB_USERNAME
           valueFrom:
             secretKeyRef:
