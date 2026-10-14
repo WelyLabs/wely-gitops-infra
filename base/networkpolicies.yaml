@@ -136,3 +136,156 @@ spec:
       ports:
         - { protocol: TCP, port: 3900 }                            # S3 API
         - { protocol: TCP, port: 3903 }                            # admin API (setup)
+# --------------------------------------------------------------------------
+# Phase 2 — the service-to-service graph.
+#
+# Same deny-by-default, now for the application pods. Traffic flows
+# browser -> cloudflared -> web(nginx, reverse proxy) -> gateway -> backends.
+# A backend only accepts connections from the peers that legitimately call it
+# (derived from each deployment's dependency env vars), so a compromised pod
+# can no longer reach a service it has no business calling (e.g. web straight
+# to events, bypassing the gateway).
+#
+# cloudflared's hostname->service mapping lives in the Cloudflare dashboard
+# (token tunnel), not in this repo. The cloudflared sources below (web, auth,
+# media public reads) are inferred from the code (nginx.conf proxies /api and
+# /rsocket to the gateway; MEDIA_PUBLIC_ENDPOINT exists; Keycloak login). If a
+# public hostname is routed differently, adjust the matching policy.
+# Kubelet health probes are NOT affected: verified that k3s/kube-router lets
+# them through a deny-all policy.
+# --------------------------------------------------------------------------
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-web
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: cloudflared } }       # public app hostname
+      ports:
+        - { protocol: TCP, port: 80 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-gateway
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-web } }          # nginx proxies /api + /rsocket here
+        - podSelector: { matchLabels: { app: cloudflared } }       # belt-and-suspenders on the critical path
+      ports:
+        - { protocol: TCP, port: 8081 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-users
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-users
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }      # /api/v1/user-service
+        - podSelector: { matchLabels: { app: wely-auth } }         # businessId mapper, during token minting
+      ports:
+        - { protocol: TCP, port: 8082 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-social
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-social
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }
+        - podSelector: { matchLabels: { app: wely-events } }       # SocialApiAdapter
+        - podSelector: { matchLabels: { app: wely-users } }
+      ports:
+        - { protocol: TCP, port: 8083 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-chat
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-chat
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }
+        - podSelector: { matchLabels: { app: wely-events } }       # event group conversations
+      ports:
+        - { protocol: TCP, port: 8084 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-events
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-events
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }
+      ports:
+        - { protocol: TCP, port: 8086 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-media
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-media
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-users } }        # avatars
+        - podSelector: { matchLabels: { app: wely-chat } }         # chat media
+        - podSelector: { matchLabels: { app: wely-events } }       # event media
+        - podSelector: { matchLabels: { app: cloudflared } }       # public signed-URL reads
+      ports:
+        - { protocol: TCP, port: 8085 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-auth
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-auth
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }        # JWT validation (JWKS)
+        - podSelector: { matchLabels: { app: wely-users } }          # JWKS + admin API
+        - podSelector: { matchLabels: { app: wely-social } }         # JWKS
+        - podSelector: { matchLabels: { app: wely-chat } }           # JWKS
+        - podSelector: { matchLabels: { app: wely-events } }         # JWKS
+        - podSelector: { matchLabels: { app: wely-media } }          # JWKS
+        - podSelector: { matchLabels: { app: cloudflared } }         # browser login
+        - podSelector: { matchLabels: { app: wely-realm-settings } } # realm configuration job
+      ports:
+        - { protocol: TCP, port: 8080 }
