@@ -13,9 +13,6 @@ namespace: wely-local
 namePrefix: local-
 
 configMapGenerator:
-- name: users-init-sql
-  files:
-  - users-init.sql
 # The realm imported at startup: a copy of wely-identity's export, with the client URLs
 # pointed at localhost (nginx on :80, ng serve on :4200).
 - name: keycloak-realm
@@ -23,21 +20,6 @@ configMapGenerator:
   - keycloak/wely-realm.json
 
 patches:
-- patch: |-
-    - op: add
-      path: /spec/template/spec/volumes
-      value:
-      - name: users-init-volume
-        configMap:
-          name: users-init-sql
-    - op: add
-      path: /spec/template/spec/containers/0/volumeMounts/-
-      value:
-        name: users-init-volume
-        mountPath: /docker-entrypoint-initdb.d
-  target:
-    kind: StatefulSet
-    name: wely-postgres-users
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment
@@ -171,6 +153,8 @@ patches:
               value: "http://local-wely-social-service:8083"
             - name: DB_URL
               value: "r2dbc:postgresql://local-wely-postgres-users-service:5432/users"
+            - name: DB_JDBC_URL
+              value: "jdbc:postgresql://local-wely-postgres-users-service:5432/users?sslmode=disable"
             - name: KEYCLOAK_ISSUER_URI
               value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
