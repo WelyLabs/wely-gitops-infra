@@ -1,5 +1,10 @@
 # Garage (S3): picture bytes. Clients: media + the services that store media,
 # plus the reset, the bucket/key bootstrap and the backup job.
+#
+# Public image reads go to Garage DIRECTLY, not through the media service: media
+# only signs the S3 URLs (dev-media.welylabs.app/...), and the browser then
+# fetches the bytes from Garage via cloudflared. So cloudflared needs the S3
+# port (3900) — but never the admin port (3903), which stays internal.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -10,6 +15,7 @@ spec:
       app: wely-garage
   policyTypes: [Ingress]
   ingress:
+    # In-cluster clients: S3 (3900) and, for the bootstrap/backup jobs, admin (3903).
     - from:
         - podSelector: { matchLabels: { app: wely-media } }        # owns picture bytes
         - podSelector: { matchLabels: { app: wely-users } }        # avatars
@@ -21,3 +27,8 @@ spec:
       ports:
         - { protocol: TCP, port: 3900 }                            # S3 API
         - { protocol: TCP, port: 3903 }                            # admin API (setup)
+    # Public signed-URL reads from the browser, via cloudflared: S3 only.
+    - from:
+        - podSelector: { matchLabels: { app: cloudflared } }       # dev-media.welylabs.app -> garage S3
+      ports:
+        - { protocol: TCP, port: 3900 }                            # S3 API
