@@ -1,0 +1,138 @@
+# NetworkPolicies — datastores. Lock each datastore to its legitimate clients only.
+#
+# Why: the cluster network is flat. Without these, ANY pod (e.g. a compromised
+# `web` nginx) can open a TCP socket straight to Postgres/Mongo/Neo4j and read
+# the data, bypassing the gateway, the JWT and every application check — a
+# database speaks to whoever connects, not JWT. These policies are the network
+# equivalent of "deny by default, then allow": a pod not listed below can no
+# longer reach the datastore.
+#
+# These are the crown jewels: PII, private messages. The service-to-service
+# graph lives in services.yaml.
+#
+# k3s enforces NetworkPolicy via its embedded kube-router controller, so these
+# are applied, not decorative. Each `from` lists the ONLY pods allowed in, by
+# their `app` label. Jobs that touch a datastore (demo-reset, garage-setup,
+# backup, kafka-topics) are given a stable `app` label in their manifests so
+# they can be named here; without that, the nightly reset and backups break.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-users
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-postgres-users
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-users } }        # owns the users profiles
+        - podSelector: { matchLabels: { app: wely-demo-reset } }   # nightly reset
+      ports:
+        - { protocol: TCP, port: 5432 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-auth
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-postgres-auth
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-auth } }         # Keycloak's own database
+      ports:
+        - { protocol: TCP, port: 5432 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mongodb
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-mongodb
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-chat } }         # conversations / messages
+        - podSelector: { matchLabels: { app: wely-events } }       # events
+        - podSelector: { matchLabels: { app: wely-demo-reset } }   # nightly reset
+      ports:
+        - { protocol: TCP, port: 27017 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-neo4j
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-neo4j
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-social } }       # friendship graph
+        - podSelector: { matchLabels: { app: wely-demo-reset } }   # nightly reset
+      ports:
+        - { protocol: TCP, port: 7687 }                            # Bolt
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-redis
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-redis
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }      # per-caller quota / circuit breaker
+      ports:
+        - { protocol: TCP, port: 6379 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kafka
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-kafka
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-users } }        # produces USER_CREATED
+        - podSelector: { matchLabels: { app: wely-social } }       # consumes USER_CREATED
+        - podSelector: { matchLabels: { app: wely-chat } }         # message broadcast
+        - podSelector: { matchLabels: { app: wely-events } }       # event topics
+        - podSelector: { matchLabels: { app: wely-kafka-topics } } # one-shot topic creation
+        - podSelector: { matchLabels: { app: wely-kafka-ui } }     # monitoring UI
+      ports:
+        - { protocol: TCP, port: 9092 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-garage
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-garage
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-media } }        # owns picture bytes
+        - podSelector: { matchLabels: { app: wely-users } }        # avatars
+        - podSelector: { matchLabels: { app: wely-chat } }         # chat media
+        - podSelector: { matchLabels: { app: wely-events } }       # event media
+        - podSelector: { matchLabels: { app: wely-demo-reset } }   # nightly reset of demo media
+        - podSelector: { matchLabels: { app: wely-garage-setup } } # buckets + keys bootstrap
+        - podSelector: { matchLabels: { app: wely-garage-backup } }# backup / restore
+      ports:
+        - { protocol: TCP, port: 3900 }                            # S3 API
+        - { protocol: TCP, port: 3903 }                            # admin API (setup)
