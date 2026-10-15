@@ -1,0 +1,15 @@
+# notifications: reached only through the gateway.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-notifications
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-notifications
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-gateway } }
+      ports:
+        - { protocol: TCP, port: 8087 }

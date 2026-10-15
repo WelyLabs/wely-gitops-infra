@@ -14,6 +14,7 @@ spec:
         - podSelector: { matchLabels: { app: wely-social } }       # consumes USER_CREATED
         - podSelector: { matchLabels: { app: wely-chat } }         # message broadcast
         - podSelector: { matchLabels: { app: wely-events } }       # event topics
+        - podSelector: { matchLabels: { app: wely-notifications } } # reads every notifying topic
         - podSelector: { matchLabels: { app: wely-kafka-topics } } # one-shot topic creation
         - podSelector: { matchLabels: { app: wely-kafka-ui } }     # monitoring UI
       ports:

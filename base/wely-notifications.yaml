@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-notifications
+  labels:
+    app: wely
+    component: notifications
+spec:
+  # One replica: live notifications go through an in-memory sink, correct on a single pod.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-notifications
+  template:
+    metadata:
+      labels:
+        app: wely-notifications
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+      - name: wely-registry
+      containers:
+      - name: notifications-api
+        image: ghcr.io/welylabs/wely-notifications:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8087
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        # A small heap: the Pi is short on memory, and this service mostly waits on Kafka.
+        - name: JAVA_OPTS
+          value: "-XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError"
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: mongo-root-username
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dev-wely-secrets-dev
+              key: mongo-root-password
+        - name: MONGODB_URI
+          value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@wely-mongodb-service:27017/notifications_db?authSource=admin"
+        - name: KEYCLOAK_ISSUER_URI
+          value: "https://auth.welylabs.app/realms/wely-realm"
+        - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+          value: "http://wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+        # Reads calls, messages, event dates and friendships from the broker.
+        - name: KAFKA_BOOTSTRAP_SERVER
+          value: "wely-kafka-service:9092"
+        # Web Push keys. Optional: without them notifications are still stored and streamed.
+        - name: VAPID_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-notifications, key: vapid-public-key, optional: true }
+        - name: VAPID_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-notifications, key: vapid-private-key, optional: true }
+        - name: VAPID_SUBJECT
+          valueFrom:
+            secretKeyRef: { name: dev-wely-notifications, key: vapid-subject, optional: true }
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        startupProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8087
+          periodSeconds: 5
+          failureThreshold: 36
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8087
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8087
+          periodSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 50m
+            memory: 256Mi
+          limits:
+            cpu: "1"
+            memory: 384Mi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-notifications-service
+spec:
+  selector:
+    app: wely-notifications
+  ports:
+    - protocol: TCP
+      port: 8087
+      targetPort: 8087
+  type: ClusterIP

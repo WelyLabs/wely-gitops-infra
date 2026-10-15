@@ -9,4 +9,5 @@ resources:
   - chat.yaml
   - events.yaml
   - media.yaml
+  - notifications.yaml
   - auth.yaml

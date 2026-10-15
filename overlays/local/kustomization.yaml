@@ -367,7 +367,7 @@ patches:
             - name: KAFKA_BOOTSTRAP
               value: "local-wely-kafka-service:9092"
             - name: KAFKA_TOPICS
-              value: "USER_CREATED USER_DELETED USER_MODIFIED EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED"
+              value: "USER_CREATED USER_DELETED USER_MODIFIED EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED CALL_EVENTS MESSAGE_BROADCAST"
   target:
     kind: Job
     name: wely-kafka-topics
@@ -421,6 +421,38 @@ patches:
     kind: Deployment
     name: wely-media
 
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-notifications
+    spec:
+      template:
+        spec:
+          containers:
+          - name: notifications-api
+            env:
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: mongo-root-username
+                  name: dev-wely-secrets-dev
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: mongo-root-password
+                  name: dev-wely-secrets-dev
+            - name: MONGODB_URI
+              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/notifications_db?authSource=admin"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "http://localhost:8080/realms/wely-realm"
+            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+            - name: KAFKA_BOOTSTRAP_SERVER
+              value: "local-wely-kafka-service:9092"
+  target:
+    kind: Deployment
+    name: wely-notifications
 patchesJson6902:
 - target:
     group: ""
@@ -449,6 +481,9 @@ images:
   # than that commit has nothing under /opt/keycloak/data/import and --import-realm is a
   # no-op.
   newTag: sha-af5dbbb03b047f882bfd2f60da1d8abdd0ea1d56
+- name: ghcr.io/welylabs/wely-notifications
+  newName: ghcr.io/welylabs/wely-notifications
+  newTag: sha-a22a8b03be2ffc14fb6dca6071a5a023bb0e054b
 - name: ghcr.io/welylabs/wely-media
   newName: ghcr.io/welylabs/wely-media
   newTag: sha-5588c149dd5eed1805fd64d63ef9fb8feccfdc50

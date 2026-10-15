@@ -363,6 +363,44 @@ patches:
   target:
     kind: Deployment
     name: wely-media
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-notifications
+    spec:
+      template:
+        spec:
+          containers:
+          - name: notifications-api
+            env:
+            # Repeated before MONGODB_URI, which expands them: a patch moves the entries it names first.
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: mongo-root-username
+                  name: dev-wely-secrets-dev
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: mongo-root-password
+                  name: dev-wely-secrets-dev
+            - name: MONGODB_URI
+              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/notifications_db?authSource=admin"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "https://dev-auth.welylabs.app/realms/wely-realm"
+            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+            - name: KAFKA_BOOTSTRAP_SERVER
+              value: "dev-wely-kafka-service:9092"
+            # The chat's own dev topics.
+            - name: CALL_EVENTS_TOPIC
+              value: "DEV_CALL_EVENTS"
+            - name: MESSAGE_BROADCAST_TOPIC
+              value: "DEV_MESSAGE_BROADCAST"
+  target:
+    kind: Deployment
+    name: wely-notifications
 images:
 - name: ghcr.io/welylabs/wely-chat
   newName: ghcr.io/welylabs/wely-chat
@@ -376,6 +414,9 @@ images:
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
   newTag: sha-af5dbbb03b047f882bfd2f60da1d8abdd0ea1d56
+- name: ghcr.io/welylabs/wely-notifications
+  newName: ghcr.io/welylabs/wely-notifications
+  newTag: sha-a22a8b03be2ffc14fb6dca6071a5a023bb0e054b
 - name: ghcr.io/welylabs/wely-media
   newName: ghcr.io/welylabs/wely-media
   newTag: sha-5588c149dd5eed1805fd64d63ef9fb8feccfdc50

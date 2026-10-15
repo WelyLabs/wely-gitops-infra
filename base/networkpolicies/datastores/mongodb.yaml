@@ -12,6 +12,7 @@ spec:
     - from:
         - podSelector: { matchLabels: { app: wely-chat } }         # conversations / messages
         - podSelector: { matchLabels: { app: wely-events } }       # events
+        - podSelector: { matchLabels: { app: wely-notifications } } # notifications, devices, preferences
         - podSelector: { matchLabels: { app: wely-demo-reset } }   # nightly reset
       ports:
         - { protocol: TCP, port: 27017 }

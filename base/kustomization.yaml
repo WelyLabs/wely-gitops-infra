@@ -11,6 +11,7 @@ resources:
   - wely-social.yaml
   - wely-chat.yaml
   - wely-media.yaml
+  - wely-notifications.yaml
   - wely-mongodb.yaml
   - wely-neo4j.yaml
   - wely-postgres-auth.yaml
