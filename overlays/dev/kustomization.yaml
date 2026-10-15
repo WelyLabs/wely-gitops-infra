@@ -10,6 +10,8 @@ resources:
 - wely-sealed-garage-dev.yaml
 # Cloudflare Realtime keys for calls (SFU and TURN), read by wely-chat only.
 - wely-sealed-calls-dev.yaml
+# VAPID keys of wely-notifications (Web Push).
+- wely-sealed-notifications-dev.yaml
 - demo/demo-reset.yaml
 - realm/realm-settings-job.yaml
 
