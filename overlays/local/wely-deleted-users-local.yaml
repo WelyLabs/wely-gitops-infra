@@ -1,0 +1,9 @@
+# Reader secret of wely-users' deleted-users list, local cluster only, in plaintext like
+# wely-garage-local.yaml. namePrefix makes it local-dev-wely-deleted-users and rewrites the references.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dev-wely-deleted-users
+type: Opaque
+stringData:
+  deleted-users-reader-secret: "3b429d78ca825ac7348e8e985f742c038d9b9ffdadeec543141e3ec59f2923a6"

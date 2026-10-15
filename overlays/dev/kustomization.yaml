@@ -26,6 +26,16 @@ configMapGenerator:
 - files:
   - realm/realm-settings.json
   name: wely-realm-settings
+# Demo accounts (public credentials): never deleted (wely-users), never erased (wely-events), never
+# promoted to community admin on any leave (wely-social) nor handed a deleted organizer's events
+# (wely-events). Same ids as DEMO_USER_IDS in demo/demo-reset.yaml; keep both lists in step.
+- literals:
+  - "protected-user-ids=89a380b8-f66a-44d0-b9d9-616241080430,a0cac685-c593-415d-bd73-6530e25a1f53,\
+    9de75282-095c-41a9-ab17-2d58b02445da,50c7b996-ebf8-40e1-a0a5-5dc634f9b793,\
+    0fa728fe-fd0e-4997-b226-fd049c6b0659,15d05360-522a-4ff1-93a9-07d63346e4c1,\
+    4d6501b7-caed-4a98-b960-199db1bd4106,66e332e6-8d98-49c6-ac22-27095c35cf9d,\
+    f4be7974-0ed3-457e-80d3-8aa08e0c5197,cdc6f71d-065c-4af5-9775-692411fc9504"
+  name: wely-account-deletion
 
 namespace: wely-dev
 
@@ -104,6 +114,11 @@ patches:
       name: wely-users
     spec:
       template:
+        metadata:
+          annotations:
+            # Environment from a Secret is read at start: bump with each seal or rotation of
+            # dev-wely-deleted-users to restart the pod (README, "Account deletion").
+            wely.dev/deleted-users-key: "0"
         spec:
           containers:
           - name: users-api
@@ -126,6 +141,13 @@ patches:
               value: "http://dev-wely-auth-service:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
+            # DELETE /profile answers 403 USR-BUS-011 for these accounts.
+            - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
+              valueFrom:
+                configMapKeyRef: { name: wely-account-deletion, key: protected-user-ids }
+            # Off by default in wely-users, so an image deployed before this list stays closed.
+            - name: ACCOUNT_DELETION_ENABLED
+              value: "true"
   target:
     kind: Deployment
     name: wely-users
@@ -148,6 +170,10 @@ patches:
               value: "https://dev-auth.welylabs.app/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+            # Demo accounts never count as or become community admins, on any leave.
+            - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
+              valueFrom:
+                configMapKeyRef: { name: wely-account-deletion, key: protected-user-ids }
   target:
     kind: Deployment
     name: wely-social
@@ -239,6 +265,10 @@ patches:
             # Publishes EVENT_GROUP_CHANGED to the in-cluster broker, like wely-users.
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
+            # Demo accounts are never erased nor handed an event by the USER_DELETED consumer.
+            - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
+              valueFrom:
+                configMapKeyRef: { name: wely-account-deletion, key: protected-user-ids }
   target:
     kind: Deployment
     name: wely-events

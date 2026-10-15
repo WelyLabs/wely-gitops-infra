@@ -5,6 +5,7 @@ resources:
 - ../../base
 - wely-secrets-local.yaml
 - wely-garage-local.yaml
+- wely-deleted-users-local.yaml
 - namespace.yaml
 - wely-users-alias.yaml
 
@@ -167,6 +168,9 @@ patches:
               value: "http://local-wely-auth-service:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
+            # Account deletion is off by default in wely-users; local has no demo account to protect.
+            - name: ACCOUNT_DELETION_ENABLED
+              value: "true"
   target:
     kind: Deployment
     name: wely-users

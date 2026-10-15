@@ -81,6 +81,10 @@ spec:
             secretKeyRef:
               name: dev-wely-secrets-dev
               key: internal-secret
+        # Guards GET /user-service/internal/deleted-users; distinct from INTERNAL_SECRET. Unset, the endpoint refuses.
+        - name: DELETED_USERS_READER_SECRET
+          valueFrom:
+            secretKeyRef: { name: dev-wely-deleted-users, key: deleted-users-reader-secret, optional: true }
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
