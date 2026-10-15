@@ -5,3 +5,4 @@ wely-secrets*.yaml
 !base/wely-secrets.example.yaml
 !overlays/local/wely-secrets-local.yaml
 *.patch
+.DS_Store
