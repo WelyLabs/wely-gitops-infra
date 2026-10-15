@@ -61,10 +61,11 @@ spec:
               set -e
               # Retry the first call: a freshly created Job pod may reach the admin API before
               # kube-router has programmed it into Garage's NetworkPolicy ingress set, which it
-              # then rejects (code 000). Also covers Garage still starting.
+              # then rejects (code 000). Also covers Garage still starting. "|| true": curl exits
+              # non-zero on a refused connection, and set -e would end the script before a retry.
               for i in $(seq 1 30); do
                 code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST \
-                  -H "Authorization: Bearer $GARAGE_ADMIN_TOKEN" "http://$GARAGE_ADMIN/v2/CreateMetadataSnapshot?node=*")
+                  -H "Authorization: Bearer $GARAGE_ADMIN_TOKEN" "http://$GARAGE_ADMIN/v2/CreateMetadataSnapshot?node=*") || true
                 [ "$code" = 200 ] && break
                 echo "snapshot attempt $i failed ($code), retrying in 5s"; sleep 5
               done
