@@ -118,6 +118,7 @@ spec:
                   done
                   echo "chat-photos listing failed after retries"; exit 1
               env:
+                # Also protected from account deletion: wely-account-deletion in ../kustomization.yaml.
                 - name: DEMO_USER_IDS
                   value: >-
                     89a380b8-f66a-44d0-b9d9-616241080430 a0cac685-c593-415d-bd73-6530e25a1f53
@@ -162,6 +163,7 @@ spec:
                   echo "avatars purge failed after retries"; exit 1
               env:
                 # The demo users' ids, as in seed-mongo.js.
+                # Also protected from account deletion: wely-account-deletion in ../kustomization.yaml.
                 - name: DEMO_USER_IDS
                   value: >-
                     89a380b8-f66a-44d0-b9d9-616241080430 a0cac685-c593-415d-bd73-6530e25a1f53

@@ -115,6 +115,46 @@ Restaurer : passer le StatefulSet `dev-wely-garage` à 0 réplica, recopier `<jo
 
 > **Même disque.** Ce volume protège d'une suppression malheureuse, d'un bug ou d'une base corrompue, pas de la perte du disque du Pi. Une copie hors du Pi de `wely-garage-backup` reste à décider (machine de la maison via Tailscale, ou stockage externe).
 
+> **Restore after account deletions.** Restoring day J brings back the media that account deletions removed after J, which nothing references any more:
+>
+> - avatars: in `dev-wely-postgres-users`, run `UPDATE account_deletion SET media_deleted_at = NULL, next_attempt_at = now() WHERE requested_at > now() - interval '8 days';` and wely-users' `AccountDeletionWorker` purges `avatars/<businessId>/` again for those accounts;
+> - event media in `wely-event-media`: the receipts wely-events dropped from the deleted users' expenses, and the cover and receipts of the events the erasure deleted. Their keys are already gone from `events_db`, so nothing deletes them again. List `events/` (rclone, as in `demo/demo-reset.yaml`) and delete every object last modified before the restore that no `events.image` and no `expenses.receiptKey` references. No tool does this sweep yet: until one exists, skipping it leaves a copy of the deleted users' receipts in Garage.
+
+## Account deletion
+
+wely-users deletes the account (tombstone, Keycloak user, avatars); wely-social, wely-chat, wely-events and wely-notifications erase their copies when they consume `USER_DELETED`. This repository provides:
+
+| Setting | Where | Effect |
+|---|---|---|
+| `ACCOUNT_DELETION_ENABLED` | wely-users: `"true"` in the dev and local patches | Turns account deletion on. wely-users defaults to off: `DELETE /profile` and `GET /profile/deletion` both answer 403 `USR-BUS-014`. prod leaves it off. |
+| `ACCOUNT_DELETION_PROTECTED_USER_IDS` | dev: ConfigMap `wely-account-deletion`, generated in `overlays/dev/kustomization.yaml`, read by wely-users, wely-social and wely-events | The ten demo accounts of `demo/demo-reset.yaml`. wely-users refuses their deletion (403 `USR-BUS-011`). wely-events never erases them nor hands them a deleted organizer's events. wely-social never counts them as or promotes them to community admin, on any leave: an admin who leaves a community where only demo accounts remain gets `COMMUNITY_LAST_MEMBER`, or deletes it with `deleteIfLast`. Unset in local and prod. |
+| `DELETED_USERS_READER_SECRET` | wely-users, from the optional Secret `dev-wely-deleted-users` | Guards `GET /user-service/internal/deleted-users`, the list the consumers' reconciliation will page through. Unset, wely-users refuses every call. local: `overlays/local/wely-deleted-users-local.yaml` in plaintext. dev: not sealed yet. |
+
+The demo accounts must stay protected: their credentials are public, the nightly reset neither recreates their Keycloak user nor survives a tombstone (`account_deletion` references the row), and the consumers keep a permanent deleted-user marker. A deleted demo account would be gone for good. Keep the ConfigMap and `DEMO_USER_IDS` in step; a change to the ConfigMap restarts its three readers.
+
+**Rollout order.** The protected list must be live before a wely-users image that serves `DELETE /profile` reaches dev, because a push to wely-users' `dev` branch commits its image tag straight to `main` here:
+
+1. Merge this change to `main` and let ArgoCD sync it.
+2. Check the `dev-wely-users` pod in ArgoCD: its environment has `ACCOUNT_DELETION_PROTECTED_USER_IDS` and `ACCOUNT_DELETION_ENABLED`, and its log reads `Account deletion: 10 protected account(s), enabled`.
+3. Only then merge wely-users, then wely-web, into `dev`.
+
+`ACCOUNT_DELETION_ENABLED` makes the order a safeguard rather than a requirement: a wely-users image that arrives first keeps deletion off instead of unguarded.
+
+`realm/realm-settings-job.yaml` also checks, at every sync, that wely-client's access tokens carry `auth_time` (the `basic` default scope and its `AUTH_TIME` note mapper, no lightweight tokens). Without it, `DELETE /profile` always answers 403 `USR-BUS-010`; the Job then fails and ArgoCD shows it.
+
+No NetworkPolicy changes: the new calls go from wely-users to Keycloak's Admin API (user logout and delete, `allow-auth`, port 8080) and to wely-media's prefix purge (`allow-media`, port 8085), which already admit wely-users on ports where container and Service agree. `USER_DELETED` already exists in every overlay, and `allow-kafka` already admits its four consumers.
+
+To seal the reader secret for dev, run the command below, add `wely-sealed-deleted-users-dev.yaml` to the dev `resources` (namePrefix makes it `dev-wely-deleted-users`), and in the same commit bump the `wely.dev/deleted-users-key` annotation of the dev wely-users patch (`"0"` to `"1"`):
+
+```bash
+kubectl create secret generic wely-deleted-users -n wely-dev \
+  --from-literal=deleted-users-reader-secret="$(openssl rand -hex 32)" \
+  --dry-run=client -o yaml \
+  | kubeseal --scope cluster-wide --format yaml > overlays/dev/wely-sealed-deleted-users-dev.yaml
+```
+
+The Secret reference is optional and resolved when the container starts. A Secret that appears later leaves the pod template unchanged, so neither Kubernetes nor ArgoCD restarts the pod, and without the bump wely-users keeps refusing the listing (401) until some unrelated rollout. Bump the annotation again on every rotation, and give each service that reads the list the same annotation once it does.
+
 ## Environnement local
 
 Toute la plateforme démarre en une commande sur un Kubernetes local.

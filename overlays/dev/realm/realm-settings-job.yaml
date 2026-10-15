@@ -23,6 +23,9 @@
 #     and makes the copy the realm's registration flow. Each part is done once and
 #     left alone; the step is retried while the Keycloak pod that has the provider starts.
 #
+#   - auth_time in wely-client's access tokens, which DELETE /user-service/profile requires: only
+#     checked, last, so a failure never skips the steps above.
+#
 # realm-settings.json DUPLICATES those keys from wely-identity/wely-realm.json and must follow
 # them. kcadm merges it into the live realm, so every other setting is left alone.
 #
@@ -98,6 +101,29 @@ spec:
               $K update realms/wely-realm --config $C -s "registrationFlow=$FLOW"
               $K get realms/wely-realm --config $C --fields registrationFlow
               $K get $F -r wely-realm --config $C --fields displayName,providerId,requirement
+
+              # auth_time comes from the AUTH_TIME note mapper of the 'basic' scope, a default scope
+              # of wely-client, and lightweight access tokens would drop it.
+              CID=$($K get clients -r wely-realm --config $C -q clientId=wely-client --fields id --format csv --noquotes)
+              SID=$($K get client-scopes -r wely-realm --config $C --fields id,name --format csv --noquotes \
+                | grep ',basic$' | cut -d, -f1)
+              auth_time() {
+                $K get clients/$CID -r wely-realm --config $C --fields 'attributes(*)' \
+                  | grep -q '"client.use.lightweight.access.token.enabled" *: *"true"' && return 1
+                $K get clients/$CID/default-client-scopes -r wely-realm --config $C --fields name --format csv \
+                  --noquotes | grep -qx basic || return 1
+                for M in $($K get client-scopes/$SID/protocol-mappers/models -r wely-realm --config $C \
+                             --fields id,protocolMapper --format csv --noquotes \
+                             | grep ',oidc-usersessionmodel-note-mapper$' | cut -d, -f1); do
+                  J=$($K get client-scopes/$SID/protocol-mappers/models/$M -r wely-realm --config $C)
+                  echo "$J" | grep -q '"user.session.note" *: *"AUTH_TIME"' \
+                    && echo "$J" | grep -q '"access.token.claim" *: *"true"' \
+                    && echo "$J" | grep -q '"claim.name" *: *"auth_time"' && return 0
+                done
+                return 1
+              }
+              auth_time || { echo "wely-client access tokens lack auth_time: DELETE /profile would always answer USR-BUS-010"; exit 1; }
+              echo "wely-client access tokens carry auth_time"
           env:
             - name: KC_ADMIN_USER
               valueFrom:

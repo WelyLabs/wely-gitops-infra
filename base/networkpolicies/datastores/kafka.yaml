@@ -1,4 +1,4 @@
-# Kafka: USER_CREATED and the event topics. Producers, consumers, topic job, UI.
+# Kafka: the USER_* topics and the event topics. Producers, consumers, topic job, UI.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -10,11 +10,11 @@ spec:
   policyTypes: [Ingress]
   ingress:
     - from:
-        - podSelector: { matchLabels: { app: wely-users } }        # produces USER_CREATED
-        - podSelector: { matchLabels: { app: wely-social } }       # consumes USER_CREATED
-        - podSelector: { matchLabels: { app: wely-chat } }         # message broadcast
-        - podSelector: { matchLabels: { app: wely-events } }       # event topics
-        - podSelector: { matchLabels: { app: wely-notifications } } # reads every notifying topic
+        - podSelector: { matchLabels: { app: wely-users } }        # produces USER_*
+        - podSelector: { matchLabels: { app: wely-social } }       # consumes USER_*, produces FRIENDSHIP_CHANGED
+        - podSelector: { matchLabels: { app: wely-chat } }         # message and call fan-out, USER_DELETED
+        - podSelector: { matchLabels: { app: wely-events } }       # event topics, USER_DELETED
+        - podSelector: { matchLabels: { app: wely-notifications } } # every notifying topic, USER_DELETED
         - podSelector: { matchLabels: { app: wely-kafka-topics } } # one-shot topic creation
         - podSelector: { matchLabels: { app: wely-kafka-ui } }     # monitoring UI
       ports:
