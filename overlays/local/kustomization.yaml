@@ -122,6 +122,8 @@ patches:
               value: "ws://local-wely-chat-service:8084"
             - name: EVENTS_API_URL
               value: "http://local-wely-events-service:8086"
+            - name: NOTIFICATIONS_API_URL
+              value: "http://local-wely-notifications-service:8087"
             - name: CORS_ALLOWED_ORIGIN
               value: "http://localhost,http://localhost:80,http://localhost:4200"
             # namePrefix renames the Service but not a value that merely spells its name, so
