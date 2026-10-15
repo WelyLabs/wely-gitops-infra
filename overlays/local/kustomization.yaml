@@ -365,7 +365,7 @@ patches:
             - name: KAFKA_BOOTSTRAP
               value: "local-wely-kafka-service:9092"
             - name: KAFKA_TOPICS
-              value: "USER_CREATED USER_DELETED USER_MODIFIED EVENT_GROUP_CHANGED EVENT_DATE_FIXED"
+              value: "USER_CREATED USER_DELETED USER_MODIFIED EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED"
   target:
     kind: Job
     name: wely-kafka-topics
