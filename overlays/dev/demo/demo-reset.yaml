@@ -45,12 +45,21 @@ spec:
           initContainers:
             - name: users
               image: postgres:17
+              # Each step retries its first connection: a freshly created Job pod may send it
+              # before kube-router has programmed this pod into the NetworkPolicy ingress sets,
+              # which it then rejects (connection refused). The seed scripts are idempotent, so
+              # replaying the whole command is safe; psql/cypher/mongosh exit non-zero on a
+              # refused connection, which is exactly what we retry.
               command:
-                - psql
-                - --host=dev-wely-postgres-users-service
-                - --dbname=users
-                - --set=demo_keycloak_id=$(DEMO_KEYCLOAK_ID)
-                - --file=/scripts/seed-users.sql
+                - sh
+                - -c
+                - |
+                  for i in $(seq 1 20); do
+                    psql --host=dev-wely-postgres-users-service --dbname=users \
+                         --set=demo_keycloak_id="$DEMO_KEYCLOAK_ID" --file=/scripts/seed-users.sql && exit 0
+                    echo "users seed attempt $i failed, retrying in 5s"; sleep 5
+                  done
+                  echo "users seed failed after retries"; exit 1
               env:
                 # Id of the Keycloak user "camille" (login: demo@welylabs.app) in wely-realm.
                 - name: DEMO_KEYCLOAK_ID
@@ -70,7 +79,12 @@ spec:
               command:
                 - sh
                 - -c
-                - cypher-shell -a bolt://dev-wely-neo4j-service:7687 -u "$NEO4J_USERNAME" -p "$NEO4J_PASSWORD" -f /scripts/seed-social.cypher
+                - |
+                  for i in $(seq 1 20); do
+                    cypher-shell -a bolt://dev-wely-neo4j-service:7687 -u "$NEO4J_USERNAME" -p "$NEO4J_PASSWORD" -f /scripts/seed-social.cypher && exit 0
+                    echo "social seed attempt $i failed, retrying in 5s"; sleep 5
+                  done
+                  echo "social seed failed after retries"; exit 1
               env:
                 - name: NEO4J_USERNAME
                   valueFrom:
@@ -89,15 +103,20 @@ spec:
               command:
                 - sh
                 - -c
-                - >-
-                  mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin"
-                  -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD"
-                  --eval 'db.getSiblingDB("chat_db").conversations.find({ participantIds: { $in: process.env.DEMO_USER_IDS.trim().split(/\s+/) } }, { _id: 1 }).forEach(c => print(c._id.toString()))'
-                  > /work/conversations && echo "$(wc -l < /work/conversations) demo conversations"
-                  && mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin"
-                  -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD"
-                  --eval 'db.getSiblingDB("events_db").events.find({ organizerId: { $in: process.env.DEMO_USER_IDS.trim().split(/\s+/) } }, { _id: 1 }).forEach(e => print(e._id.toString()))'
-                  > /work/events && echo "$(wc -l < /work/events) demo events"
+                - |
+                  for i in $(seq 1 20); do
+                    mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin" \
+                      -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD" \
+                      --eval 'db.getSiblingDB("chat_db").conversations.find({ participantIds: { $in: process.env.DEMO_USER_IDS.trim().split(/\s+/) } }, { _id: 1 }).forEach(c => print(c._id.toString()))' \
+                      > /work/conversations && echo "$(wc -l < /work/conversations) demo conversations" \
+                    && mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin" \
+                      -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD" \
+                      --eval 'db.getSiblingDB("events_db").events.find({ organizerId: { $in: process.env.DEMO_USER_IDS.trim().split(/\s+/) } }, { _id: 1 }).forEach(e => print(e._id.toString()))' \
+                      > /work/events && echo "$(wc -l < /work/events) demo events" \
+                    && exit 0
+                    echo "chat-photos listing attempt $i failed, retrying in 5s"; sleep 5
+                  done
+                  echo "chat-photos listing failed after retries"; exit 1
               env:
                 - name: DEMO_USER_IDS
                   value: >-
@@ -126,14 +145,21 @@ spec:
                 - sh
                 - -c
                 - |
-                  set -e
-                  R=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-avatars/avatars"
-                  for id in $DEMO_USER_IDS; do rclone purge "$R/$id"; done
-                  C=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-chat-media/chat"
-                  while read -r conversation; do rclone purge "$C/$conversation"; done < /work/conversations
-                  E=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-event-media/events"
-                  while read -r event; do rclone purge "$E/$event"; done < /work/events
-                  echo "demo pictures, photos, covers and receipts removed"
+                  run() {
+                    set -e
+                    R=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-avatars/avatars"
+                    for id in $DEMO_USER_IDS; do rclone purge "$R/$id"; done
+                    C=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-chat-media/chat"
+                    while read -r conversation; do rclone purge "$C/$conversation"; done < /work/conversations
+                    E=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-event-media/events"
+                    while read -r event; do rclone purge "$E/$event"; done < /work/events
+                    echo "demo pictures, photos, covers and receipts removed"
+                  }
+                  for i in $(seq 1 20); do
+                    run && exit 0
+                    echo "avatars purge attempt $i failed, retrying in 5s"; sleep 5
+                  done
+                  echo "avatars purge failed after retries"; exit 1
               env:
                 # The demo users' ids, as in seed-mongo.js.
                 - name: DEMO_USER_IDS
@@ -159,7 +185,12 @@ spec:
               command:
                 - sh
                 - -c
-                - mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin" -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD" --file /scripts/seed-mongo.js
+                - |
+                  for i in $(seq 1 20); do
+                    mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin" -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD" --file /scripts/seed-mongo.js && exit 0
+                    echo "events/chat seed attempt $i failed, retrying in 5s"; sleep 5
+                  done
+                  echo "events/chat seed failed after retries"; exit 1
               env:
                 - name: MONGO_USERNAME
                   valueFrom:
