@@ -8,6 +8,8 @@ resources:
 # Garage's RPC secret, admin token and keys, sealed apart from the shared secret (see
 # base/wely-secrets.example.yaml, second document).
 - wely-sealed-garage-dev.yaml
+# Cloudflare Realtime keys for calls (SFU and TURN), read by wely-chat only.
+- wely-sealed-calls-dev.yaml
 - demo/demo-reset.yaml
 - realm/realm-settings-job.yaml
 
@@ -156,6 +158,10 @@ patches:
       name: wely-chat
     spec:
       template:
+        metadata:
+          annotations:
+            # Environment from a Secret is read at start: bumped to restart the pod on new keys.
+            wely.dev/calls-keys: "1"
         spec:
           containers:
           - name: chat
