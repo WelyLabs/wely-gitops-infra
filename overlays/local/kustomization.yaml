@@ -468,7 +468,7 @@ patchesJson6902:
 images:
 - name: ghcr.io/welylabs/wely-chat
   newName: ghcr.io/welylabs/wely-chat
-  newTag: sha-7c36b55be6cc962eb85bd8ac91538a00001604b8
+  newTag: sha-ff8652b19a1652ab7c55f215933d387249872cf5
 - name: ghcr.io/welylabs/wely-events
   newName: ghcr.io/welylabs/wely-events
   newTag: sha-9169483d18fc4e23bfe51ab564b9f7bd2630b111
