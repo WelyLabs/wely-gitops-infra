@@ -161,7 +161,7 @@ patches:
         metadata:
           annotations:
             # Environment from a Secret is read at start: bumped to restart the pod on new keys.
-            wely.dev/calls-keys: "1"
+            wely.dev/calls-keys: "2"
         spec:
           containers:
           - name: chat
