@@ -496,7 +496,7 @@ images:
   newTag: sha-1d4d7fe1005cfe10ac2e620df45e60e5e6c9c693
 - name: ghcr.io/welylabs/wely-users
   newName: ghcr.io/welylabs/wely-users
-  newTag: sha-c89ca4bbdf51e8e85d179968acac16145d4a35b2
+  newTag: sha-ff7d52b2728306ffc46c654b47be862700571c36
 - name: ghcr.io/welylabs/wely-web
   newName: ghcr.io/welylabs/wely-web
   newTag: sha-85ab75452bab760cc0b6edbc1d108f84b9b294e8
