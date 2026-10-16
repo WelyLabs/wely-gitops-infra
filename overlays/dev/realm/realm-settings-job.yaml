@@ -23,6 +23,9 @@
 #     and makes the copy the realm's registration flow. Each part is done once and
 #     left alone; the step is retried while the Keycloak pod that has the provider starts.
 #
+#   - wely://oauth-callback among wely-client's redirect URIs, for wely-ios's sign-up and sign-in
+#     pages: appended once, the live URIs are kept.
+#
 #   - auth_time in wely-client's access tokens, which DELETE /user-service/profile requires: only
 #     checked, last, so a failure never skips the steps above.
 #
@@ -102,9 +105,16 @@ spec:
               $K get realms/wely-realm --config $C --fields registrationFlow
               $K get $F -r wely-realm --config $C --fields displayName,providerId,requirement
 
+              CID=$($K get clients -r wely-realm --config $C -q clientId=wely-client --fields id --format csv --noquotes)
+              IOS_REDIRECT="wely://oauth-callback"
+              URIS=$($K get clients/$CID -r wely-realm --config $C --fields redirectUris | tr -d '\n ' \
+                | sed 's/.*\[\(.*\)\].*/\1/')
+              echo "$URIS" | grep -qF "\"$IOS_REDIRECT\"" \
+                || $K update clients/$CID -r wely-realm --config $C -s "redirectUris=[${URIS:+$URIS,}\"$IOS_REDIRECT\"]"
+              $K get clients/$CID -r wely-realm --config $C --fields redirectUris
+
               # auth_time comes from the AUTH_TIME note mapper of the 'basic' scope, a default scope
               # of wely-client, and lightweight access tokens would drop it.
-              CID=$($K get clients -r wely-realm --config $C -q clientId=wely-client --fields id --format csv --noquotes)
               SID=$($K get client-scopes -r wely-realm --config $C --fields id,name --format csv --noquotes \
                 | grep ',basic$' | cut -d, -f1)
               auth_time() {
