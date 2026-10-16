@@ -1,4 +1,5 @@
-# users: reached by the gateway, and by Keycloak's businessId mapper at login.
+# users: reached by the gateway, by Keycloak's businessId mapper at login, and by the four
+# services that page through its deleted-users list (reconciliation).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -12,5 +13,9 @@ spec:
     - from:
         - podSelector: { matchLabels: { app: wely-gateway } }      # /api/v1/user-service
         - podSelector: { matchLabels: { app: wely-auth } }         # businessId mapper, during token minting
+        - podSelector: { matchLabels: { app: wely-social } }       # deleted-users reconciliation
+        - podSelector: { matchLabels: { app: wely-chat } }         # deleted-users reconciliation
+        - podSelector: { matchLabels: { app: wely-events } }       # deleted-users reconciliation
+        - podSelector: { matchLabels: { app: wely-notifications } } # deleted-users reconciliation
       ports:
-        - { protocol: TCP, port: 8082 }
+        - { protocol: TCP, port: 8082 }   # container port (Service 8082 -> 8082): a policy filters the pod port

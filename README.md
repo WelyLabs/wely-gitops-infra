@@ -122,13 +122,14 @@ Restaurer : passer le StatefulSet `dev-wely-garage` à 0 réplica, recopier `<jo
 
 ## Account deletion
 
-wely-users deletes the account (tombstone, Keycloak user, avatars); wely-social, wely-chat, wely-events and wely-notifications erase their copies when they consume `USER_DELETED`. This repository provides:
+wely-users deletes the account (tombstone, Keycloak user, avatars); wely-social, wely-chat, wely-events and wely-notifications erase their copies when they consume `USER_DELETED`, and again in a daily reconciliation pass. This repository provides:
 
 | Setting | Where | Effect |
 |---|---|---|
 | `ACCOUNT_DELETION_ENABLED` | wely-users: `"true"` in the dev and local patches | Turns account deletion on. wely-users defaults to off: `DELETE /profile` and `GET /profile/deletion` both answer 403 `USR-BUS-014`. prod leaves it off. |
 | `ACCOUNT_DELETION_PROTECTED_USER_IDS` | dev: ConfigMap `wely-account-deletion`, generated in `overlays/dev/kustomization.yaml`, read by wely-users, wely-social and wely-events | The ten demo accounts of `demo/demo-reset.yaml`. wely-users refuses their deletion (403 `USR-BUS-011`). wely-events never erases them nor hands them a deleted organizer's events. wely-social never counts them as or promotes them to community admin, on any leave: an admin who leaves a community where only demo accounts remain gets `COMMUNITY_LAST_MEMBER`, or deletes it with `deleteIfLast`. Unset in local and prod. |
-| `DELETED_USERS_READER_SECRET` | wely-users, from the optional Secret `dev-wely-deleted-users` | Guards `GET /user-service/internal/deleted-users`, the list the consumers' reconciliation will page through. Unset, wely-users refuses every call. local: `overlays/local/wely-deleted-users-local.yaml` in plaintext. dev: not sealed yet. |
+| `DELETED_USERS_READER_SECRET` | wely-users and the four consumers, from the optional Secret `dev-wely-deleted-users` | wely-users checks it on `GET /user-service/internal/deleted-users`; the consumers send it when their reconciliation pages through that list. Unset, wely-users refuses every call (401) and a consumer's pass fails without calling it. local: `overlays/local/wely-deleted-users-local.yaml` in plaintext. dev: not sealed yet. |
+| `USERS_API_URL` | wely-social, wely-chat, wely-events and wely-notifications: `http://wely-users-service:8082` in the base, the `dev-` or `local-` Service name in each overlay's patch | Where the reconciliation reads the deleted-users list: straight on the wely-users Service, since the gateway answers 404 for `/api/v1/*/internal/**`. |
 
 The demo accounts must stay protected: their credentials are public, the nightly reset neither recreates their Keycloak user nor survives a tombstone (`account_deletion` references the row), and the consumers keep a permanent deleted-user marker. A deleted demo account would be gone for good. Keep the ConfigMap and `DEMO_USER_IDS` in step; a change to the ConfigMap restarts its three readers.
 
@@ -142,9 +143,15 @@ The demo accounts must stay protected: their credentials are public, the nightly
 
 `realm/realm-settings-job.yaml` also adds `wely://oauth-callback` to wely-client's redirect URIs (wely-ios opens Keycloak's sign-up page and comes back on that scheme), keeping the URIs already set, and checks, at every sync, that wely-client's access tokens carry `auth_time` (the `basic` default scope and its `AUTH_TIME` note mapper, no lightweight tokens). Without it, `DELETE /profile` always answers 403 `USR-BUS-010`; the Job then fails and ArgoCD shows it.
 
-No NetworkPolicy changes: the new calls go from wely-users to Keycloak's Admin API (user logout and delete, `allow-auth`, port 8080) and to wely-media's prefix purge (`allow-media`, port 8085), which already admit wely-users on ports where container and Service agree. `USER_DELETED` already exists in every overlay, and `allow-kafka` already admits its four consumers.
+**Reconciliation.** Erasure does not rely on Kafka delivering every `USER_DELETED`. Each consumer runs a `DeletedUsersReconciliationLoop`: 1 minute after start, then every 24 h (1 h after a pass that failed), it pages through wely-users' tombstones and erases every account it has not erased yet, plus every account deleted in the last 48 h. `ACCOUNT_ERASURE_RECONCILIATION_ENABLED=false` turns the loop off in a service; this repository leaves it at its default, on. Until the dev secret is sealed, every pass fails without calling wely-users and is retried an hour later.
 
-To seal the reader secret for dev, run the command below, add `wely-sealed-deleted-users-dev.yaml` to the dev `resources` (namePrefix makes it `dev-wely-deleted-users`), and in the same commit bump the `wely.dev/deleted-users-key` annotation of the dev wely-users patch (`"0"` to `"1"`):
+NetworkPolicy: `allow-users` admits the four consumers on port 8082. A policy filters the pod (container) port, and for wely-users the Service maps 8082 to the same 8082. The other calls already had their rules: wely-users to Keycloak's Admin API (user logout and delete, `allow-auth`, port 8080) and to wely-media's prefix purge (`allow-media`, port 8085), on ports where container and Service agree. `allow-kafka` already admits the four `USER_DELETED` consumers. No egress policy exists, so nothing restricts the callers' side.
+
+To seal the reader secret for dev, use two commits:
+
+1. Run the command below, add `wely-sealed-deleted-users-dev.yaml` to the dev `resources` (namePrefix makes it `dev-wely-deleted-users`), commit, and let ArgoCD sync.
+2. Check, read-only, that the controller has unsealed it: `kubectl get secret dev-wely-deleted-users -n wely-dev` lists it with `DATA 1`.
+3. In a second commit, bump `wely.dev/deleted-users-key` in `overlays/dev/kustomization.yaml` (`"0"` to `"1"`). That value sits in one patch applied to wely-users, wely-social, wely-chat, wely-events and wely-notifications, so the single bump restarts all five readers.
 
 ```bash
 kubectl create secret generic wely-deleted-users -n wely-dev \
@@ -153,7 +160,43 @@ kubectl create secret generic wely-deleted-users -n wely-dev \
   | kubeseal --scope cluster-wide --format yaml > overlays/dev/wely-sealed-deleted-users-dev.yaml
 ```
 
-The Secret reference is optional and resolved when the container starts. A Secret that appears later leaves the pod template unchanged, so neither Kubernetes nor ArgoCD restarts the pod, and without the bump wely-users keeps refusing the listing (401) until some unrelated rollout. Bump the annotation again on every rotation, and give each service that reads the list the same annotation once it does.
+The Secret reference is optional and read once, when the container starts. A Secret that appears later leaves the pod templates unchanged, so neither Kubernetes nor ArgoCD restarts the pods: without the bump, wely-users keeps refusing the listing (401) and the consumers' passes keep failing until some unrelated rollout.
+
+The bump needs its own commit. In the commit that adds the SealedSecret, ArgoCD applies it after the Deployments (custom resources come last in a wave), and the controller unseals it a few seconds later. The restarted pods can start before the Secret exists and keep an empty value until their next restart. `wely.dev/calls-keys` hit exactly this (commit `794a733`). Nothing in ArgoCD shows it: the pods are healthy, wely-users answers 401, and each consumer's pass fails and is retried an hour later.
+
+A rotation takes the same two commits. Note the Secret's `resourceVersion` (`kubectl get secret dev-wely-deleted-users -n wely-dev -o jsonpath='{.metadata.resourceVersion}'`), re-run the command and commit, wait until the `resourceVersion` changes, then bump the annotation again. Until the bump, all five readers keep the old value and still agree; during the restart, a reader still on the old value gets 401 and its pass is retried an hour later.
+
+## Kafka retention
+
+`base/wely-kafka-topics.yaml` creates the topics and sets their retention. Each `KAFKA_TOPICS` entry is `NAME` or `NAME:policy`, and each overlay lists its own topic names. The Job passes a policy's settings on create (`--config`) and re-applies them at every run with `kafka-configs.sh --alter --add-config`, because `--create --if-not-exists` leaves an existing topic untouched. It is an Argo CD PostSync hook, so every dev sync re-applies the values. An unknown policy, a failed create or a failed alter exits non-zero, and Argo CD shows the failed hook.
+
+| Policy | Topics | `retention.ms` | `segment.ms` | Longest a record stays |
+|---|---|---|---|---|
+| `live` | `MESSAGE_BROADCAST`, `CALL_EVENTS` (local), `DEV_MESSAGE_BROADCAST`, `DEV_CALL_EVENTS` (dev) | 3600000 (1 h) | 900000 (15 min) | about 1 h 20 |
+| `personal` | `USER_CREATED`, `USER_MODIFIED`, `FRIENDSHIP_CHANGED` | 259200000 (3 d) | 86400000 (1 d) | about 4 d |
+| `erasure` | `USER_DELETED` | 604800000 (7 d) | 86400000 (1 d) | about 8 d |
+| none | `EVENT_GROUP_CHANGED`, `EVENT_DATE_FIXED` | broker default (7 d) | broker default (7 d) | about 14 d |
+
+Kafka only deletes closed segments, so a record can outlive `retention.ms` by up to `segment.ms`, plus the broker's 5-minute retention check. prod gets the same policies on the topics it creates, which are the base's (no broadcast topic).
+
+**Why this is safe for account deletion.** Erasure never depends on Kafka retention. `USER_DELETED` only makes it fast: the consumers' daily reconciliation pages through wely-users' tombstones, which are permanent, so a consumer that misses a record (down longer than the retention, or a new consumer group) still erases the account at its next pass.
+
+**What the shorter windows cost.**
+
+- `live`: wely-chat reads these topics from the latest offset with one group per pod, so it never needs a backlog. wely-notifications keeps one group: down for more than about 1 h, it loses the message and call notifications of the outage. The messages themselves stay in wely-chat.
+- `personal`: a wely-social stopped for more than about 3 d loses the creations and renames published meanwhile, and nothing reconciles them (only deletions are). A wely-notifications stopped as long loses friend-request notifications.
+- The first sync applies the new values at once: segments older than their policy are deleted within minutes, which cannot be undone.
+
+**Post-sync check (read-only).** The Job ends with `kafka-configs.sh --describe`, so its log lists the dynamic configs of every topic. Each tagged topic shows its policy's `retention.ms` and `segment.ms`; `EVENT_GROUP_CHANGED` and `EVENT_DATE_FIXED` show none.
+
+```bash
+kubectl logs -n wely-dev job/dev-wely-kafka-topics --tail=40
+# or on demand, inside the broker pod (reads the configs, changes nothing):
+kubectl exec -n wely-dev dev-wely-kafka-0 -- /opt/kafka/bin/kafka-configs.sh \
+  --bootstrap-server localhost:9092 --describe --entity-type topics
+```
+
+To change a value, edit `policy()` in `base/wely-kafka-topics.yaml`. A commit that changes only this Job leaves the dev application Synced, because Argo CD keeps hooks out of the sync status, so no automatic sync runs it: start a sync from Argo CD. Removing a tag does not reset a topic: that takes `kafka-configs.sh --alter --entity-type topics --entity-name <topic> --delete-config retention.ms,segment.ms`. On the local cluster the Job is immutable: see [`README-LOCAL.md`](README-LOCAL.md).
 
 ## Environnement local
 

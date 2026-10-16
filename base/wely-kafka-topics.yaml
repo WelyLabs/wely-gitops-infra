@@ -1,9 +1,11 @@
-# Creates the Kafka topics the services use. The binders run with auto-create-topics=false,
-# so a topic that is not listed here does not exist. Idempotent (--if-not-exists): it runs at
-# every Argo CD sync, and plain kubectl apply (local) runs it once.
+# Creates the Kafka topics the services use and applies their retention. The binders run with
+# auto-create-topics=false, so a topic that is not listed here does not exist. Idempotent: it runs
+# at every Argo CD sync, and plain kubectl apply (local) runs it once.
 #
-# Overlays set KAFKA_BOOTSTRAP to the prefixed Service name, and add their environment's
-# topics to KAFKA_TOPICS (dev: DEV_MESSAGE_BROADCAST and DEV_CALL_EVENTS for the chat).
+# KAFKA_TOPICS lists NAME or NAME:policy. A policy sets retention.ms and segment.ms (policy() below)
+# on create and again at every run; a topic without one keeps the broker defaults (README, "Kafka retention").
+# Overlays set KAFKA_BOOTSTRAP to the prefixed Service name, and rewrite KAFKA_TOPICS with their
+# environment's topics (dev: DEV_MESSAGE_BROADCAST and DEV_CALL_EVENTS for the chat).
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -28,20 +30,46 @@ spec:
         - |
           set -e
           T=/opt/kafka/bin/kafka-topics.sh
+          C=/opt/kafka/bin/kafka-configs.sh
+          # Kafka deletes whole closed segments: a record lives at most about segment.ms + retention.ms.
+          policy() {
+            case "$1" in
+              live)     echo "retention.ms=3600000,segment.ms=900000" ;;     # 1 h, rolled every 15 min
+              personal) echo "retention.ms=259200000,segment.ms=86400000" ;; # 3 d, rolled daily
+              erasure)  echo "retention.ms=604800000,segment.ms=86400000" ;; # 7 d, rolled daily
+              *) echo "unknown retention policy: $1" >&2; return 1 ;;
+            esac
+          }
+          # Fails before touching the broker if an entry names an unknown policy.
+          for entry in $KAFKA_TOPICS; do
+            case "$entry" in *:*) policy "${entry#*:}" > /dev/null ;; esac
+          done
           for i in $(seq 1 30); do
             $T --bootstrap-server "$KAFKA_BOOTSTRAP" --list > /dev/null 2>&1 && break
             sleep 10
           done
-          for topic in $KAFKA_TOPICS; do
+          for entry in $KAFKA_TOPICS; do
+            topic="${entry%%:*}"
+            configs=""
+            case "$entry" in *:*) configs=$(policy "${entry#*:}") ;; esac
+            create_configs=""
+            for kv in $(echo "$configs" | tr ',' ' '); do create_configs="$create_configs --config $kv"; done
+            # create_configs is unquoted on purpose: one word per --config and value.
             $T --bootstrap-server "$KAFKA_BOOTSTRAP" --create --if-not-exists \
-               --topic "$topic" --partitions 1 --replication-factor 1
+               --topic "$topic" --partitions 1 --replication-factor 1 $create_configs
+            # --if-not-exists leaves an existing topic untouched: its policy is re-applied here.
+            if [ -n "$configs" ]; then
+              $C --bootstrap-server "$KAFKA_BOOTSTRAP" --alter --entity-type topics \
+                 --entity-name "$topic" --add-config "$configs"
+            fi
           done
           $T --bootstrap-server "$KAFKA_BOOTSTRAP" --list
+          $C --bootstrap-server "$KAFKA_BOOTSTRAP" --describe --entity-type topics
         env:
         - name: KAFKA_BOOTSTRAP
           value: "wely-kafka-service:9092"
         - name: KAFKA_TOPICS
-          value: "USER_CREATED USER_DELETED USER_MODIFIED EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED"
+          value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal"
         resources:
           requests: { cpu: 50m, memory: 128Mi }
           limits: { memory: 384Mi }

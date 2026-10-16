@@ -26,6 +26,13 @@ kubectl apply -k overlays/local --server-side
 > - Déploiement de Keycloak (`wely-auth`), de la Gateway (`wely-gateway`), du Frontend (`wely-web`) et des microservices (`users`, `social`, `chat`, `events`).
 > - Exposition automatique des ports sur `localhost`.
 
+> **Topics Job after a change.** A Job's pod template is immutable, so once the topics Job changes (`base/wely-kafka-topics.yaml`, or the `KAFKA_TOPICS` patch in `overlays/local/kustomization.yaml`), the apply fails on `local-wely-kafka-topics`. Delete the Job, then apply again: it recreates the topics it lacks and re-applies every policy.
+>
+> ```bash
+> kubectl delete job local-wely-kafka-topics -n wely-local
+> kubectl apply -k overlays/local --server-side
+> ```
+
 ---
 
 ### Accès aux Services en Local 🌐

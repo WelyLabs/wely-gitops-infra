@@ -66,6 +66,12 @@ spec:
         - name: VAPID_SUBJECT
           valueFrom:
             secretKeyRef: { name: dev-wely-notifications, key: vapid-subject, optional: true }
+        # Pages through wely-users' deleted-users list for the daily erasure reconciliation.
+        - name: USERS_API_URL
+          value: "http://wely-users-service:8082"
+        - name: DELETED_USERS_READER_SECRET
+          valueFrom:
+            secretKeyRef: { name: dev-wely-deleted-users, key: deleted-users-reader-secret, optional: true }
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

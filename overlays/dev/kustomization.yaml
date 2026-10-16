@@ -107,6 +107,21 @@ patches:
   target:
     kind: Deployment
     name: wely-gateway
+# Environment from a Secret is read at start: once each seal or rotation of dev-wely-deleted-users
+# is live, one bump in its own commit restarts wely-users and the four readers of its list (README).
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: deleted-users-readers
+    spec:
+      template:
+        metadata:
+          annotations:
+            wely.dev/deleted-users-key: "0"
+  target:
+    kind: Deployment
+    name: wely-(users|social|chat|events|notifications)
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment
@@ -114,11 +129,6 @@ patches:
       name: wely-users
     spec:
       template:
-        metadata:
-          annotations:
-            # Environment from a Secret is read at start: bump with each seal or rotation of
-            # dev-wely-deleted-users to restart the pod (README, "Account deletion").
-            wely.dev/deleted-users-key: "0"
         spec:
           containers:
           - name: users-api
@@ -174,6 +184,9 @@ patches:
             - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
               valueFrom:
                 configMapKeyRef: { name: wely-account-deletion, key: protected-user-ids }
+            # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
+            - name: USERS_API_URL
+              value: "http://dev-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-social
@@ -227,6 +240,9 @@ patches:
               value: "DEV_CALL_EVENTS"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "dev-wely-kafka-service:9092"
+            # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
+            - name: USERS_API_URL
+              value: "http://dev-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-chat
@@ -269,6 +285,9 @@ patches:
             - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
               valueFrom:
                 configMapKeyRef: { name: wely-account-deletion, key: protected-user-ids }
+            # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
+            - name: USERS_API_URL
+              value: "http://dev-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-events
@@ -352,8 +371,9 @@ patches:
             # namePrefix renames the Service, not a value that spells its name.
             - name: KAFKA_BOOTSTRAP
               value: "dev-wely-kafka-service:9092"
+            # NAME:policy, as in the base; the chat's DEV_ topics are live fan-out, read from latest.
             - name: KAFKA_TOPICS
-              value: "USER_CREATED USER_DELETED USER_MODIFIED DEV_MESSAGE_BROADCAST DEV_CALL_EVENTS EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED"
+              value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal DEV_MESSAGE_BROADCAST:live DEV_CALL_EVENTS:live EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal"
   target:
     kind: Job
     name: wely-kafka-topics
@@ -428,6 +448,9 @@ patches:
               value: "DEV_CALL_EVENTS"
             - name: MESSAGE_BROADCAST_TOPIC
               value: "DEV_MESSAGE_BROADCAST"
+            # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
+            - name: USERS_API_URL
+              value: "http://dev-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-notifications
