@@ -488,7 +488,7 @@ images:
   newTag: sha-15044fc1fe0cac9e5de9624cb3177cd54eff2649
 - name: ghcr.io/welylabs/wely-events
   newName: ghcr.io/welylabs/wely-events
-  newTag: sha-9db7b0eacb0cf47eb0368bbbe60a4c6f6f720f7c
+  newTag: sha-be303f8ef1fd403e7f6bb9c5d5e12a8bfb39d20d
 - name: ghcr.io/welylabs/wely-gateway
   newName: ghcr.io/welylabs/wely-gateway
   newTag: sha-64f43f27fe30166d1fe73239012c5a6b568b37b8
