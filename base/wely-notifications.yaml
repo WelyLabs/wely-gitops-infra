@@ -66,6 +66,17 @@ spec:
         - name: VAPID_SUBJECT
           valueFrom:
             secretKeyRef: { name: dev-wely-notifications, key: vapid-subject, optional: true }
+        # APNs key (iPhone app: notifications and VoIP calls). Optional: APNs stays off until a
+        # paid Apple Developer team's .p8 key is sealed (seal-apns-secret.sh).
+        - name: APNS_TEAM_ID
+          valueFrom:
+            secretKeyRef: { name: dev-wely-apns, key: apns-team-id, optional: true }
+        - name: APNS_KEY_ID
+          valueFrom:
+            secretKeyRef: { name: dev-wely-apns, key: apns-key-id, optional: true }
+        - name: APNS_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef: { name: dev-wely-apns, key: apns-private-key, optional: true }
         # Pages through wely-users' deleted-users list for the daily erasure reconciliation.
         - name: USERS_API_URL
           value: "http://wely-users-service:8082"

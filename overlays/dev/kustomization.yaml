@@ -420,6 +420,10 @@ patches:
       name: wely-notifications
     spec:
       template:
+        metadata:
+          annotations:
+            # An optional secret is read at pod start: bump this once the APNs key is sealed.
+            wely.dev/apns-keys: "0"
         spec:
           containers:
           - name: notifications-api
