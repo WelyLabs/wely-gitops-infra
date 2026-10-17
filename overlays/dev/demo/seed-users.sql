@@ -5,6 +5,8 @@
 -- other users have no Keycloak account, so their keycloak_id is a placeholder that matches none.
 -- identity_checked_at is set for all of them: wely-users deletes unchecked users whose Keycloak
 -- account does not exist, which is exactly what the fictional friends look like.
+-- Birthdays are relative to the reset day, so the calendar always has some coming up; seed-mongo.js
+-- creates the matching BIRTHDAY events with the same offsets.
 \set ON_ERROR_STOP on
 
 BEGIN;
@@ -21,16 +23,16 @@ WHERE id IN (
    OR keycloak_id = :'demo_keycloak_id'
    OR keycloak_id LIKE 'demo-fixture-%';
 
-INSERT INTO app_user (id, keycloak_id, user_name, hashtag, first_name, last_name, profile_pic_url, joined_date, identity_checked_at) VALUES
-  ('89a380b8-f66a-44d0-b9d9-616241080430', :'demo_keycloak_id',     'camille', 2680, 'Camille', 'Martin',  '/demo/avatars/camille.svg', now() - interval '94 days', now()),
-  ('a0cac685-c593-415d-bd73-6530e25a1f53', 'demo-fixture-lea',      'lea',     6000, 'Léa',     'Moreau',  '/demo/avatars/lea.svg',     now() - interval '120 days', now()),
-  ('9de75282-095c-41a9-ab17-2d58b02445da', 'demo-fixture-hugo',     'hugo',    9074, 'Hugo',    'Bernard', '/demo/avatars/hugo.svg',    now() - interval '88 days', now()),
-  ('50c7b996-ebf8-40e1-a0a5-5dc634f9b793', 'demo-fixture-ines',     'ines',    3474, 'Inès',    'Petit',   '/demo/avatars/ines.svg',    now() - interval '75 days', now()),
-  ('0fa728fe-fd0e-4997-b226-fd049c6b0659', 'demo-fixture-lucas',    'lucas',   8335, 'Lucas',   'Robert',  '/demo/avatars/lucas.svg',   now() - interval '61 days', now()),
-  ('15d05360-522a-4ff1-93a9-07d63346e4c1', 'demo-fixture-sarah',    'sarah',   3173, 'Sarah',   'Dubois',  '/demo/avatars/sarah.svg',   now() - interval '47 days', now()),
-  ('4d6501b7-caed-4a98-b960-199db1bd4106', 'demo-fixture-nathan',   'nathan',  5013, 'Nathan',  'Lefèvre', '/demo/avatars/nathan.svg',  now() - interval '33 days', now()),
-  ('66e332e6-8d98-49c6-ac22-27095c35cf9d', 'demo-fixture-jules',    'jules',   8739, 'Jules',   'Fontaine','/demo/avatars/jules.svg',   now() - interval '12 days', now()),
-  ('f4be7974-0ed3-457e-80d3-8aa08e0c5197', 'demo-fixture-emma',     'emma',    1665, 'Emma',    'Girard',  '/demo/avatars/emma.svg',    now() - interval '9 days', now()),
-  ('cdc6f71d-065c-4af5-9775-692411fc9504', 'demo-fixture-chloe',    'chloe',   5546, 'Chloé',   'Garnier', '/demo/avatars/chloe.svg',   now() - interval '4 days', now());
+INSERT INTO app_user (id, keycloak_id, user_name, hashtag, first_name, last_name, profile_pic_url, joined_date, identity_checked_at, birth_date, registration_completed) VALUES
+  ('89a380b8-f66a-44d0-b9d9-616241080430', :'demo_keycloak_id',     'camille', 2680, 'Camille', 'Martin',  '/demo/avatars/camille.svg', now() - interval '94 days', now(), (current_date + 25) - interval '29 years', true),
+  ('a0cac685-c593-415d-bd73-6530e25a1f53', 'demo-fixture-lea',      'lea',     6000, 'Léa',     'Moreau',  '/demo/avatars/lea.svg',     now() - interval '120 days', now(), (current_date + 9) - interval '28 years', true),
+  ('9de75282-095c-41a9-ab17-2d58b02445da', 'demo-fixture-hugo',     'hugo',    9074, 'Hugo',    'Bernard', '/demo/avatars/hugo.svg',    now() - interval '88 days', now(), (current_date + 16) - interval '31 years', true),
+  ('50c7b996-ebf8-40e1-a0a5-5dc634f9b793', 'demo-fixture-ines',     'ines',    3474, 'Inès',    'Petit',   '/demo/avatars/ines.svg',    now() - interval '75 days', now(), (current_date + 3) - interval '27 years', true),
+  ('0fa728fe-fd0e-4997-b226-fd049c6b0659', 'demo-fixture-lucas',    'lucas',   8335, 'Lucas',   'Robert',  '/demo/avatars/lucas.svg',   now() - interval '61 days', now(), (current_date + 40) - interval '30 years', true),
+  ('15d05360-522a-4ff1-93a9-07d63346e4c1', 'demo-fixture-sarah',    'sarah',   3173, 'Sarah',   'Dubois',  '/demo/avatars/sarah.svg',   now() - interval '47 days', now(), (current_date + 0) - interval '26 years', true),
+  ('4d6501b7-caed-4a98-b960-199db1bd4106', 'demo-fixture-nathan',   'nathan',  5013, 'Nathan',  'Lefèvre', '/demo/avatars/nathan.svg',  now() - interval '33 days', now(), (current_date + 60) - interval '33 years', true),
+  ('66e332e6-8d98-49c6-ac22-27095c35cf9d', 'demo-fixture-jules',    'jules',   8739, 'Jules',   'Fontaine','/demo/avatars/jules.svg',   now() - interval '12 days', now(), (current_date + 120) - interval '24 years', true),
+  ('f4be7974-0ed3-457e-80d3-8aa08e0c5197', 'demo-fixture-emma',     'emma',    1665, 'Emma',    'Girard',  '/demo/avatars/emma.svg',    now() - interval '9 days', now(), (current_date + 200) - interval '29 years', true),
+  ('cdc6f71d-065c-4af5-9775-692411fc9504', 'demo-fixture-chloe',    'chloe',   5546, 'Chloé',   'Garnier', '/demo/avatars/chloe.svg',   now() - interval '4 days', now(), (current_date + 300) - interval '25 years', true);
 
 COMMIT;

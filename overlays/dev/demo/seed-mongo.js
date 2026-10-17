@@ -74,6 +74,8 @@ chat.conversations.deleteMany({ participantIds: { $in: DEMO_IDS } });
 const events = db.getSiblingDB('events_db').events;
 
 events.deleteMany({ organizerId: { $in: DEMO_IDS } });
+// Surprises a visitor's real friends may have organised for a demo user.
+events.deleteMany({ honoreeId: { $in: DEMO_IDS } });
 // Subscriptions a visitor added to events of real users.
 events.updateMany({ participantIds: { $in: DEMO_IDS } }, { $pull: { participantIds: { $in: DEMO_IDS } } });
 
@@ -272,6 +274,77 @@ events.insertMany(demoEvents.map(e => ({
   visibility: e.visibility || 'FRIENDS',
   _class: EVENT_CLASS,
 })));
+
+// --- Birthdays ------------------------------------------------------------------------------
+
+// Days from the reset day to each birthday, as birth_date in seed-users.sql: camille's friends
+// show every closeness (sarah today, ines in 3 days, lea, intimate, in 9), and lea is already
+// planning hugo's surprise, which camille can join but hugo never sees.
+const BIRTHDAYS = { camille: 25, lea: 9, hugo: 16, ines: 3, lucas: 40, sarah: 0, nathan: 60, jules: 120, emma: 200, chloe: 300 };
+const NAMES = { camille: 'Camille', lea: 'Léa', hugo: 'Hugo', ines: 'Inès', lucas: 'Lucas', sarah: 'Sarah',
+                nathan: 'Nathan', jules: 'Jules', emma: 'Emma', chloe: 'Chloé' };
+
+/** The calendar date `days` from today, as {y, m, d}. */
+function dateIn(days) {
+  const t = new Date(Date.UTC(TODAY.y, TODAY.m - 1, TODAY.d + days));
+  return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() };
+}
+
+// One yearly BIRTHDAY per user, as wely-events upserts it from USER_BIRTHDAY: the year 2000 is a
+// placeholder, only the month and day count.
+events.insertMany(Object.entries(BIRTHDAYS).map(([name, days]) => {
+  const { m, d } = dateIn(days);
+  return {
+    _id: 'birthday-' + U[name],
+    kind: 'BIRTHDAY',
+    title: 'Anniversaire de ' + NAMES[name],
+    organizerId: U[name],
+    honoreeId: U[name],
+    honoreeName: NAMES[name],
+    birthMonth: m,
+    birthDay: d,
+    allDay: true,
+    startDate: new Date(Date.UTC(2000, m - 1, d)),
+    endDate: new Date(Date.UTC(2000, m - 1, d + 1)),
+    visibility: 'FRIENDS',
+    participantIds: [],
+    hiddenFrom: [],
+    _class: EVENT_CLASS,
+  };
+}));
+
+const hugoBirthday = dateIn(BIRTHDAYS.hugo);
+events.insertOne({
+  kind: 'SURPRISE',
+  title: 'Anniversaire surprise de Hugo 🎉',
+  organizerId: U.lea,
+  organizerName: 'lea',
+  honoreeId: U.hugo,
+  honoreeName: 'Hugo',
+  hiddenFrom: [U.hugo],
+  occurrenceKey: U.hugo + ':' + hugoBirthday.y,
+  allDay: false,
+  startDate: at(BIRTHDAYS.hugo, 19),
+  endDate: at(BIRTHDAYS.hugo, 23),
+  location: 'Péniche Loupika, quai Augagneur',
+  coordinates: { type: 'Point', coordinates: [4.8410, 45.7600] },
+  description: '🤫 Hugo ne voit pas cet événement. On réserve la péniche, chacun ramène un petit truc !',
+  participantIds: [U.lea, U.emma],
+  visibility: 'FRIENDS',
+  _class: EVENT_CLASS,
+});
+
+// The reminder job reads friend lists that wely-events caches when a user opens their calendar:
+// camille's is seeded so the proposals for lea's birthday go out on the first run.
+const friendLists = db.getSiblingDB('events_db').friend_lists;
+friendLists.deleteMany({ _id: { $in: DEMO_IDS } });
+friendLists.insertOne({
+  _id: U.camille,
+  friends: [['lea', 'INTIMATE'], ['hugo', 'CLOSE'], ['ines', 'FRIEND'], ['lucas', 'FRIEND'], ['sarah', 'FRIEND'], ['nathan', 'FRIEND']]
+    .map(([name, closeness]) => ({ userId: U[name], closeness })),
+  refreshedAt: new Date(),
+  _class: 'com.calendar.events.infrastructure.persistence.entities.FriendListEntity',
+});
 
 // --- Conversations --------------------------------------------------------------------------
 
