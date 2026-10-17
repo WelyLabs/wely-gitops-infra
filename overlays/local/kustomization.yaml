@@ -193,6 +193,9 @@ patches:
               value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+            # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
+            - name: USERS_API_URL
+              value: "http://local-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-social
@@ -245,6 +248,9 @@ patches:
               value: "http://localhost:8080/realms/wely-realm"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+            # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
+            - name: USERS_API_URL
+              value: "http://local-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-chat
@@ -282,6 +288,9 @@ patches:
               value: "http://local-wely-social-service:8083"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
+            # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
+            - name: USERS_API_URL
+              value: "http://local-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-events
@@ -370,8 +379,9 @@ patches:
             # namePrefix renames the Service, not a value that spells its name.
             - name: KAFKA_BOOTSTRAP
               value: "local-wely-kafka-service:9092"
+            # NAME:policy, as in the base; the chat's topics are live fan-out, read from latest.
             - name: KAFKA_TOPICS
-              value: "USER_CREATED USER_DELETED USER_MODIFIED EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED CALL_EVENTS MESSAGE_BROADCAST"
+              value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal CALL_EVENTS:live MESSAGE_BROADCAST:live"
   target:
     kind: Job
     name: wely-kafka-topics
@@ -454,6 +464,9 @@ patches:
               value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
+            # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
+            - name: USERS_API_URL
+              value: "http://local-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-notifications

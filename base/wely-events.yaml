@@ -63,6 +63,12 @@ spec:
         # Publishes EVENT_GROUP_CHANGED, which wely-chat follows to keep each event's group.
         - name: KAFKA_BOOTSTRAP_SERVER
           value: "wely-kafka-service:9092"
+        # Pages through wely-users' deleted-users list for the daily erasure reconciliation.
+        - name: USERS_API_URL
+          value: "http://wely-users-service:8082"
+        - name: DELETED_USERS_READER_SECRET
+          valueFrom:
+            secretKeyRef: { name: dev-wely-deleted-users, key: deleted-users-reader-secret, optional: true }
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
