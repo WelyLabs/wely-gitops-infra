@@ -473,7 +473,7 @@ images:
   newTag: sha-a035b792562d48b295256ed440a55ce93bea43e1
 - name: ghcr.io/welylabs/wely-notifications
   newName: ghcr.io/welylabs/wely-notifications
-  newTag: sha-a20eb85a186ede29650be449f047a2eb8930f0d2
+  newTag: sha-f7c1d0273d95db2336442618522eecc9ea522707
 - name: ghcr.io/welylabs/wely-media
   newName: ghcr.io/welylabs/wely-media
   newTag: sha-ad6d61c9ef5ff7d676d51da236528fba599ece7b
