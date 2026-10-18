@@ -334,17 +334,24 @@ events.insertOne({
   _class: EVENT_CLASS,
 });
 
-// The reminder job reads friend lists that wely-events caches when a user opens their calendar:
-// camille's is seeded so the proposals for lea's birthday go out on the first run.
-const friendLists = db.getSiblingDB('events_db').friend_lists;
-friendLists.deleteMany({ _id: { $in: DEMO_IDS } });
-friendLists.insertOne({
-  _id: U.camille,
-  friends: [['lea', 'INTIMATE'], ['hugo', 'CLOSE'], ['ines', 'FRIEND'], ['lucas', 'FRIEND'], ['sarah', 'FRIEND'], ['nathan', 'FRIEND']]
-    .map(([name, closeness]) => ({ userId: U[name], closeness })),
-  refreshedAt: new Date(),
-  _class: 'com.calendar.events.infrastructure.persistence.entities.FriendListEntity',
-});
+// wely-events' copy of the friendship graph, which wely-social keeps up to date through
+// FRIENDSHIP_CHANGED. seed-social.cypher writes Neo4j directly, without publishing, so the copy is
+// seeded here with the same accepted pairs ([a, b, closeness, days ago]). Version 0: any real
+// change a visitor makes afterwards wins.
+const friendships = db.getSiblingDB('events_db').friendships;
+friendships.deleteMany({ $or: [{ a: { $in: DEMO_IDS } }, { b: { $in: DEMO_IDS } }] });
+friendships.insertMany([
+  ['camille', 'lea', 'INTIMATE', 80], ['camille', 'hugo', 'CLOSE', 70], ['camille', 'ines', 'FRIEND', 60],
+  ['camille', 'lucas', 'FRIEND', 50], ['camille', 'sarah', 'FRIEND', 40], ['nathan', 'camille', 'FRIEND', 25],
+  ['lea', 'hugo', 'FRIEND', 85], ['sarah', 'nathan', 'FRIEND', 30], ['ines', 'lucas', 'FRIEND', 55],
+  ['lea', 'emma', 'FRIEND', 8], ['hugo', 'emma', 'FRIEND', 6],
+].map(([x, y, closeness, days]) => {
+  const [a, b] = [U[x], U[y]].sort();
+  return { _id: a + ':' + b, a, b, friends: true, closeness, since: new Date(Date.now() - days * 86400000), version: 0,
+           _class: 'com.calendar.events.infrastructure.persistence.entities.FriendshipEntity' };
+}));
+// The friend lists the birthday feature cached before this projection existed.
+db.getSiblingDB('events_db').friend_lists.drop();
 
 // --- Conversations --------------------------------------------------------------------------
 
