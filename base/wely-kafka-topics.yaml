@@ -2,7 +2,7 @@
 # auto-create-topics=false, so a topic that is not listed here does not exist. Idempotent: it runs
 # at every Argo CD sync, and plain kubectl apply (local) runs it once.
 #
-# KAFKA_TOPICS lists NAME or NAME:policy. A policy sets retention.ms and segment.ms (policy() below)
+# KAFKA_TOPICS lists NAME or NAME:policy. A policy sets retention or compaction (policy() below)
 # on create and again at every run; a topic without one keeps the broker defaults (README, "Kafka retention").
 # Overlays set KAFKA_BOOTSTRAP to the prefixed Service name, and rewrite KAFKA_TOPICS with their
 # environment's topics (dev: DEV_MESSAGE_BROADCAST and DEV_CALL_EVENTS for the chat).
@@ -37,6 +37,9 @@ spec:
               live)     echo "retention.ms=3600000,segment.ms=900000" ;;     # 1 h, rolled every 15 min
               personal) echo "retention.ms=259200000,segment.ms=86400000" ;; # 3 d, rolled daily
               erasure)  echo "retention.ms=604800000,segment.ms=86400000" ;; # 7 d, rolled daily
+              # The latest value per key, kept for good; a null value (tombstone) erases its key
+              # a day after compaction, which is how account deletion reaches a state topic.
+              state)    echo "cleanup.policy=compact,delete.retention.ms=86400000,min.cleanable.dirty.ratio=0.1,segment.ms=3600000" ;;
               *) echo "unknown retention policy: $1" >&2; return 1 ;;
             esac
           }
@@ -69,7 +72,7 @@ spec:
         - name: KAFKA_BOOTSTRAP
           value: "wely-kafka-service:9092"
         - name: KAFKA_TOPICS
-          value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal USER_BIRTHDAY:personal BIRTHDAY_NOTICES:personal FRIENDSHIP_NOTICES:personal"
+          value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal USER_BIRTHDAY:personal BIRTHDAY_NOTICES:personal FRIENDSHIP_NOTICES:personal FRIENDSHIP_STATE:state"
         resources:
           requests: { cpu: 50m, memory: 128Mi }
           limits: { memory: 384Mi }

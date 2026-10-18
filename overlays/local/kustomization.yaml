@@ -381,7 +381,7 @@ patches:
               value: "local-wely-kafka-service:9092"
             # NAME:policy, as in the base; the chat's topics are live fan-out, read from latest.
             - name: KAFKA_TOPICS
-              value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal USER_BIRTHDAY:personal BIRTHDAY_NOTICES:personal FRIENDSHIP_NOTICES:personal CALL_EVENTS:live MESSAGE_BROADCAST:live"
+              value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal USER_BIRTHDAY:personal BIRTHDAY_NOTICES:personal FRIENDSHIP_NOTICES:personal FRIENDSHIP_STATE:state CALL_EVENTS:live MESSAGE_BROADCAST:live"
   target:
     kind: Job
     name: wely-kafka-topics
