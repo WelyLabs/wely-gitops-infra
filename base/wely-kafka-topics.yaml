@@ -69,7 +69,7 @@ spec:
         - name: KAFKA_BOOTSTRAP
           value: "wely-kafka-service:9092"
         - name: KAFKA_TOPICS
-          value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal USER_BIRTHDAY:personal BIRTHDAY_NOTICES:personal"
+          value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal USER_BIRTHDAY:personal BIRTHDAY_NOTICES:personal FRIENDSHIP_NOTICES:personal"
         resources:
           requests: { cpu: 50m, memory: 128Mi }
           limits: { memory: 384Mi }
