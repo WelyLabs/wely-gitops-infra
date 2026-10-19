@@ -122,6 +122,21 @@ patches:
   target:
     kind: Deployment
     name: wely-(users|social|chat|events|notifications)
+# Same for media-secret-social in dev-wely-garage: once it is sealed and live, one bump in its own
+# commit restarts wely-media and wely-social, its two readers.
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: media-social-readers
+    spec:
+      template:
+        metadata:
+          annotations:
+            wely.dev/media-social-key: "0"
+  target:
+    kind: Deployment
+    name: wely-(media|social)
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment
