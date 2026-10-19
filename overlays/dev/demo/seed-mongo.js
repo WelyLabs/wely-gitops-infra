@@ -68,6 +68,17 @@ chat.message_buckets.deleteMany({ conversationId: { $in: touched } });
 // Their media tab too; the photo files themselves are purged from Garage by the job.
 chat.conversation_photos.deleteMany({ conversationId: { $in: touched } });
 chat.conversations.deleteMany({ participantIds: { $in: DEMO_IDS } });
+// wely-chat's friendships projection: the demo friendships are written straight into Neo4j,
+// so FRIENDSHIP_STATE never carries them. Version 0: any real change of a pair outranks it.
+chat.friendships.deleteMany({ $or: [{ a: { $in: DEMO_IDS } }, { b: { $in: DEMO_IDS } }] });
+chat.friendships.insertMany([
+  // The accepted pairs of seed-social.cypher.
+  ['camille', 'lea'], ['camille', 'hugo'], ['camille', 'ines'], ['camille', 'lucas'], ['camille', 'sarah'],
+  ['nathan', 'camille'], ['lea', 'hugo'], ['sarah', 'nathan'], ['ines', 'lucas'], ['lea', 'emma'], ['hugo', 'emma'],
+].map(pair => {
+  const [a, b] = pair.map(name => U[name]).sort();
+  return { _id: a + ':' + b, a, b, friends: true, version: NumberLong(0) };
+}));
 
 // --- Events ---------------------------------------------------------------------------------
 
