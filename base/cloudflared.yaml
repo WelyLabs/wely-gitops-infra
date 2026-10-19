@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: cloudflared
-        image: cloudflare/cloudflared:latest
+        # Pinned: `latest` changed version on any restart, unseen. Bump by hand from the cloudflared releases.
+        image: cloudflare/cloudflared:2026.10.1
         resources:
           requests:
             memory: 32Mi
