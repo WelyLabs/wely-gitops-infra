@@ -16,3 +16,4 @@ stringData:
   media-secret-users: 9b608f679c31941e2cba455dee860afb9b641fef4e3487f4c97be67e20c757e6
   media-secret-chat: 40670af2a0d5c9c8008fa4457f2ebbf12c4e941e300130967cb51825cb69e26d
   media-secret-events: 4f80f6509f2bd712104aad60fe624f047cdeddf19130a3bc12eae5da01495d99
+  media-secret-social: 80c4d83317c0d86c8806b52f00a6946a477a6d42ec8d867778a23cb1cd2f8053

@@ -63,6 +63,7 @@ spec:
           AVATARS=$(bucket wely-avatars)
           CHAT=$(bucket wely-chat-media)
           EVENTS=$(bucket wely-event-media)
+          COMMUNITIES=$(bucket wely-community-media)
 
           key() {
             ok "$(call ImportKey "{\"accessKeyId\":\"$1\",\"secretAccessKey\":\"$2\",\"name\":\"$3\"}")" "ImportKey $3"
@@ -76,7 +77,7 @@ spec:
           allow "$EVENTS" "$RESET_ACCESS_KEY" wely-demo-reset
           if [ -n "${MEDIA_ACCESS_KEY:-}" ]; then
             key "$MEDIA_ACCESS_KEY" "$MEDIA_SECRET_KEY" wely-media
-            for b in "$AVATARS" "$CHAT" "$EVENTS"; do allow "$b" "$MEDIA_ACCESS_KEY" wely-media; done
+            for b in "$AVATARS" "$CHAT" "$EVENTS" "$COMMUNITIES"; do allow "$b" "$MEDIA_ACCESS_KEY" wely-media; done
           else
             echo "no key for wely-media yet: it answers MED-TEC-001"
           fi
@@ -92,7 +93,7 @@ spec:
               done
             done
           fi
-          echo "Garage ready: buckets wely-avatars, wely-chat-media and wely-event-media"
+          echo "Garage ready: buckets wely-avatars, wely-chat-media, wely-event-media and wely-community-media"
         env:
         - name: GARAGE_ADMIN
           value: "wely-garage-0.wely-garage-admin:3903"

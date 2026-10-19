@@ -59,6 +59,12 @@ spec:
         - name: DELETED_USERS_READER_SECRET
           valueFrom:
             secretKeyRef: { name: dev-wely-deleted-users, key: deleted-users-reader-secret, optional: true }
+        # Community pictures go through wely-media, which knows this service by its secret.
+        - name: MEDIA_API_URL
+          value: "http://wely-media-service:8085"
+        - name: MEDIA_API_SECRET
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: media-secret-social, optional: true }
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

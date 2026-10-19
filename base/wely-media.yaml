@@ -40,7 +40,7 @@ spec:
           value: "http://wely-garage-service:3900"
         - name: MEDIA_PUBLIC_ENDPOINT
           value: "https://media.welylabs.app"
-        # Its Garage key, on the avatar, chat and event buckets. Optional like every key sealed
+        # Its Garage key, on the avatar, chat, event and community buckets. Optional like every key sealed
         # apart: without it the service runs and answers MED-TEC-001.
         - name: MEDIA_ACCESS_KEY
           valueFrom:
@@ -59,6 +59,9 @@ spec:
         - name: INTERNAL_SECRET_EVENTS
           valueFrom:
             secretKeyRef: { name: dev-wely-garage, key: media-secret-events, optional: true }
+        - name: INTERNAL_SECRET_SOCIAL
+          valueFrom:
+            secretKeyRef: { name: dev-wely-garage, key: media-secret-social, optional: true }
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

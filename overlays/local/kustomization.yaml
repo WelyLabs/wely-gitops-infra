@@ -196,6 +196,8 @@ patches:
             # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
             - name: USERS_API_URL
               value: "http://local-wely-users-service:8082"
+            - name: MEDIA_API_URL
+              value: "http://local-wely-media-service:8085"
   target:
     kind: Deployment
     name: wely-social
