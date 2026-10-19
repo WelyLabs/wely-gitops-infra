@@ -16,7 +16,7 @@ resources:
 - realm/realm-settings-job.yaml
 
 # Dataset of the public demo account, replayed nightly by demo/demo-reset.yaml.
-# Display settings of wely-realm, applied by realm/realm-settings-job.yaml after each sync.
+# Display settings of wely-realm and master, applied by realm/realm-settings-job.yaml after each sync.
 configMapGenerator:
 - files:
   - demo/seed-users.sql
@@ -25,6 +25,7 @@ configMapGenerator:
   name: wely-demo-seed
 - files:
   - realm/realm-settings.json
+  - realm/master-settings.json
   name: wely-realm-settings
 # Demo accounts (public credentials): never deleted (wely-users), never erased (wely-events), never
 # promoted to community admin on any leave (wely-social) nor handed a deleted organizer's events

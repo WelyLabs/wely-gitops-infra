@@ -29,6 +29,10 @@
 #   - auth_time in wely-client's access tokens, which DELETE /user-service/profile requires: only
 #     checked, last, so a failure never skips the steps above.
 #
+#   - the master realm's login screen, in front of the admin console (master-settings.json): the
+#     wely-admin theme of wely-identity, its brand panel, and French. Only those keys: the
+#     realm's security settings are left as they are.
+#
 # realm-settings.json DUPLICATES those keys from wely-identity/wely-realm.json and must follow
 # them. kcadm merges it into the live realm, so every other setting is left alone.
 #
@@ -75,6 +79,8 @@ spec:
               done
               $K update realms/wely-realm --config $C -f /settings/realm-settings.json
               $K get realms/wely-realm --config $C --fields displayName,supportedLocales,defaultLocale,editUsernameAllowed
+              $K update realms/master --config $C -f /settings/master-settings.json
+              $K get realms/master --config $C --fields loginTheme,displayName,defaultLocale
               $K add-roles -r wely-realm --config $C --uusername service-account-wely-users-api-client \
                 --cclientid realm-management --rolename manage-users
               $K get-roles -r wely-realm --config $C --uusername service-account-wely-users-api-client \

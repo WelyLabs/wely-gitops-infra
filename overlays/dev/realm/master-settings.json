@@ -1,0 +1,8 @@
+{
+  "loginTheme": "wely-admin",
+  "displayName": "WelyLabs Admin",
+  "displayNameHtml": "<span class=\"brand-name\">WelyLabs</span><div class=\"brand-pitch\"><p class=\"brand-title\">Console d'administration</p><ul class=\"brand-points\"><li>Realms, clients et fournisseurs d'identité</li><li>Comptes, rôles et sessions des utilisateurs</li><li>Thèmes, flux d'authentification et événements</li></ul></div><span class=\"brand-note\">Réservé à l'équipe WelyLabs</span>",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["fr"],
+  "defaultLocale": "fr"
+}
