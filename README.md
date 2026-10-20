@@ -51,6 +51,8 @@ Deux conséquences :
 │   ├── wely-redis.yaml           compteurs de quota de la gateway (sans persistance)
 │   ├── cloudflared.yaml          tunnel Cloudflare (exposition publique)
 │   └── wely-tailscale.yaml       opérateur Tailscale (accès administrateur)
+├── observability/
+│   └── prometheus/               Prometheus, opt-in per overlay (dev), not exposed
 └── overlays/
     ├── local/                    Kubernetes local — secrets en clair, images locales
     ├── dev/                      cluster Raspberry Pi — SealedSecrets, images par SHA

@@ -16,6 +16,11 @@ spec:
     metadata:
       labels:
         app: wely-chat
+      # Scraped by observability/prometheus where an overlay deploys it (no token on this path).
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8084"
+        prometheus.io/path: /actuator/prometheus
     spec:
       # Non-root, matching the uid baked into the images. A pod that does not need
       # root should not run as it.

@@ -1,0 +1,120 @@
+# Prometheus: scrapes the opted-in pods of its namespace (prometheus.yml), keeps 7 days.
+#
+# Storage: a 2Gi claim on the cluster's default StorageClass (k3s local-path), like every
+# datastore in base/, so the history survives a restart. local-path does NOT enforce the claim's
+# size: --storage.tsdb.retention.size is the real cap, set below the claim.
+#
+# Not exposed: a ClusterIP Service, no route in the tunnel, and a NetworkPolicy that admits no
+# ingress (networkpolicy.yaml). Read it with
+#   kubectl -n <ns> port-forward svc/<prefix>wely-prometheus-service 9090
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wely-prometheus
+  labels:
+    app: wely
+    component: prometheus
+spec:
+  serviceName: "wely-prometheus-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-prometheus
+  template:
+    metadata:
+      labels:
+        app: wely-prometheus
+    spec:
+      serviceAccountName: wely-prometheus
+      # Non-root: the image's own user (nobody). local-path creates its directories world-writable,
+      # as Garage's claim already relies on.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: prometheus
+        # Pinned by tag and digest (multi-arch index, arm64 included).
+        image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+        imagePullPolicy: IfNotPresent
+        args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus
+        - --storage.tsdb.retention.time=7d
+        # Counts the blocks, the WAL and the head chunks; kept under the 2Gi claim.
+        - --storage.tsdb.retention.size=1536MB
+        - --web.listen-address=:9090
+        # Prometheus 3 derives GOMEMLIMIT from the memory limit below (auto-gomemlimit, on by
+        # default), so the Go heap is collected before the container is OOM-killed.
+        ports:
+        - containerPort: 9090
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        # A WAL replay after a restart can take a while on a Pi: /-/healthy answers during it,
+        # /-/ready only once it is done. startupProbe keeps liveness off until then.
+        startupProbe:
+          httpGet:
+            path: /-/ready
+            port: 9090
+          periodSeconds: 5
+          failureThreshold: 60
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9090
+          periodSeconds: 15
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9090
+          periodSeconds: 10
+          failureThreshold: 3
+        # About ten targets at 30s: a few thousand series. Sized for the Raspberry Pi node.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 384Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/prometheus
+          readOnly: true
+        - name: prometheus-data
+          mountPath: /prometheus
+      volumes:
+      - name: config
+        configMap:
+          name: wely-prometheus-config
+  volumeClaimTemplates:
+  - metadata:
+      name: prometheus-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-prometheus-service
+  labels:
+    app: wely
+    component: prometheus
+spec:
+  type: ClusterIP
+  selector:
+    app: wely-prometheus
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090

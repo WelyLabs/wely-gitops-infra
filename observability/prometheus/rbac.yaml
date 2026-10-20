@@ -1,0 +1,36 @@
+# Pod discovery in Prometheus's own namespace, read-only. A Role, not a ClusterRole: Prometheus
+# sees the pods of this environment and nothing else in the cluster.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: wely-prometheus
+  labels:
+    app: wely
+    component: prometheus
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: wely-prometheus
+  labels:
+    app: wely
+    component: prometheus
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: wely-prometheus
+  labels:
+    app: wely
+    component: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: wely-prometheus
+subjects:
+  - kind: ServiceAccount
+    name: wely-prometheus

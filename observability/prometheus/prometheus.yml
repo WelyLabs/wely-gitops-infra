@@ -1,0 +1,49 @@
+global:
+  # Seven small JVMs on a Raspberry Pi: 30s is plenty for error counters and keeps the TSDB small.
+  scrape_interval: 30s
+  scrape_timeout: 10s
+  evaluation_interval: 30s
+
+scrape_configs:
+  # Prometheus itself (TSDB size, scrape durations), over loopback.
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Every pod of this namespace that opts in with the prometheus.io/* annotations.
+  - job_name: kubernetes-pods
+    kubernetes_sd_configs:
+      - role: pod
+        # Only the namespace Prometheus runs in: the Role in rbac.yaml grants nothing else.
+        namespaces:
+          own_namespace: true
+    relabel_configs:
+      # Opt-in only.
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"
+      # A port must be named: no guessing from the container ports.
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: keep
+        regex: "\\d+"
+      # Completed or pending pods have nothing to serve.
+      - source_labels: [__meta_kubernetes_pod_phase]
+        action: keep
+        regex: Running
+      # The pod discovery yields one target per container port; all of them are rewritten to the
+      # same pod IP and annotated port below, and identical targets collapse into one.
+      - source_labels: [__meta_kubernetes_pod_ip, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: "(.+);(\\d+)"
+        replacement: "$1:$2"
+        target_label: __address__
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        regex: "(.+)"
+        target_label: __metrics_path__
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: app

@@ -14,6 +14,9 @@ resources:
 - wely-sealed-notifications-dev.yaml
 - demo/demo-reset.yaml
 - realm/realm-settings-job.yaml
+# Metrics of the six Spring services (pods annotated prometheus.io/* in base/). Dev only: prod
+# shares the same Raspberry Pi and cannot start anyway.
+- ../../observability/prometheus
 
 # Dataset of the public demo account, replayed nightly by demo/demo-reset.yaml.
 # Display settings of wely-realm and master, applied by realm/realm-settings-job.yaml after each sync.

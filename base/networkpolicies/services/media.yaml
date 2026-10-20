@@ -14,5 +14,6 @@ spec:
         - podSelector: { matchLabels: { app: wely-chat } }         # chat media
         - podSelector: { matchLabels: { app: wely-events } }       # event media
         - podSelector: { matchLabels: { app: cloudflared } }       # public signed-URL reads
+        - podSelector: { matchLabels: { app: wely-prometheus } }   # metrics scrape (/actuator/prometheus)
       ports:
         - { protocol: TCP, port: 8085 }

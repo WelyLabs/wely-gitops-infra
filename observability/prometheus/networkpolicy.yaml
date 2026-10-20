@@ -1,0 +1,14 @@
+# prometheus: no ingress at all. Nothing in the cluster needs to call it; read it with
+# `kubectl port-forward`, which enters the pod's network namespace and is not filtered here,
+# like the kubelet probes (base/networkpolicies/README.md).
+# Without this policy the pod would accept connections from any pod, cloudflared included.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-prometheus
+  policyTypes: [Ingress]
+  ingress: []

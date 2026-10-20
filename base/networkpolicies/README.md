@@ -23,6 +23,9 @@ Traffic flows: browser → cloudflared → web (nginx, reverse proxy) → gatewa
 
 ## Things to know
 
+- **Prometheus** (`observability/prometheus`, dev only) is admitted on each
+  scraped service's main port, where `/actuator/prometheus` is served. Its own
+  pod admits no ingress (`allow-prometheus` in that directory).
 - **k3s enforces NetworkPolicy** via its embedded kube-router controller, so
   these are applied, not decorative.
 - **Kubelet health probes are NOT affected**: verified that k3s/kube-router lets

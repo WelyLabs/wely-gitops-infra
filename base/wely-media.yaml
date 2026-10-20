@@ -17,6 +17,11 @@ spec:
     metadata:
       labels:
         app: wely-media
+      # Scraped by observability/prometheus where an overlay deploys it (no token on this path).
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8085"
+        prometheus.io/path: /actuator/prometheus
     spec:
       securityContext:
         runAsNonRoot: true

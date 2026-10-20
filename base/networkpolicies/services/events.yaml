@@ -11,5 +11,6 @@ spec:
   ingress:
     - from:
         - podSelector: { matchLabels: { app: wely-gateway } }
+        - podSelector: { matchLabels: { app: wely-prometheus } }   # metrics scrape (/actuator/prometheus)
       ports:
         - { protocol: TCP, port: 8086 }

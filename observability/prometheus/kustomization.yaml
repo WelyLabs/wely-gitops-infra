@@ -1,0 +1,25 @@
+# A minimal Prometheus, scraping the pods of its own namespace that opt in with annotations.
+#
+# Not part of base/: base/ is also rendered by overlays/prod, which Argo CD deploys onto the same
+# Raspberry Pi. An overlay opts in by listing this directory in its resources (overlays/dev does).
+#
+# A pod is scraped when its template carries:
+#   prometheus.io/scrape: "true"
+#   prometheus.io/port:   "<port>"                  the pod port serving the metrics
+#   prometheus.io/path:   /actuator/prometheus     defaults to /metrics when absent
+# and when the NetworkPolicy of that pod lets app=wely-prometheus in on that port
+# (base/networkpolicies/services/).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - rbac.yaml
+  - prometheus.yaml
+  - networkpolicy.yaml
+
+# Generated, so a change to the configuration renames the ConfigMap and rolls the pod: Prometheus
+# reads its file at start, and the lifecycle (reload) API stays off.
+configMapGenerator:
+  - name: wely-prometheus-config
+    files:
+      - prometheus.yml
