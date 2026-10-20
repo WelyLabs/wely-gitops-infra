@@ -11,7 +11,7 @@
 # The Secret is named in full: it comes from a SealedSecret, which kustomize does not know
 # is a Secret, so namePrefix does not rewrite references to it.
 #
-# The three steps run in order (init containers), each with the image of the database it
+# The steps run in order (init containers), each with the image of the database it
 # talks to, so the client always matches the server and the Pi already has the image.
 # Run it by hand with:
 #   kubectl create job -n wely-dev --from=cronjob/dev-wely-demo-reset demo-reset-manual
@@ -39,7 +39,8 @@ spec:
             - name: scripts
               configMap:
                 name: wely-demo-seed
-            # The demo conversations' ids, listed before seed-mongo.js deletes them, for the photo purge.
+            # Ids listed before the seeds delete them, for the picture purges: the demo
+            # conversations and events, and the communities a demo account created.
             - name: work
               emptyDir: {}
           initContainers:
@@ -74,6 +75,43 @@ spec:
               resources:
                 requests: { cpu: 10m, memory: 32Mi }
                 limits: { memory: 128Mi }
+            # The communities a demo account created, before seed-social.cypher deletes them: a
+            # visitor may have made one and uploaded its picture. Listed by createdBy, like the
+            # seed deletes them, so a real user's community is never purged.
+            - name: communities
+              image: neo4j:5
+              command:
+                - sh
+                - -c
+                - |
+                  IDS=$(printf "'%s'," $DEMO_USER_IDS | sed 's/,$//')
+                  for i in $(seq 1 20); do
+                    cypher-shell -a bolt://dev-wely-neo4j-service:7687 -u "$NEO4J_USERNAME" -p "$NEO4J_PASSWORD" \
+                      --format plain "MATCH (c:Community) WHERE c.createdBy IN [$IDS] RETURN c.communityId" \
+                      > /work/communities.raw \
+                    && tail -n +2 /work/communities.raw | tr -d '"' > /work/communities \
+                    && echo "$(wc -l < /work/communities) demo communities" && exit 0
+                    echo "communities listing attempt $i failed, retrying in 5s"; sleep 5
+                  done
+                  echo "communities listing failed after retries"; exit 1
+              env:
+                - name: DEMO_USER_IDS
+                  value: >-
+                    89a380b8-f66a-44d0-b9d9-616241080430 a0cac685-c593-415d-bd73-6530e25a1f53
+                    9de75282-095c-41a9-ab17-2d58b02445da 50c7b996-ebf8-40e1-a0a5-5dc634f9b793
+                    0fa728fe-fd0e-4997-b226-fd049c6b0659 15d05360-522a-4ff1-93a9-07d63346e4c1
+                    4d6501b7-caed-4a98-b960-199db1bd4106 66e332e6-8d98-49c6-ac22-27095c35cf9d
+                    f4be7974-0ed3-457e-80d3-8aa08e0c5197 cdc6f71d-065c-4af5-9775-692411fc9504
+                - name: NEO4J_USERNAME
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: neo4j-username }
+                - name: NEO4J_PASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: dev-wely-secrets-dev, key: neo4j-password }
+              volumeMounts: [{ name: work, mountPath: /work }]
+              resources:
+                requests: { cpu: 50m, memory: 128Mi }
+                limits: { memory: 384Mi }
             - name: social
               image: neo4j:5
               command:
@@ -154,7 +192,9 @@ spec:
                     while read -r conversation; do rclone purge "$C/$conversation"; done < /work/conversations
                     E=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-event-media/events"
                     while read -r event; do rclone purge "$E/$event"; done < /work/events
-                    echo "demo pictures, photos, covers and receipts removed"
+                    M=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-community-media/communities"
+                    while read -r community; do rclone purge "$M/$community"; done < /work/communities
+                    echo "demo pictures, photos, covers, receipts and community pictures removed"
                   }
                   for i in $(seq 1 20); do
                     run && exit 0

@@ -2,11 +2,12 @@
 # keys that may use them, imported from the Secret so the services and this Job agree on them.
 #
 # Garage grants access per bucket, not per path: one bucket per use (avatars, chat photos, event
-# covers and receipts). The keys are Garage keys, never AWS ones, and never leave the
-# cluster. Rotating one means a new access key id: Garage refuses to re-import a known id.
+# covers and receipts, community pictures). The keys are Garage keys, never AWS ones, and
+# never leave the cluster. Rotating one means a new access key id: Garage refuses to
+# re-import a known id.
 #
-#   wely-media        read + write on all three buckets: stores every picture, signs URLs to read them
-#   wely-demo-reset   read + write on all three buckets: the nightly reset removes the demo uploads
+#   wely-media        read + write on all four buckets: stores every picture, signs URLs to read them
+#   wely-demo-reset   read + write on all four buckets: the nightly reset removes the demo uploads
 #
 # 409 from CreateBucket or ImportKey means it already exists: that is the second run.
 # wely-users and wely-chat had keys of their own before wely-media; any left are deleted.
@@ -75,6 +76,7 @@ spec:
           allow "$AVATARS" "$RESET_ACCESS_KEY" wely-demo-reset
           allow "$CHAT" "$RESET_ACCESS_KEY" wely-demo-reset
           allow "$EVENTS" "$RESET_ACCESS_KEY" wely-demo-reset
+          allow "$COMMUNITIES" "$RESET_ACCESS_KEY" wely-demo-reset
           if [ -n "${MEDIA_ACCESS_KEY:-}" ]; then
             key "$MEDIA_ACCESS_KEY" "$MEDIA_SECRET_KEY" wely-media
             for b in "$AVATARS" "$CHAT" "$EVENTS" "$COMMUNITIES"; do allow "$b" "$MEDIA_ACCESS_KEY" wely-media; done
