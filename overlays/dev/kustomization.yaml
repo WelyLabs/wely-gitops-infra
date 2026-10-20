@@ -418,7 +418,7 @@ patches:
           annotations:
             # Its optional Secrets are read at pod start: bump this once dev-wely-grafana or
             # dev-wely-grafana-alerting is sealed, rotated, and live.
-            wely.dev/grafana-secrets: "0"
+            wely.dev/grafana-secrets: "1"
         spec:
           containers:
           - name: grafana
