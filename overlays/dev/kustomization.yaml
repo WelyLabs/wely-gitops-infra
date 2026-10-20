@@ -485,7 +485,7 @@ images:
   newTag: sha-3e378383d9f828c58f87301621eb82debf777e52
 - name: ghcr.io/welylabs/wely-gateway
   newName: ghcr.io/welylabs/wely-gateway
-  newTag: sha-64f43f27fe30166d1fe73239012c5a6b568b37b8
+  newTag: sha-b2f82fcdebb8cdfb8544759d4026fb732941ed93
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
   newTag: sha-9f72372077788f336c4239d312e4220b335f6b86
