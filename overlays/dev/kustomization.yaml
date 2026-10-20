@@ -23,6 +23,8 @@ resources:
 # optional Secrets, sealed by seal-grafana-secrets.sh at the workspace root, are listed below
 # once sealed: wely-sealed-grafana-dev.yaml, wely-sealed-grafana-alerting-dev.yaml.
 - ../../observability/grafana
+- wely-sealed-grafana-dev.yaml
+- wely-sealed-grafana-alerting-dev.yaml
 
 # Dataset of the public demo account, replayed nightly by demo/demo-reset.yaml.
 # Display settings of wely-realm and master, applied by realm/realm-settings-job.yaml after each sync.

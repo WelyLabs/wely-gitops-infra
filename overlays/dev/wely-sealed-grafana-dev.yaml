@@ -1,0 +1,18 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  annotations:
+    sealedsecrets.bitnami.com/cluster-wide: "true"
+  name: wely-grafana
+  namespace: wely-dev
+spec:
+  encryptedData:
+    admin-password: AgCE33qnKe4m5CGSDgCs0C7ysKh+qzQ6e4AM6ptRdpPqdnUJjObNZnXF8jHFVZw37ZKWPYYGUzSaQXuPBWKtewUAhgtXj1aMI1x9yLZoGWPdaxW8ve9Xu243f/7IAEOAfz1H3qykA/wz2Tswtmb/263E8QxrBeTImtM5H3aOStC6G0siYeuwdnIEpqEETi20RivY0jVvMX2vjheb94IZMoQcLeMGWtFytFx9PaKLbcYNU92BN9gZzV/cg8x+rdfw3+103HImsuKKCGNgf/KeSOY6RHCsQ0kkKU5gp/eUzYZV8a6/9jHkoaGOcy3R+C6XyDmlR+b/VgrC2+OoNeYTDkiu8dtSIsnaZRv52i9UFd3fTETkvpviDFjZsz/2hkVMRaWpv0JSmxJrK2VVJpput7K4ed2q2FsXBnbs1505RdqE68AuvbxwfZkEND6rysY4mkrq0gsFh0OnZpCnGqdpWA91eR7XQoK7phcOhj6kHhs2OGVlVuLf+rYXBuovz7hHmfNSQb6VXvYgdkxxk/+vDbo1nPLwf5F5UYpTT8Wz87QUZk8U4aVT7KpS36CE74S7pg+Tl5LwaP7OHVYBNKdNlCVJL08kFO73dc/YrjtjUm0XFNqLlv9g5azWTxOsabXQx5+O1IUee+PAlGtY1U8ot7r31x8afSfqZAg3QZjYu89/yvzwGrUS0/JMkRnxPclhjAEiDxzk64EZSLmrIEhqXP4Kfwrfh5pXMDrq9kk3vXqrMA==
+    admin-user: AgCryCnTjQfOmlkgNtHuPsJ4+NjhzUZy9reBjCKFp+UjT7IgF7B21k62VNFV082nt5jMFsIKxWPnENBB/HQxfkzid7wtrt42I2v/1a2yIkVEfuk71Bk0NbpwlTRTLEqbNv8CWvsEeWRAzxfsjr2OF8FiW1Wya9VvvFo6VwBNmtG+9K8m7wk5CbtILskGRLgGWz3wr4j/c1SJ0mVXhcqYiOXSBhLqpbUGvR6N5Lybatz94kyT3gOOs4xRhvh1H8che1YzGTz0UK/HfZoliZwjpriimgmhteEjGsWv1CIGQcuNdisvTLQf0D9gRFKbiqqVdhtDaxxgwBfKfEUrYv1M9UmmOtNF+2G4Vhl0KSmZdE9F1AHpaZ0PRR7qzVLg2UpFLpK+PTbCDNpBPSAlOox9eZjoGefY2pYfiXjgy36P17IoqDm0xcJjifT/J7nhwsQ4k+py8GFRVsvViL5sAPfvfqIx8foDdHE99ztPfhYVWGXdY96HB+j54Vd1A6ry2sveab9LaDGXbi3ghUfimAdyOO9PohMHLLN5axTlKkIIXoXiw/IhHt85txB9gP9GZWFwKE5k+OKnMhQSyP9QCOSQUyNhdyUyZ6mgl6Ylby2kbgGXjBlWTq/UMXjVRRDrio1xPpKY6rUP9DtJiMGv4WS1yC8OPc4yUVhNCNL7L8TfsxkquBqcKFImpsIJwkJ5aR41vJxTTEzw8g==
+  template:
+    metadata:
+      annotations:
+        sealedsecrets.bitnami.com/cluster-wide: "true"
+      name: wely-grafana
+      namespace: wely-dev

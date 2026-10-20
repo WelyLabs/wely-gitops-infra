@@ -1,0 +1,17 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  annotations:
+    sealedsecrets.bitnami.com/cluster-wide: "true"
+  name: wely-grafana-alerting
+  namespace: wely-dev
+spec:
+  encryptedData:
+    discord-webhook-url: AgCusEOoPIeQFFiYBWSovSZini8JW5W0X76engXFdzjhuwbzYEksnmaEH7KLdOTMf5lG1wXXFy7ZgBGQNCdoQug4A6Nqrn29PXFN7vTfvY5wtxD/FQjYW+dXy82XL+ik7bz9T4MD+Ffnb7j0rG198VPvif3yuMXtLjxQrcsV7HAplGttHyqJaqp2ZVWFPNw2BY3Vw6RZvRzVW/YaVPQPwRFmzv31boEH0uL8eT+NChXBdtDQzVWA65jPTmHDv1J5TQOK+tR9yUC6LgWsOZf011XbbmvIUrCgcp7A8zYdaG329hjjY2bAzXn9H/kxFBHUZrtDHQipS4Mvpg8NPtG4GGAroXGEmTt3yQ0Kw4ktY9sF4EfQkTqRWXCyFy/513FpHUbzGMiBf2yVyaX+LKRY6E8gtOkrsCUBRuH6rOtg6NxFLz/+I00ersRRe/lvD8qnn+/xB6XoQdvDKKlZqvatK/ckNXO37BcX9B4heV3Xp3UcpY8j+b6fKURnwlfeoCiPl1/xxVbs9scQ+SbXISiPOPP4+dBANAqVBlWV5J/zFgZPXMK743j3JyE5SeZhBMYsUTsJxLUqfMMinXRp3ZOT1ns4dtEC2YEqsLY/ork8Wr9QtHsYCOjWsDDhpFweG1jSzTyWz7AWNoiYrbyFPvcUjmVaoOVe9MfrVbJxzWP3tGTQQfgzdN16CH9LOsOdadFPrDBQgDK3Vf0LPR5j/atdbDzUoCswQwR5IQg3atCfc+5anpvN1CcnqkvuUhM32f7zAtYwfI2z+sxr/Fg+Q9i7MB95N3RYXqbZpN5VTwMCDexvWDmRJGUyPnXCgck7tKs05OqRxIHnaYr3c6VTSJYesGknUDLTXElgefHb
+  template:
+    metadata:
+      annotations:
+        sealedsecrets.bitnami.com/cluster-wide: "true"
+      name: wely-grafana-alerting
+      namespace: wely-dev
