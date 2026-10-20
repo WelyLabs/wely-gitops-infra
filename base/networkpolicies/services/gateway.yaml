@@ -14,3 +14,8 @@ spec:
         - podSelector: { matchLabels: { app: cloudflared } }       # belt-and-suspenders on the critical path
       ports:
         - { protocol: TCP, port: 8081 }
+    # Management port (actuator): Prometheus only. Neither web nor cloudflared reaches it.
+    - from:
+        - podSelector: { matchLabels: { app: wely-prometheus } }   # metrics scrape (/actuator/prometheus)
+      ports:
+        - { protocol: TCP, port: 9081 }

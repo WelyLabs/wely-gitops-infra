@@ -14,6 +14,12 @@ spec:
     metadata:
       labels:
         app: wely-gateway
+      # Metrics live on the management port (9081) once the gateway moves its actuator there; 8081
+      # is the port the tunnel reaches and serves no actuator. Admitted by allow-gateway.
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9081"
+        prometheus.io/path: /actuator/prometheus
     spec:
       # Non-root, matching the uid baked into the images. A pod that does not need
       # root should not run as it.
@@ -68,21 +74,23 @@ spec:
         # startupProbe carries the slow first boot on this cluster — Raspberry Pi
         # nodes need well over the 30s a bare initialDelaySeconds would allow. While
         # it runs, liveness is suspended, so a slow start is not mistaken for a hang.
+        # /livez and /readyz are the probe aliases the gateway keeps on 8081 when its
+        # actuator moves to the management port: the probes do not follow the move.
         startupProbe:
           httpGet:
-            path: /actuator/health/readiness
+            path: /readyz
             port: 8081
           periodSeconds: 5
           failureThreshold: 36
         livenessProbe:
           httpGet:
-            path: /actuator/health/liveness
+            path: /livez
             port: 8081
           periodSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /actuator/health/readiness
+            path: /readyz
             port: 8081
           periodSeconds: 5
           failureThreshold: 3
