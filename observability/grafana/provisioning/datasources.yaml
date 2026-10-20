@@ -1,0 +1,23 @@
+# The one datasource. Dashboards and alert rules name it by uid, never by name.
+apiVersion: 1
+
+# Removes a datasource of the same name left by an older provisioning before re-creating it.
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    # Set per overlay on the Deployment (namePrefix), interpolated by Grafana at start.
+    url: $__env{PROMETHEUS_URL}
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      # The scrape interval (prometheus.yml): $__rate_interval never drops below 4 x 30s.
+      timeInterval: 30s
+      prometheusType: Prometheus

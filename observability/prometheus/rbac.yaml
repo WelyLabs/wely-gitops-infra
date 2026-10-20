@@ -1,5 +1,6 @@
 # Pod discovery in Prometheus's own namespace, read-only. A Role, not a ClusterRole: Prometheus
-# sees the pods of this environment and nothing else in the cluster.
+# sees the pods of this environment and no other namespace's. The one cluster-scoped grant, at the
+# end of this file, covers Node objects and the kubelet's metrics, nothing namespaced.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -32,5 +33,46 @@ roleRef:
   kind: Role
   name: wely-prometheus
 subjects:
+  - kind: ServiceAccount
+    name: wely-prometheus
+---
+# The kubelet's cAdvisor endpoint (job kubelet-cadvisor in prometheus.yml): Prometheus's only
+# cluster-scoped grant, needed because Nodes are cluster-scoped objects. Kept to the minimum:
+#   - nodes: get/list/watch, for the node discovery (no Secret, no Pod outside this namespace);
+#   - nodes/metrics: get, which is how the kubelet authorises /metrics and /metrics/cadvisor.
+# Deliberately NOT nodes/proxy: that subresource covers every kubelet endpoint, and the kubelet
+# treats a WebSocket exec upgrade as a GET on it, so it amounts to running commands in any
+# container of the node. Prometheus reaches the kubelet directly instead of through the API
+# server proxy, which needs it.
+# namePrefix makes the name per environment (dev-wely-prometheus-kubelet), so a second overlay
+# deploying Prometheus would get its own pair rather than fight over one.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: wely-prometheus-kubelet
+  labels:
+    app: wely
+    component: prometheus
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes/metrics"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: wely-prometheus-kubelet
+  labels:
+    app: wely
+    component: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: wely-prometheus-kubelet
+subjects:
+  # The overlay's namespace transformer fills in the ServiceAccount's namespace.
   - kind: ServiceAccount
     name: wely-prometheus

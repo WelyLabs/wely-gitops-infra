@@ -1,0 +1,18 @@
+# Loads every JSON file of observability/grafana/dashboards (mounted read-only) into the folder
+# "Wely". The UI cannot save over them: change the JSON in Git instead (export from the UI with
+# "Export > Export as JSON" if a change is easier to make there).
+apiVersion: 1
+
+providers:
+  - name: wely
+    orgId: 1
+    # Matched by title, as the alert rules' folder is: whichever provisioner runs first creates
+    # it and the other reuses it.
+    folder: Wely
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 60
+    options:
+      path: /etc/grafana/dashboards/wely
+      foldersFromFilesStructure: false

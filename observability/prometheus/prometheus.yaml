@@ -1,11 +1,12 @@
-# Prometheus: scrapes the opted-in pods of its namespace (prometheus.yml), keeps 7 days.
+# Prometheus: scrapes the opted-in pods of its namespace and the node's kubelet (prometheus.yml),
+# keeps 7 days.
 #
 # Storage: a 2Gi claim on the cluster's default StorageClass (k3s local-path), like every
 # datastore in base/, so the history survives a restart. local-path does NOT enforce the claim's
 # size: --storage.tsdb.retention.size is the real cap, set below the claim.
 #
-# Not exposed: a ClusterIP Service, no route in the tunnel, and a NetworkPolicy that admits no
-# ingress (networkpolicy.yaml). Read it with
+# Not exposed: a ClusterIP Service, no route in the tunnel, and a NetworkPolicy that admits Grafana
+# alone (networkpolicy.yaml). Read it in Grafana (observability/grafana), or directly with
 #   kubectl -n <ns> port-forward svc/<prefix>wely-prometheus-service 9090
 apiVersion: apps/v1
 kind: StatefulSet
@@ -64,19 +65,26 @@ spec:
             port: 9090
           periodSeconds: 5
           failureThreshold: 60
+        # 5s rather than the default 1s: when several JVMs start at once the Pi's four cores sit
+        # at 100% and a 1s probe times out (seen on 2026-10-20: three misses in a row restarted
+        # a healthy Prometheus in the middle of a rollout).
         livenessProbe:
           httpGet:
             path: /-/healthy
             port: 9090
           periodSeconds: 15
+          timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /-/ready
             port: 9090
           periodSeconds: 10
+          timeoutSeconds: 5
           failureThreshold: 3
-        # About ten targets at 30s: a few thousand series. Sized for the Raspberry Pi node.
+        # Ten targets at 30s: about 10 000 series (9 300 measured before node-exporter and the
+        # trimmed cAdvisor job, which add a few hundred), for a working set near 80Mi. The limit
+        # leaves room for Grafana's range queries; sized for the Raspberry Pi node.
         resources:
           requests:
             cpu: 100m

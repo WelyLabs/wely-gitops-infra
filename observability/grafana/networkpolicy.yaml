@@ -1,0 +1,15 @@
+# grafana: no ingress at all. It is read with `kubectl port-forward`, which enters the pod's
+# network namespace and is not filtered here, like the kubelet probes
+# (base/networkpolicies/README.md). Not routed through the tunnel either.
+# Outgoing traffic is not filtered in this repository: Grafana reaches Prometheus (admitted by
+# observability/prometheus/networkpolicy.yaml) and Discord's webhook API.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-grafana
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-grafana
+  policyTypes: [Ingress]
+  ingress: []

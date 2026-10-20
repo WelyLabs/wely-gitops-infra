@@ -1,6 +1,6 @@
-# prometheus: no ingress at all. Nothing in the cluster needs to call it; read it with
-# `kubectl port-forward`, which enters the pod's network namespace and is not filtered here,
-# like the kubelet probes (base/networkpolicies/README.md).
+# prometheus: Grafana only (observability/grafana), on the API port. Nothing else in the cluster
+# needs to call it; read it with `kubectl port-forward`, which enters the pod's network namespace
+# and is not filtered here, like the kubelet probes (base/networkpolicies/README.md).
 # Without this policy the pod would accept connections from any pod, cloudflared included.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -11,4 +11,8 @@ spec:
     matchLabels:
       app: wely-prometheus
   policyTypes: [Ingress]
-  ingress: []
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-grafana } }   # datasource queries (/api/v1/query*)
+      ports:
+        - { protocol: TCP, port: 9090 }

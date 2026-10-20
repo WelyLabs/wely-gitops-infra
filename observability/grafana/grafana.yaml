@@ -1,0 +1,199 @@
+# Grafana OSS: the dashboards and alert rules of observability/prometheus, provisioned from Git.
+#
+# Storage: an emptyDir, not a claim. Everything that matters is provisioned from this directory at
+# every start: datasource, dashboards, contact point, notification policy and alert rules. The
+# sqlite database only holds what the UI adds on top: user preferences, starred dashboards,
+# silences, the alert notification log and the current alert state. Losing those at a restart is
+# the price of having no PersistentVolume to manage; the visible effect is that an alert still
+# firing is notified once more after a restart. A side benefit: the admin account is created from
+# the Secret at every start, so re-sealing it and restarting the pod is the whole rotation.
+#
+# Admin credentials: Secret wely-grafana (admin-user, admin-password), optional. Without it,
+# Grafana starts with its built-in admin/admin and asks for a new password at the first login;
+# that change only lasts until the next restart (emptyDir). The pod is reachable through
+# `kubectl port-forward` only, so this fallback needs cluster credentials to exploit.
+#
+# Not exposed: a ClusterIP Service, no route in the tunnel, no ingress admitted
+# (networkpolicy.yaml). Open it with
+#   kubectl -n <ns> port-forward svc/<prefix>wely-grafana-service 3000:3000
+# then http://localhost:3000.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-grafana
+  labels:
+    app: wely
+    component: grafana
+spec:
+  replicas: 1
+  # One pod at a time: no claim to share, and a Pi has no memory for two during a rollout.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: wely-grafana
+  template:
+    metadata:
+      labels:
+        app: wely-grafana
+    spec:
+      # Grafana calls Prometheus over HTTP; it never talks to the Kubernetes API.
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      # Non-root: the image's own user and group (grafana, 472), as the official Helm chart runs it.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        runAsGroup: 472
+        fsGroup: 472
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: grafana
+        # Pinned by tag and digest (multi-arch index, arm64 included). 12.4.12, released
+        # 2026-09-29: the 12.4 line is still patched, and the dashboards use its JSON model.
+        image: grafana/grafana:12.4.12@sha256:83be3e511ede559bee80e2215bb1987cb1246075461cb961beb515b0341e7aea
+        imagePullPolicy: IfNotPresent
+        # The image's own entrypoint (/run.sh), behind one line of shell: the Discord contact
+        # point is provisioned from $DISCORD_WEBHOOK_URL, and Grafana refuses to provision a
+        # Discord integration without a URL, which would stop it from starting. Without the
+        # optional Secret the variable gets a placeholder on a reserved, never-resolving domain
+        # (RFC 2606): the rules still evaluate and show in Grafana, and each notification fails
+        # at delivery, visibly, under Alerting > Contact points.
+        command: ["/bin/sh", "-c"]
+        args:
+        - export DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-https://discord-webhook.invalid/not-configured}"; exec /run.sh
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        # The datasource URL (provisioning/datasources.yaml). namePrefix renames the Prometheus
+        # Service but not a value that spells its name: the overlay sets the prefixed name.
+        - name: PROMETHEUS_URL
+          value: "http://wely-prometheus-service:9090"
+        # Optional Secrets: namePrefix does not rewrite these references (the SealedSecret is not
+        # a Secret to kustomize), so they spell the dev name, like the services in base/.
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef: { name: dev-wely-grafana, key: admin-user, optional: true }
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef: { name: dev-wely-grafana, key: admin-password, optional: true }
+        - name: DISCORD_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef: { name: dev-wely-grafana-alerting, key: discord-webhook-url, optional: true }
+        # Sign-in only: no anonymous viewer, no self sign-up.
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "false"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        - name: GF_SERVER_ROOT_URL
+          value: "http://localhost:3000/"
+        # No calls home: usage reporting, update checks, news feed, avatars, and the plugins
+        # Grafana 12 would otherwise download and load at every start (memory and start-up time).
+        - name: GF_ANALYTICS_REPORTING_ENABLED
+          value: "false"
+        - name: GF_ANALYTICS_CHECK_FOR_UPDATES
+          value: "false"
+        - name: GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES
+          value: "false"
+        - name: GF_NEWS_NEWS_FEED_ENABLED
+          value: "false"
+        - name: GF_SECURITY_DISABLE_GRAVATAR
+          value: "true"
+        - name: GF_PLUGINS_PREINSTALL_DISABLED
+          value: "true"
+        # Dashboards refresh every 30s; nobody gets to hammer the Pi's Prometheus faster.
+        - name: GF_DASHBOARDS_MIN_REFRESH_INTERVAL
+          value: "30s"
+        # The Go heap is collected before the container reaches its memory limit.
+        - name: GOMEMLIMIT
+          value: "220MiB"
+        securityContext:
+          allowPrivilegeEscalation: false
+          # Writable paths are the two volumes below: /var/lib/grafana (sqlite, plugins dir) and
+          # /tmp. The image logs to the console only, so /var/log/grafana is never written.
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        # The first start creates the sqlite schema (several hundred migrations), and with an
+        # emptyDir every start is a first start: up to a minute on the Pi. Liveness waits for it.
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          periodSeconds: 10
+          failureThreshold: 30
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: "1"
+            memory: 256Mi
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
+        - name: tmp
+          mountPath: /tmp
+        - name: datasources
+          mountPath: /etc/grafana/provisioning/datasources
+          readOnly: true
+        - name: dashboard-provider
+          mountPath: /etc/grafana/provisioning/dashboards
+          readOnly: true
+        - name: alerting
+          mountPath: /etc/grafana/provisioning/alerting
+          readOnly: true
+        - name: dashboards
+          mountPath: /etc/grafana/dashboards/wely
+          readOnly: true
+      volumes:
+      - name: data
+        emptyDir:
+          sizeLimit: 256Mi
+      - name: tmp
+        emptyDir:
+          sizeLimit: 64Mi
+      - name: datasources
+        configMap:
+          name: wely-grafana-datasources
+      - name: dashboard-provider
+        configMap:
+          name: wely-grafana-dashboard-provider
+      - name: alerting
+        configMap:
+          name: wely-grafana-alerting-config
+      - name: dashboards
+        configMap:
+          name: wely-grafana-dashboards
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-grafana-service
+  labels:
+    app: wely
+    component: grafana
+spec:
+  type: ClusterIP
+  selector:
+    app: wely-grafana
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

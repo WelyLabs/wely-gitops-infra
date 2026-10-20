@@ -1,0 +1,11 @@
+# node-exporter: the Raspberry Pi itself (CPU, memory, disks, load, temperature), scraped by
+# observability/prometheus through the same pod annotations as the services.
+#
+# Not part of base/, for the same reason as Prometheus: overlays/prod renders base/ onto the same
+# node. An overlay that deploys Prometheus lists this directory too (overlays/dev does).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - node-exporter.yaml
+  - networkpolicy.yaml

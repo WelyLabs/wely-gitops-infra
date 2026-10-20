@@ -52,7 +52,9 @@ Deux conséquences :
 │   ├── cloudflared.yaml          tunnel Cloudflare (exposition publique)
 │   └── wely-tailscale.yaml       opérateur Tailscale (accès administrateur)
 ├── observability/
-│   └── prometheus/               Prometheus, opt-in per overlay (dev), not exposed
+│   ├── prometheus/               Prometheus, opt-in per overlay (dev), not exposed
+│   ├── node-exporter/            node metrics of the Pi (CPU, RAM, disks, temperature)
+│   └── grafana/                  dashboards + Discord alerts, provisioned from Git (port-forward)
 └── overlays/
     ├── local/                    Kubernetes local — secrets en clair, images locales
     ├── dev/                      cluster Raspberry Pi — SealedSecrets, images par SHA

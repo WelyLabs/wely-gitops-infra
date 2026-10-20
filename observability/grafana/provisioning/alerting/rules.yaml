@@ -1,0 +1,248 @@
+# Alert rules, evaluated by Grafana every minute against the Prometheus datasource.
+#
+# Every rule has the same shape: query A returns one series per thing watched (service, pod,
+# topic, mount point, breaker) with a value, and expression C compares that value to a threshold.
+# A series of A that crosses it becomes a firing alert after "for"; one that comes back resolves.
+#
+# noDataState: what an empty result means. OK where empty is the normal case (no technical error,
+# no consumer lagging, no breaker created yet); NoData where it means the data itself is gone.
+# execErrState: Error, so an unreachable Prometheus raises a DatasourceError alert of its own
+# rather than silencing every rule.
+#
+# The labels of A (app, pod, topic...) travel with each alert: the notification policy groups by
+# alertname and app, and the annotations below quote them.
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: wely
+    folder: Wely
+    interval: 1m
+    rules:
+      # ── Service down ──────────────────────────────────────────────────────────────────────────
+      # Any scrape target: the seven services, node-exporter, the kubelet and Prometheus itself.
+      # A pod that is gone altogether (scaled to 0, stuck Pending) has no target and no series:
+      # this rule watches crashed and hung processes, not missing pods.
+      - uid: wely-service-down
+        title: Service down
+        condition: C
+        for: 2m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ if $labels.app }}{{ $labels.app }}{{ else }}{{ $labels.job }}{{ end }} is not answering its scrapes"
+          description: "Target {{ $labels.instance }} (job {{ $labels.job }}{{ if $labels.pod }}, pod {{ $labels.pod }}{{ end }}) has failed every scrape for 2 minutes."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 300, to: 0 }
+            model:
+              refId: A
+              expr: up
+              instant: true
+              range: false
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: lt, params: [1] }
+
+      # ── Technical errors ──────────────────────────────────────────────────────────────────────
+      # More than 5 technical errors in 10 minutes for one service. One alert per code and source
+      # of that service, so the Discord message (grouped by app) lists what failed and where.
+      - uid: wely-technical-errors
+        title: Technical errors
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.app }}: more than 5 technical errors in 10 minutes"
+          description: "{{ humanize $values.A.Value }} x {{ $labels.code }} (source {{ $labels.source }}) in the last 10 minutes."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 600, to: 0 }
+            model:
+              refId: A
+              # Per code and source, kept only for the services whose total is above 5.
+              expr: |
+                sum by (app, code, source) (increase(wely_errors_technical_total[10m]))
+                  and on (app)
+                (sum by (app) (increase(wely_errors_technical_total[10m])) > 5)
+              instant: true
+              range: false
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: gt, params: [0] }
+
+      # ── Kafka consumer lag ────────────────────────────────────────────────────────────────────
+      # A consumer more than 100 records behind on a topic, and further behind than 10 minutes
+      # earlier, for 10 minutes in a row: it is not catching up.
+      - uid: wely-kafka-lag-increasing
+        title: Kafka lag increasing
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.app }} is falling behind on {{ $labels.topic }}"
+          description: "{{ humanize $values.A.Value }} records of lag on {{ $labels.topic }}, still growing after 10 minutes."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 600, to: 0 }
+            model:
+              refId: A
+              expr: |
+                (sum by (app, topic) (kafka_consumer_fetch_manager_records_lag) > 100)
+                  and on (app, topic)
+                (sum by (app, topic) (delta(kafka_consumer_fetch_manager_records_lag[10m])) > 0)
+              instant: true
+              range: false
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: gt, params: [0] }
+
+      # ── JVM heap ──────────────────────────────────────────────────────────────────────────────
+      # Heap used above 90% of its maximum for 5 minutes, per pod: the garbage collector is no
+      # longer getting it back, and an OutOfMemoryError is next.
+      - uid: wely-heap-high
+        title: JVM heap above 90%
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.app }}: heap at {{ humanizePercentage $values.A.Value }} of its maximum"
+          description: "Pod {{ $labels.pod }} has used more than 90% of its maximum heap for 5 minutes."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 300, to: 0 }
+            model:
+              refId: A
+              expr: |
+                sum by (app, pod) (jvm_memory_used_bytes{area="heap"})
+                  /
+                sum by (app, pod) (jvm_memory_max_bytes{area="heap"})
+              instant: true
+              range: false
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: gt, params: [0.9] }
+
+      # ── Disk space ────────────────────────────────────────────────────────────────────────────
+      # Less than 10% free on a filesystem of the Pi for 10 minutes. Prometheus's TSDB, like every
+      # other claim, is a local-path directory on the root filesystem
+      # (/var/lib/rancher/k3s/storage), so "/" running out is also Prometheus running out.
+      - uid: wely-disk-space-low
+        title: Disk space low
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.mountpoint }} has {{ humanizePercentage $values.A.Value }} free"
+          description: "Filesystem {{ $labels.device }} mounted on {{ $labels.mountpoint }} has had less than 10% free space for 10 minutes. Prometheus and every claim live on the root filesystem."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 300, to: 0 }
+            model:
+              refId: A
+              expr: |
+                min by (device, mountpoint) (
+                  node_filesystem_avail_bytes{fstype!~"tmpfs|ramfs"}
+                    /
+                  node_filesystem_size_bytes{fstype!~"tmpfs|ramfs"}
+                )
+              instant: true
+              range: false
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: lt, params: [0.1] }
+
+      # ── Gateway circuit breaker ───────────────────────────────────────────────────────────────
+      # A breaker of the gateway open for 2 minutes: every request to that service gets the
+      # fallback. resilience4j exports one series per state, at 1 on the current one; breakers
+      # only appear after their first call, hence noDataState OK.
+      - uid: wely-gateway-breaker-open
+        title: Gateway circuit breaker open
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "Gateway breaker {{ $labels.name }} is open"
+          description: "{{ $labels.name }} has been open for 2 minutes: the gateway answers its routes with the fallback."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 300, to: 0 }
+            model:
+              refId: A
+              expr: max by (app, name) (resilience4j_circuitbreaker_state{app="wely-gateway", state=~"open|forced_open"})
+              instant: true
+              range: false
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: gt, params: [0] }

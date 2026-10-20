@@ -1,0 +1,16 @@
+# node-exporter: Prometheus only, on the metrics port. The pod is in the pod network (no
+# hostNetwork), so this policy applies to it like to any other pod.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-node-exporter
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-node-exporter
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: wely-prometheus } }   # metrics scrape (/metrics)
+      ports:
+        - { protocol: TCP, port: 9100 }

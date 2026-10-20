@@ -17,6 +17,12 @@ resources:
 # Metrics of the six Spring services (pods annotated prometheus.io/* in base/). Dev only: prod
 # shares the same Raspberry Pi and cannot start anyway.
 - ../../observability/prometheus
+# The Pi itself (CPU, memory, disks, temperature), scraped by the Prometheus above.
+- ../../observability/node-exporter
+# Dashboards and Discord alerts over that Prometheus (kubectl port-forward only). Its two
+# optional Secrets, sealed by seal-grafana-secrets.sh at the workspace root, are listed below
+# once sealed: wely-sealed-grafana-dev.yaml, wely-sealed-grafana-alerting-dev.yaml.
+- ../../observability/grafana
 
 # Dataset of the public demo account, replayed nightly by demo/demo-reset.yaml.
 # Display settings of wely-realm and master, applied by realm/realm-settings-job.yaml after each sync.
@@ -398,6 +404,28 @@ patches:
   target:
     kind: Job
     name: wely-kafka-topics
+# namePrefix renames the Prometheus Service, not a value that spells its name.
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-grafana
+    spec:
+      template:
+        metadata:
+          annotations:
+            # Its optional Secrets are read at pod start: bump this once dev-wely-grafana or
+            # dev-wely-grafana-alerting is sealed, rotated, and live.
+            wely.dev/grafana-secrets: "0"
+        spec:
+          containers:
+          - name: grafana
+            env:
+            - name: PROMETHEUS_URL
+              value: "http://dev-wely-prometheus-service:9090"
+  target:
+    kind: Deployment
+    name: wely-grafana
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment

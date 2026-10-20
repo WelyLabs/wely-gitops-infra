@@ -1,0 +1,21 @@
+# One contact point: a Discord channel's webhook.
+#
+# The URL comes from the optional Secret wely-grafana-alerting (key discord-webhook-url), through
+# the DISCORD_WEBHOOK_URL variable of the Deployment; Grafana interpolates it at start and stores
+# it encrypted in its database. Without the Secret the variable holds a placeholder on the
+# reserved .invalid domain (grafana.yaml): rules evaluate and fire as usual, and every delivery
+# fails, shown as an error on this contact point in Alerting > Contact points and in the logs.
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: discord
+    receivers:
+      - uid: discord
+        type: discord
+        settings:
+          url: $__env{DISCORD_WEBHOOK_URL}
+          # Posts under the webhook's own name and avatar, set in Discord.
+          use_discord_username: false
+        # "Resolved" messages too, so the channel tells when it is over.
+        disableResolveMessage: false

@@ -1,5 +1,6 @@
 global:
   # Seven small JVMs on a Raspberry Pi: 30s is plenty for error counters and keeps the TSDB small.
+  # Grafana's datasource declares the same 30s (timeInterval), so $__rate_interval is at least 2m.
   scrape_interval: 30s
   scrape_timeout: 10s
   evaluation_interval: 30s
@@ -47,3 +48,50 @@ scrape_configs:
         target_label: pod
       - source_labels: [__meta_kubernetes_pod_label_app]
         target_label: app
+
+  # cAdvisor, as embedded in the kubelet: container memory, CPU and throttling, which the JVMs
+  # cannot report about themselves, plus the node's own network interfaces.
+  #
+  # Straight to the kubelet (https://<node InternalIP>:10250/metrics/cadvisor) rather than through
+  # the API server proxy (/api/v1/nodes/<node>/proxy/metrics/cadvisor): the kubelet authorises
+  # /metrics/* as the nodes/metrics subresource, while the proxy route needs nodes/proxy, which also
+  # opens the kubelet's other endpoints (exec over a WebSocket upgrade included). On k3s the
+  # kubelet's serving certificate is signed by the cluster CA mounted in every pod (k3s-server-ca)
+  # and carries the node's InternalIP and hostname as SANs, so the TLS check passes unchanged.
+  # Read access: the ClusterRole in rbac.yaml.
+  - job_name: kubelet-cadvisor
+    scheme: https
+    metrics_path: /metrics/cadvisor
+    kubernetes_sd_configs:
+      # One target per node, at its first InternalIP and kubelet port (10250).
+      - role: node
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: node
+    # The kubelet exposes ~6 000 series for every container of the node; the Pi keeps ~100.
+    metric_relabel_configs:
+      # 1. A handful of metric names.
+      - source_labels: [__name__]
+        action: keep
+        regex: "container_(memory_working_set_bytes|spec_memory_limit_bytes|cpu_usage_seconds_total|cpu_cfs_throttled_periods_total|cpu_cfs_periods_total|network_receive_bytes_total|network_transmit_bytes_total)"
+      # 2. Then only the series that answer a question, keyed on name;namespace;container;id;interface:
+      #    - memory and CPU per container of this environment (container="" is the pod cgroup or
+      #      the pause container, dropped);
+      #    - CFS throttling per pod: this kubelet reports it on the pod cgroup only (container="");
+      #    - network of the node itself (id="/", the root cgroup, which sits in the host network
+      #      namespace), on its real interfaces. node-exporter runs in the pod network and cannot
+      #      see them (observability/node-exporter).
+      #    container_fs_usage_bytes is not kept: with containerd, this kubelet reports it for the
+      #    root cgroup only, which node-exporter's filesystem collector already covers.
+      #    The namespace is written out: this file is deployed by overlays/dev only.
+      - source_labels: [__name__, namespace, container, id, interface]
+        action: keep
+        regex: "container_(memory_working_set_bytes|spec_memory_limit_bytes|cpu_usage_seconds_total);wely-dev;[^;]+;[^;]*;|container_cpu_cfs_(throttled_periods|periods)_total;wely-dev;;[^;]*;|container_network_(receive|transmit)_bytes_total;;;/;(eth0|wlan0|tailscale0)"
+      # 3. The cgroup path, the containerd id and the image digest change on every restart or
+      #    deploy and identify nothing namespace/pod/container do not.
+      - action: labeldrop
+        regex: "id|name|image"

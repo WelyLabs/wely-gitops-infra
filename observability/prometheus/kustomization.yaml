@@ -1,4 +1,6 @@
-# A minimal Prometheus, scraping the pods of its own namespace that opt in with annotations.
+# A minimal Prometheus, scraping the pods of its own namespace that opt in with annotations, and
+# a trimmed set of container metrics from the node's kubelet (cAdvisor, job kubelet-cadvisor).
+# Read through observability/grafana; node metrics come from observability/node-exporter.
 #
 # Not part of base/: base/ is also rendered by overlays/prod, which Argo CD deploys onto the same
 # Raspberry Pi. An overlay opts in by listing this directory in its resources (overlays/dev does).

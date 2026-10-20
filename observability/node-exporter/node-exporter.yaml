@@ -1,0 +1,121 @@
+# node-exporter: one pod per node (a single Raspberry Pi 5 today), reading the host's /proc, /sys
+# and root filesystem through read-only hostPath mounts.
+#
+# No hostNetwork and no hostPID:
+#   - /proc/stat, /proc/meminfo, /proc/loadavg, /proc/diskstats and /sys are not namespaced, so the
+#     host's copies mounted under /host give the node's figures from inside the pod;
+#   - the filesystem collector reads the mount table of PID 1 in the host's /proc (/host/proc/1/
+#     mounts: the host's init, since that procfs belongs to the host PID namespace) and stats each
+#     mount point under /host/root;
+#   - the pod keeps an ordinary pod IP, so Prometheus's pod discovery scrapes it through the
+#     annotations below and the NetworkPolicy in networkpolicy.yaml applies (it would not to a
+#     hostNetwork pod, whose port would then be open on the node's LAN and Tailscale addresses).
+# The price: the netdev collector would report the pod's own network namespace, not the node's,
+# so it is off. The node's interfaces come from the kubelet's cAdvisor instead (root cgroup,
+# job kubelet-cadvisor in observability/prometheus/prometheus.yml).
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: wely-node-exporter
+  labels:
+    app: wely
+    component: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app: wely-node-exporter
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: wely-node-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9100"
+        prometheus.io/path: /metrics
+    spec:
+      # Talks to nothing in the cluster.
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: node-exporter
+        # Pinned by tag and digest (multi-arch index, arm64 included), released 2026-07-14.
+        image: prom/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+        imagePullPolicy: IfNotPresent
+        args:
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        - --path.rootfs=/host/root
+        - --web.listen-address=:9100
+        # No go_* / process_* / promhttp_* series about the exporter itself.
+        - --web.disable-exporter-metrics
+        # What a Pi needs, nothing more: a few hundred series instead of the defaults' thousand-odd.
+        - --collector.disable-defaults
+        - --collector.cpu
+        - --collector.meminfo
+        - --collector.loadavg
+        - --collector.diskstats
+        - --collector.filesystem
+        # The SoC temperature: thermal_zone0 (cpu-thermal), also exposed as an hwmon chip.
+        - --collector.thermal_zone
+        - --collector.hwmon
+        # Real filesystems only: kubelet volumes, container layers and the k3s/containerd state
+        # are views of the root filesystem (or tmpfs) and would only repeat it.
+        - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run|var/lib/kubelet|var/lib/rancher/k3s/agent/containerd|var/lib/containerd)($|/)
+        - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
+        ports:
+        - containerPort: 9100
+          name: metrics
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 9100
+          periodSeconds: 30
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 9100
+          periodSeconds: 30
+        # node-exporter stays well under 30Mi resident with this few collectors.
+        resources:
+          requests:
+            cpu: 10m
+            memory: 24Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        # HostToContainer: mounts made on the host after the pod started (a USB disk) show up too.
+        - name: root
+          mountPath: /host/root
+          readOnly: true
+          mountPropagation: HostToContainer
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: root
+        hostPath:
+          path: /
