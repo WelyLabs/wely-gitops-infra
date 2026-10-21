@@ -18,6 +18,7 @@ spec:
         - podSelector: { matchLabels: { app: wely-events } }         # JWKS
         - podSelector: { matchLabels: { app: wely-media } }          # JWKS
         - podSelector: { matchLabels: { app: wely-notifications } }  # JWKS
+        - podSelector: { matchLabels: { app: wely-mcp } }            # JWKS
         - podSelector: { matchLabels: { app: cloudflared } }         # browser login
         - podSelector: { matchLabels: { app: wely-realm-settings } } # realm configuration job
       ports:
