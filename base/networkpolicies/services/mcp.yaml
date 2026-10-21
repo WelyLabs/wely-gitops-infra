@@ -1,0 +1,17 @@
+# mcp: entered from outside through cloudflared, like web, because MCP clients are not in the
+# cluster. The port filtered is the POD's (8088), which the Service happens to mirror here --
+# a NetworkPolicy never matches the Service port, and getting that wrong has caused outages.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mcp
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-mcp
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: cloudflared } }       # public MCP hostname
+      ports:
+        - { protocol: TCP, port: 8088 }
