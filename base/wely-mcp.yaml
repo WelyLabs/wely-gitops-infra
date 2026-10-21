@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wely-mcp
+  labels:
+    app: wely
+    component: mcp
+spec:
+  # Stateless: it holds no session of its own, every call carrying the caller's token. Kept at one
+  # replica because nothing yet needs more, not because a second would break anything.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wely-mcp
+  template:
+    metadata:
+      labels:
+        app: wely-mcp
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+      - name: wely-registry
+      containers:
+      - name: mcp
+        image: ghcr.io/welylabs/wely-mcp:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8088
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        # A small heap: this service only translates calls and waits on the gateway.
+        - name: JAVA_OPTS
+          value: "-XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError"
+        # The hostname MCP clients reach, which goes into the OAuth discovery document. It must be
+        # the public one: a client reads it to find where to sign in, from outside the cluster.
+        - name: MCP_PUBLIC_URL
+          value: "https://mcp.welylabs.app"
+        # Calls the calendar as any other API client would, relaying the caller's token.
+        - name: GATEWAY_URL
+          value: "http://wely-gateway-service:8081"
+        - name: KEYCLOAK_ISSUER_URI
+          value: "https://auth.welylabs.app/realms/wely-realm"
+        - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+          value: "http://wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        startupProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8088
+          periodSeconds: 5
+          failureThreshold: 36
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8088
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8088
+          periodSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 50m
+            memory: 192Mi
+          limits:
+            cpu: "1"
+            memory: 320Mi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wely-mcp-service
+spec:
+  selector:
+    app: wely-mcp
+  ports:
+    - protocol: TCP
+      port: 8088
+      targetPort: 8088
+  type: ClusterIP

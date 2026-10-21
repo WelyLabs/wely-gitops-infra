@@ -219,6 +219,28 @@ patches:
   target:
     kind: Deployment
     name: wely-social
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-mcp
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mcp
+            env:
+            - name: MCP_PUBLIC_URL
+              value: "https://dev-mcp.welylabs.app"
+            - name: GATEWAY_URL
+              value: "http://dev-wely-gateway-service:8081"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "https://dev-auth.welylabs.app/realms/wely-realm"
+            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "http://dev-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+  target:
+    kind: Deployment
+    name: wely-mcp
 # Keyed by environment-variable name rather than by index, unlike the patches above.
 # The base gained CHAT_BROADCAST_MODE and its Kafka settings, which shifted every index
 # after MONGODB_URI, so /env/4 stopped being the Keycloak issuer. A merge patch has no
@@ -525,6 +547,9 @@ images:
 - name: ghcr.io/welylabs/wely-notifications
   newName: ghcr.io/welylabs/wely-notifications
   newTag: sha-ac070ae96fefebef3478de2944195df2aa2c8550
+- name: ghcr.io/welylabs/wely-mcp
+  newName: ghcr.io/welylabs/wely-mcp
+  newTag: latest
 - name: ghcr.io/welylabs/wely-media
   newName: ghcr.io/welylabs/wely-media
   newTag: sha-853f182ab8c1c320fc67fa5a5f98ccc77293f466
