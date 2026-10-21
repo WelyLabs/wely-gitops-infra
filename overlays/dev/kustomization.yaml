@@ -37,6 +37,7 @@ configMapGenerator:
 - files:
   - realm/realm-settings.json
   - realm/master-settings.json
+  - realm/wely-mcp-client.json
   name: wely-realm-settings
 # Demo accounts (public credentials): never deleted (wely-users), never erased (wely-events), never
 # promoted to community admin on any leave (wely-social) nor handed a deleted organizer's events
