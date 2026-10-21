@@ -26,6 +26,11 @@
 #   - wely://oauth-callback among wely-client's redirect URIs, for wely-ios's sign-up and sign-in
 #     pages: appended once, the live URIs are kept.
 #
+#   - wely-mcp-client, the public client an MCP client signs in through: created once, then its
+#     PKCE method and business-scope are checked at every sync, and its redirect URIs appended
+#     without rewriting the live ones. The realm refuses anonymous dynamic client registration,
+#     so this is the only way a client exists for Claude to use.
+#
 #   - auth_time in wely-client's access tokens, which DELETE /user-service/profile requires: only
 #     checked, last, so a failure never skips the steps above.
 #
@@ -118,6 +123,44 @@ spec:
               echo "$URIS" | grep -qF "\"$IOS_REDIRECT\"" \
                 || $K update clients/$CID -r wely-realm --config $C -s "redirectUris=[${URIS:+$URIS,}\"$IOS_REDIRECT\"]"
               $K get clients/$CID -r wely-realm --config $C --fields redirectUris
+
+              # wely-mcp-client: the public client an MCP client (Claude) signs in through to reach
+              # wely-mcp. Declared here because the realm refuses anonymous dynamic client
+              # registration (Trusted Hosts policy), so a client cannot register itself.
+              mcp_cid() { $K get clients -r wely-realm --config $C -q clientId=wely-mcp-client \
+                            --fields id --format csv --noquotes; }
+              [ -n "$(mcp_cid)" ] \
+                || $K create clients -r wely-realm --config $C -f /settings/wely-mcp-client.json
+              MCP_CID=$(mcp_cid)
+              [ -n "$MCP_CID" ] || { echo "wely-mcp-client could not be created"; exit 1; }
+
+              # PKCE is mandatory on a public client: without it an intercepted code is enough.
+              $K update clients/$MCP_CID -r wely-realm --config $C \
+                -s 'attributes."pkce.code.challenge.method"=S256'
+
+              # business-scope carries the businessId claim. Without it the token is valid and
+              # every call behind the gateway still fails, which is a confusing way to break.
+              BSID=$($K get client-scopes -r wely-realm --config $C --fields id,name --format csv \
+                       --noquotes | grep ',business-scope$' | cut -d, -f1)
+              [ -n "$BSID" ] || { echo "business-scope is missing from the realm"; exit 1; }
+              $K get clients/$MCP_CID/default-client-scopes -r wely-realm --config $C --fields name \
+                --format csv --noquotes | grep -qx business-scope \
+                || $K update clients/$MCP_CID/default-client-scopes/$BSID -r wely-realm --config $C
+
+              # Redirect URIs are appended, never rewritten: Claude's exact callback may differ from
+              # the two below, and whatever is added by hand must survive the next sync.
+              for MCP_REDIRECT in https://claude.ai/api/mcp/auth_callback https://claude.com/api/mcp/auth_callback; do
+                MCP_URIS=$($K get clients/$MCP_CID -r wely-realm --config $C --fields redirectUris \
+                             | tr -d '\n ' | sed 's/.*\[\(.*\)\].*/\1/')
+                echo "$MCP_URIS" | grep -qF "\"$MCP_REDIRECT\"" \
+                  || $K update clients/$MCP_CID -r wely-realm --config $C \
+                       -s "redirectUris=[${MCP_URIS:+$MCP_URIS,}\"$MCP_REDIRECT\"]"
+              done
+              $K get clients/$MCP_CID -r wely-realm --config $C \
+                --fields clientId,publicClient,standardFlowEnabled,redirectUris
+              $K get clients/$MCP_CID/default-client-scopes -r wely-realm --config $C --fields name \
+                --format csv --noquotes | grep -qx business-scope \
+                || { echo "wely-mcp-client lacks business-scope: its tokens would carry no businessId"; exit 1; }
 
               # auth_time comes from the AUTH_TIME note mapper of the 'basic' scope, a default scope
               # of wely-client, and lightweight access tokens would drop it.
