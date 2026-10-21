@@ -12,6 +12,7 @@ spec:
     - from:
         - podSelector: { matchLabels: { app: wely-web } }          # nginx proxies /api + /rsocket here
         - podSelector: { matchLabels: { app: cloudflared } }       # belt-and-suspenders on the critical path
+        - podSelector: { matchLabels: { app: wely-mcp } }          # MCP tools call the API as any client would
       ports:
         - { protocol: TCP, port: 8081 }
     # Management port (actuator): Prometheus only. Neither web nor cloudflared reaches it.
