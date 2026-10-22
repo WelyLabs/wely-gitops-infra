@@ -312,7 +312,10 @@ patches:
         spec:
           containers:
           - name: keycloak
-            # Local is the only environment that imports the realm, from keycloak/wely-realm.json.
+            # Local is the only environment that imports the realm, from keycloak/wely-realm.json,
+            # which is now the only export of wely-realm there is: wely-identity used to carry a
+            # second one, baked into the Keycloak image and hidden by the mount below, that nothing
+            # applied and that had already drifted (it alone held wely-mcp-client).
             # It replaces a 357 KB dump of a Keycloak database that used to seed Postgres here —
             # four RSA private keys and a CREDENTIAL table, in a public repository. Keycloak skips
             # a realm that already exists, so the flag would be harmless in dev and prod; it stays
