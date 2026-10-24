@@ -302,8 +302,8 @@
           "attributes": {}
         }
       ],
-      "wely-client": [],
-      "wely-users-api-client": [],
+      "wely-web-local-client": [],
+      "wely-users-local-client": [],
       "security-admin-console": [],
       "admin-cli": [],
       "account-console": [],
@@ -464,12 +464,12 @@
   "users": [
     {
       "id": "938386eb-79ac-4a28-8ebb-a50f44a52e40",
-      "username": "service-account-wely-users-api-client",
+      "username": "service-account-wely-users-local-client",
       "emailVerified": false,
       "enabled": true,
       "createdTimestamp": 1765912069244,
       "totp": false,
-      "serviceAccountClientId": "wely-users-api-client",
+      "serviceAccountClientId": "wely-users-local-client",
       "credentials": [],
       "disableableCredentialTypes": [],
       "requiredActions": [],
@@ -701,7 +701,7 @@
     },
     {
       "id": "9cbadcae-a924-47ec-8e35-e6bd8e2ee33e",
-      "clientId": "wely-client",
+      "clientId": "wely-web-local-client",
       "name": "",
       "description": "",
       "rootUrl": "http://localhost",
@@ -754,11 +754,11 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "wely-client",
             "id.token.claim": "true",
             "lightweight.claim": "false",
             "access.token.claim": "true",
-            "introspection.token.claim": "true"
+            "introspection.token.claim": "true",
+            "included.custom.audience": "wely-api-local"
           }
         },
         {
@@ -793,7 +793,7 @@
       ]
     },
     {
-      "clientId": "wely-mcp-client",
+      "clientId": "wely-mcp-local-client",
       "name": "Wely MCP (LLM agents)",
       "description": "Public client an MCP client signs in through to reach wely-mcp. Declared here because the realm refuses anonymous dynamic client registration.",
       "enabled": true,
@@ -835,7 +835,7 @@
     },
     {
       "id": "717a9e61-3f16-4378-b057-814ff141a9f3",
-      "clientId": "wely-users-api-client",
+      "clientId": "wely-users-local-client",
       "name": "",
       "description": "",
       "rootUrl": "",
@@ -1400,11 +1400,11 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "wely-client",
             "id.token.claim": "false",
             "lightweight.claim": "false",
             "access.token.claim": "true",
-            "introspection.token.claim": "true"
+            "introspection.token.claim": "true",
+            "included.custom.audience": "wely-api-local"
           }
         }
       ]
