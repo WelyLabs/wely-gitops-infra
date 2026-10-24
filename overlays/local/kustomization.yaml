@@ -41,6 +41,12 @@ patches:
               value: "http://local-wely-gateway-service.wely-local.svc.cluster.local:8081"
             - name: KEYCLOAK_URL
               value: "http://localhost:8080"
+            # Injected into index.html by entrypoint.sh like the URL above: the realm and the client
+            # cannot be constants in the bundle now that one Keycloak serves every environment.
+            - name: KEYCLOAK_REALM
+              value: "wely-local"
+            - name: KEYCLOAK_CLIENT_ID
+              value: "wely-web-local-client"
   target:
     kind: Deployment
     name: wely-web
