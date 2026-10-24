@@ -43,9 +43,6 @@ spec:
         # restart the identity provider the whole platform authenticates against, turning a
         # slowdown into an outage. Readiness takes it out of rotation without killing it.
         #
-        # Unlike the Spring services, whose readiness deliberately ignores their databases,
-        # Keycloak's /health/ready includes its datasource — and that is right: with no database
-        # it cannot authenticate anyone, so serving traffic would be pretending.
         startupProbe:
           # Generous: a cold start on this node takes minutes, and until this passes the other
           # probes are not run at all, so a slow boot is never mistaken for a failure.
@@ -53,7 +50,21 @@ spec:
           periodSeconds: 10
           failureThreshold: 60
         readinessProbe:
-          httpGet: { path: /health/ready, port: 9000 }
+          # Deliberately the listening socket, not /health/ready. Measured on this deployment,
+          # that endpoint answers "status": "DOWN" — and takes minutes to say it. The failing
+          # entry is "Keycloak cluster health check", the Infinispan cache cluster, not the
+          # datasource: with one replica and no JGroups discovery configured there is no cluster
+          # to be healthy, so readiness on it would never pass and the pod would never join the
+          # Service. A first attempt did exactly that, sitting 0/1 for thirty minutes.
+          #
+          # The socket is the condition that actually caused the 502s: cloudflared could not
+          # connect to 8080 while Keycloak was still booting. /health/started above proves the
+          # server finished starting, so the pair reads "started, and accepting connections".
+          #
+          # What this gives up: a Keycloak that later loses its database still reports ready.
+          # That matches the Spring services, whose readiness ignores their databases too, and at
+          # one replica taking it out of rotation would be indistinguishable from an outage.
+          tcpSocket: { port: 8080 }
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
