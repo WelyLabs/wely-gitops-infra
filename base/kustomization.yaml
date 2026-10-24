@@ -20,7 +20,6 @@ resources:
   - wely-garage.yaml
   - wely-garage-setup.yaml
   - wely-garage-backup.yaml
-  - wely-tailscale.yaml
   - prometheus-rbac.yaml
   - networkpolicies/datastores
   - networkpolicies/services

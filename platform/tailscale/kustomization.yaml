@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The Tailscale operator, which puts chosen Services on the tailnet instead of on the public web.
+#
+# One per cluster, not one per environment: it watches Services everywhere and creates its proxy
+# pods in the tailscale namespace, so a second instance would fight the first. It therefore has an
+# ArgoCD Application of its own rather than living in an environment overlay — the hand-written
+# version sat in base/, which would have given every environment a copy of it.
+#
+# No `namespace:` transformer here: the upstream manifest carries its own namespaces, and the
+# transformer would move the namespace-scoped Roles out of `tailscale`, where their whole point is
+# to confine the operator's access to secrets.
+resources:
+- operator.yaml
+- wely-sealed-operator-oauth.yaml
+
+# Upstream ships `:stable`, a floating tag on a controller that creates StatefulSets and reads the
+# tailnet credentials. Pinned to the release this manifest was vendored from.
+images:
+- name: tailscale/k8s-operator
+  newName: tailscale/k8s-operator
+  newTag: v1.104.1

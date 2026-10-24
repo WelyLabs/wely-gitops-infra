@@ -16,3 +16,12 @@ spec:
         - podSelector: { matchLabels: { app: wely-grafana } }   # datasource queries (/api/v1/query*)
       ports:
         - { protocol: TCP, port: 9090 }
+    # The Tailscale proxies, which the operator runs in the tailscale namespace to put this
+    # Service on the tailnet. Selected by namespace rather than by pod label: the operator names
+    # those pods after the Service's UID, so there is no stable label to match. The namespace
+    # carries no label of its own upstream, hence kubernetes.io/metadata.name, which Kubernetes
+    # sets on every namespace.
+    - from:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: tailscale } }
+      ports:
+        - { protocol: TCP, port: 9090 }

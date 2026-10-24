@@ -481,7 +481,7 @@ patches:
 images:
 - name: ghcr.io/welylabs/wely-chat
   newName: ghcr.io/welylabs/wely-chat
-  newTag: sha-0ab5e5191329f8ab2880b66d349537f632fc6a68
+  newTag: sha-b04c4efac2e069c799dca948a7883ed822d00e7e
 - name: ghcr.io/welylabs/wely-events
   newName: ghcr.io/welylabs/wely-events
   newTag: sha-6301854c5923aa94b9a16aad8c9fef4958a9961f
@@ -493,16 +493,16 @@ images:
   newTag: sha-ec5cdb967d32f809cd77b09f472d9272df35bed0
 - name: ghcr.io/welylabs/wely-mcp
   newName: ghcr.io/welylabs/wely-mcp
-  newTag: sha-9fd145b83c03cee858244d0eb13cf62e6a3d7be0
+  newTag: sha-1a0ab27d783aedc0a02bf60eebd7c7fdccacf664
 - name: ghcr.io/welylabs/wely-media
   newName: ghcr.io/welylabs/wely-media
   newTag: sha-853f182ab8c1c320fc67fa5a5f98ccc77293f466
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
-  newTag: sha-dc5a6cdb2c93f661ad89b163d0afd02f79b27641
+  newTag: sha-7aea6d76e128f02822c41949121c26bbfc606424
 - name: ghcr.io/welylabs/wely-users
   newName: ghcr.io/welylabs/wely-users
-  newTag: sha-e28cd3e1f6de8374f865fb1863b201411e4dcd6f
+  newTag: sha-b3b580f247a921b6c6a6744db83660de53143eb4
 - name: ghcr.io/welylabs/wely-web
   newName: ghcr.io/welylabs/wely-web
   newTag: sha-26f551522e7a056629259926048770dc33174535
