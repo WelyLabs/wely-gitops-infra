@@ -17,7 +17,7 @@ scrape_configs:
       - role: pod
         # The environments this Prometheus watches, named one by one. Not own_namespace: it no
         # longer runs inside the environment it scrapes. Each name here needs a matching Role in
-        # that namespace (observability/shared/watched-namespaces-rbac.yaml) — without it the job
+        # that namespace (base/prometheus-rbac.yaml, placed by each overlay) — without it the job
         # simply has no targets, which is visible, rather than scraping part of the fleet quietly.
         namespaces:
           names:
