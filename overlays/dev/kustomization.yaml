@@ -435,23 +435,6 @@ patches:
     apiVersion: apps/v1
     kind: Deployment
     metadata:
-      name: wely-kafka-ui
-    spec:
-      template:
-        spec:
-          containers:
-          - name: kafka-ui
-            env:
-            - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
-              value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
-  target:
-    kind: Deployment
-    name: wely-kafka-ui
-
-- patch: |-
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
       name: wely-media
     spec:
       template:
