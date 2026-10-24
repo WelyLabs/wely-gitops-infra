@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Observability, in a namespace of its own.
+#
+# It is an observer, not a participant: nothing serves traffic because of it, and nothing stops
+# serving if it goes away. That is why it is not in wely-platform beside Keycloak and Kafka —
+# those are on the request path, with a blast radius and a policy shape of their own, and a
+# scraper holding pod-read next to the identity provider's secrets is the wrong neighbour.
+#
+# Pod discovery stays namespace-scoped on purpose, as prometheus/rbac.yaml always argued: rather
+# than a ClusterRole that would see every namespace, each watched environment grants a Role of its
+# own to this namespace's service account — see watched-namespaces-rbac.yaml. Adding an
+# environment means a Role there and a line in prometheus.yml, never a wider grant here.
+namespace: wely-observability
+
+resources:
+- namespace.yaml
+- ../prometheus
+- ../grafana
+- ../node-exporter
+# Read by Grafana (optional: true, so it starts without them).
+- wely-sealed-grafana.yaml
+- wely-sealed-grafana-alerting.yaml

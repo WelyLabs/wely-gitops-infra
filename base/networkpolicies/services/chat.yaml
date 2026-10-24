@@ -12,6 +12,11 @@ spec:
     - from:
         - podSelector: { matchLabels: { app: wely-gateway } }
         - podSelector: { matchLabels: { app: wely-events } }       # event group conversations
+        # Prometheus moved to wely-observability; the entry below is kept so a scraper running
+        # beside the service still works, and this one admits the shared instance. Inside one
+        # `from` element the two selectors are ANDed: this namespace, that pod, nothing else.
+        - namespaceSelector: { matchLabels: { wely.dev/role: observability } }
+          podSelector: { matchLabels: { app: wely-prometheus } }
         - podSelector: { matchLabels: { app: wely-prometheus } }   # metrics scrape (/actuator/prometheus)
       ports:
         - { protocol: TCP, port: 8084 }

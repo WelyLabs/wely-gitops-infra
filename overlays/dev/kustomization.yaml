@@ -14,17 +14,9 @@ resources:
 - wely-sealed-notifications-dev.yaml
 - demo/demo-reset.yaml
 # realm/ moved to platform/: one Keycloak, one realm per environment, configured there.
-# Metrics of the six Spring services (pods annotated prometheus.io/* in base/). Dev only: prod
-# shares the same Raspberry Pi and cannot start anyway.
-- ../../observability/prometheus
-# The Pi itself (CPU, memory, disks, temperature), scraped by the Prometheus above.
-- ../../observability/node-exporter
-# Dashboards and Discord alerts over that Prometheus (kubectl port-forward only). Its two
-# optional Secrets, sealed by seal-grafana-secrets.sh at the workspace root, are listed below
-# once sealed: wely-sealed-grafana-dev.yaml, wely-sealed-grafana-alerting-dev.yaml.
-- ../../observability/grafana
-- wely-sealed-grafana-dev.yaml
-- wely-sealed-grafana-alerting-dev.yaml
+# Observability moved to observability/shared, in wely-observability: it watches the
+# environments rather than belonging to one. It reads this namespace's pods through a Role
+# granted there — see observability/shared/watched-namespaces-rbac.yaml.
 
 # Dataset of the public demo account, replayed nightly by demo/demo-reset.yaml.
 configMapGenerator:

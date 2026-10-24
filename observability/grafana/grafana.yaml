@@ -75,13 +75,13 @@ spec:
         # a Secret to kustomize), so they spell the dev name, like the services in base/.
         - name: GF_SECURITY_ADMIN_USER
           valueFrom:
-            secretKeyRef: { name: dev-wely-grafana, key: admin-user, optional: true }
+            secretKeyRef: { name: wely-grafana, key: admin-user, optional: true }
         - name: GF_SECURITY_ADMIN_PASSWORD
           valueFrom:
-            secretKeyRef: { name: dev-wely-grafana, key: admin-password, optional: true }
+            secretKeyRef: { name: wely-grafana, key: admin-password, optional: true }
         - name: DISCORD_WEBHOOK_URL
           valueFrom:
-            secretKeyRef: { name: dev-wely-grafana-alerting, key: discord-webhook-url, optional: true }
+            secretKeyRef: { name: wely-grafana-alerting, key: discord-webhook-url, optional: true }
         # Sign-in only: no anonymous viewer, no self sign-up.
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "false"

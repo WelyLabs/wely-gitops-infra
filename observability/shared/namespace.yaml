@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wely-observability
+  labels:
+    # Read by the NetworkPolicies of the environments, which admit a scrape from this namespace.
+    # Not wely.dev/env: observability watches environments, it is not one of them, and the
+    # policies of wely-platform must keep refusing it.
+    wely.dev/role: observability

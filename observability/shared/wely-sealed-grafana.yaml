@@ -1,11 +1,14 @@
 ---
+# Re-declared for wely-observability. The seal is cluster-wide, so the ciphertext is bound
+# to neither a name nor a namespace and these are the values already live in wely-dev.
+# Rotating one means resealing it in both places until the dev copies are retired.
 apiVersion: bitnami.com/v1alpha1
 kind: SealedSecret
 metadata:
   annotations:
     sealedsecrets.bitnami.com/cluster-wide: "true"
   name: wely-grafana
-  namespace: wely-dev
+  namespace: wely-observability
 spec:
   encryptedData:
     admin-password: AgCE33qnKe4m5CGSDgCs0C7ysKh+qzQ6e4AM6ptRdpPqdnUJjObNZnXF8jHFVZw37ZKWPYYGUzSaQXuPBWKtewUAhgtXj1aMI1x9yLZoGWPdaxW8ve9Xu243f/7IAEOAfz1H3qykA/wz2Tswtmb/263E8QxrBeTImtM5H3aOStC6G0siYeuwdnIEpqEETi20RivY0jVvMX2vjheb94IZMoQcLeMGWtFytFx9PaKLbcYNU92BN9gZzV/cg8x+rdfw3+103HImsuKKCGNgf/KeSOY6RHCsQ0kkKU5gp/eUzYZV8a6/9jHkoaGOcy3R+C6XyDmlR+b/VgrC2+OoNeYTDkiu8dtSIsnaZRv52i9UFd3fTETkvpviDFjZsz/2hkVMRaWpv0JSmxJrK2VVJpput7K4ed2q2FsXBnbs1505RdqE68AuvbxwfZkEND6rysY4mkrq0gsFh0OnZpCnGqdpWA91eR7XQoK7phcOhj6kHhs2OGVlVuLf+rYXBuovz7hHmfNSQb6VXvYgdkxxk/+vDbo1nPLwf5F5UYpTT8Wz87QUZk8U4aVT7KpS36CE74S7pg+Tl5LwaP7OHVYBNKdNlCVJL08kFO73dc/YrjtjUm0XFNqLlv9g5azWTxOsabXQx5+O1IUee+PAlGtY1U8ot7r31x8afSfqZAg3QZjYu89/yvzwGrUS0/JMkRnxPclhjAEiDxzk64EZSLmrIEhqXP4Kfwrfh5pXMDrq9kk3vXqrMA==
@@ -15,4 +18,4 @@ spec:
       annotations:
         sealedsecrets.bitnami.com/cluster-wide: "true"
       name: wely-grafana
-      namespace: wely-dev
+      namespace: wely-observability
