@@ -32,12 +32,12 @@ spec:
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: dev-wely-secrets-dev
+              name: wely-secrets-platform
               key: auth-db-username
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: dev-wely-secrets-dev
+              name: wely-secrets-platform
               key: auth-db-password
         volumeMounts:
         - name: pg-auth-data

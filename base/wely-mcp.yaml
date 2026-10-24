@@ -46,9 +46,13 @@ spec:
         - name: GATEWAY_URL
           value: "http://wely-gateway-service:8081"
         - name: KEYCLOAK_ISSUER_URI
-          value: "https://auth.welylabs.app/realms/wely-realm"
+          value: "https://auth.welylabs.app/realms/wely-prod"
+        # The audience this API accepts, stamped by business-scope's mapper. Empty would accept any
+        # authentic token of the realm, whoever asked for it.
+        - name: JWT_AUDIENCES
+          value: "wely-api-prod"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-          value: "http://wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+          value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-prod/protocol/openid-connect/certs"
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

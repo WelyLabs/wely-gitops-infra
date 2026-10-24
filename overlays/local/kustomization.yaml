@@ -3,6 +3,11 @@ kind: Kustomization
 
 resources:
 - ../../base
+# Keycloak and Kafka, which base no longer carries: on a throwaway cluster they live in the same
+# namespace as everything else, and namePrefix gives them the local- names the patches below
+# already expect. This overlay is also what proves the realm export can build a realm from
+# nothing — the shared instance on the Pi never recreates one.
+- ../../platform/base
 - wely-secrets-local.yaml
 - wely-garage-local.yaml
 - wely-deleted-users-local.yaml
@@ -110,9 +115,14 @@ patches:
           - name: gateway
             env:
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/wely-realm"
+              value: "http://localhost:8080/realms/wely-local"
+            # Empty on purpose: the export still carries the old audience mapper, so a local token
+            # has no aud to check. Fixing the export is what will also prove it can build a working
+            # realm from nothing.
+            - name: JWT_AUDIENCES
+              value: ""
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-local/protocol/openid-connect/certs"
             - name: USERS_API_URL
               value: "http://local-wely-users-service:8082"
             - name: SOCIAL_API_URL
@@ -159,15 +169,24 @@ patches:
             - name: DB_JDBC_URL
               value: "jdbc:postgresql://local-wely-postgres-users-service:5432/users?sslmode=disable"
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/wely-realm"
+              value: "http://localhost:8080/realms/wely-local"
+            # Empty on purpose: the export still carries the old audience mapper, so a local token
+            # has no aud to check. Fixing the export is what will also prove it can build a working
+            # realm from nothing.
+            - name: JWT_AUDIENCES
+              value: ""
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-local/protocol/openid-connect/certs"
             - name: KEYCLOAK_INTERNAL_TOKEN_URI
-              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/token"
+              value: "http://local-wely-auth-service:8080/realms/wely-local/protocol/openid-connect/token"
+            - name: KEYCLOAK_ADMIN_CLIENT_ID
+              value: "wely-users-local-client"
             - name: KEYCLOAK_BASE_URL
               value: "http://local-wely-auth-service:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
+            - name: TOPIC_PREFIX
+              value: "local."
             # Account deletion is off by default in wely-users; local has no demo account to protect.
             - name: ACCOUNT_DELETION_ENABLED
               value: "true"
@@ -189,10 +208,17 @@ patches:
               value: "neo4j://local-wely-neo4j-service:7687"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
+            - name: TOPIC_PREFIX
+              value: "local."
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/wely-realm"
+              value: "http://localhost:8080/realms/wely-local"
+            # Empty on purpose: the export still carries the old audience mapper, so a local token
+            # has no aud to check. Fixing the export is what will also prove it can build a working
+            # realm from nothing.
+            - name: JWT_AUDIENCES
+              value: ""
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-local/protocol/openid-connect/certs"
             # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
             - name: USERS_API_URL
               value: "http://local-wely-users-service:8082"
@@ -229,6 +255,8 @@ patches:
             # nothing in the local overlay points at cloud infrastructure.
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
+            - name: TOPIC_PREFIX
+              value: "local."
             # MONGO_USERNAME and MONGO_PASSWORD are repeated here, unchanged from the base,
             # only to pin their position. Kubernetes expands $(VAR) from variables declared
             # *earlier* in the list and leaves a forward reference as literal text, and a merge
@@ -247,9 +275,14 @@ patches:
             - name: MONGODB_URI
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/chat_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/wely-realm"
+              value: "http://localhost:8080/realms/wely-local"
+            # Empty on purpose: the export still carries the old audience mapper, so a local token
+            # has no aud to check. Fixing the export is what will also prove it can build a working
+            # realm from nothing.
+            - name: JWT_AUDIENCES
+              value: ""
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-local/protocol/openid-connect/certs"
             # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
             - name: USERS_API_URL
               value: "http://local-wely-users-service:8082"
@@ -282,14 +315,21 @@ patches:
             - name: MONGODB_URI
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/events_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/wely-realm"
+              value: "http://localhost:8080/realms/wely-local"
+            # Empty on purpose: the export still carries the old audience mapper, so a local token
+            # has no aud to check. Fixing the export is what will also prove it can build a working
+            # realm from nothing.
+            - name: JWT_AUDIENCES
+              value: ""
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-local/protocol/openid-connect/certs"
             # namePrefix renames the Service, not a value that spells its name.
             - name: SOCIAL_API_URL
               value: "http://local-wely-social-service:8083"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
+            - name: TOPIC_PREFIX
+              value: "local."
             # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
             - name: USERS_API_URL
               value: "http://local-wely-users-service:8082"
@@ -464,17 +504,62 @@ patches:
             - name: MONGODB_URI
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@local-wely-mongodb-service:27017/notifications_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
-              value: "http://localhost:8080/realms/wely-realm"
+              value: "http://localhost:8080/realms/wely-local"
+            # Empty on purpose: the export still carries the old audience mapper, so a local token
+            # has no aud to check. Fixing the export is what will also prove it can build a working
+            # realm from nothing.
+            - name: JWT_AUDIENCES
+              value: ""
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "http://local-wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+              value: "http://local-wely-auth-service:8080/realms/wely-local/protocol/openid-connect/certs"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "local-wely-kafka-service:9092"
+            - name: TOPIC_PREFIX
+              value: "local."
             # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
             - name: USERS_API_URL
               value: "http://local-wely-users-service:8082"
   target:
     kind: Deployment
     name: wely-notifications
+# The shared base creates dev.* and prod.*; a throwaway cluster only ever needs its own. Keyed by
+# variable name, not by index: the Job's env list grows and an index says nothing about what it means.
+- patch: |-
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: wely-kafka-topics
+    spec:
+      template:
+        spec:
+          containers:
+          - name: topics
+            env:
+            - name: KAFKA_ENVS
+              value: "local"
+  target:
+    kind: Job
+    name: wely-kafka-topics
+
+# wely-mcp is not otherwise patched here, and would inherit the production audience from base.
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-mcp
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mcp
+            env:
+            - name: JWT_AUDIENCES
+              value: ""
+            - name: KEYCLOAK_ISSUER_URI
+              value: "http://localhost:8080/realms/wely-local"
+  target:
+    kind: Deployment
+    name: wely-mcp
 patchesJson6902:
 - target:
     group: ""
@@ -487,6 +572,7 @@ patchesJson6902:
       value: wely-users-service
 
 # Copied from overlays/dev by the sync-local-images workflow; not edited by hand.
+
 images:
 - name: ghcr.io/welylabs/wely-chat
   newName: ghcr.io/welylabs/wely-chat

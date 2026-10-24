@@ -1,4 +1,8 @@
-# Applies the display settings of wely-realm that the login theme depends on.
+# Applies the display settings of one realm (REALM below) that the login theme depends on.
+#
+# One Keycloak in wely-platform serves every environment, with one realm per environment
+# (wely-dev, wely-prod) and clients named wely-<service>-<env>-client. Everything this script
+# touches is parameterised, so a second environment is a second instance of this Job.
 #
 # The realm export in wely-identity is only imported by the local overlay: dev's realm already
 # exists, and Keycloak skips an existing realm on import. So a change to the export never
@@ -26,7 +30,7 @@
 #   - wely://oauth-callback among wely-client's redirect URIs, for wely-ios's sign-up and sign-in
 #     pages: appended once, the live URIs are kept.
 #
-#   - wely-mcp-client, the public client an MCP client signs in through: created once, then its
+#   - $MCP_CLIENT, the public client an MCP client signs in through: created once, then its
 #     PKCE method and business-scope are checked at every sync, and its redirect URIs appended
 #     without rewriting the live ones. The realm refuses anonymous dynamic client registration,
 #     so this is the only way a client exists for Claude to use.
@@ -38,8 +42,7 @@
 #     wely-admin theme of wely-identity, its brand panel, and French. Only those keys: the
 #     realm's security settings are left as they are.
 #
-# realm-settings.json DUPLICATES those keys from wely-identity/wely-realm.json and must follow
-# them. kcadm merges it into the live realm, so every other setting is left alone.
+# realm-settings.json DUPLICATES those keys from the realm export and must follow them. kcadm merges it into the live realm, so every other setting is left alone.
 #
 # PostSync with BeforeHookCreation: the Job is recreated at every sync instead of patched. A
 # Job's template is immutable, and the image tag below changes with each Keycloak deploy — a
@@ -78,118 +81,158 @@ spec:
               C=/tmp/kcadm.config
               # Keycloak may still be starting when the sync ends: retry the login for 5 min.
               for i in $(seq 1 30); do
-                $K config credentials --config $C --server http://dev-wely-auth-service:8080 \
+                $K config credentials --config $C --server http://wely-auth-service:8080 \
                   --realm master --user "$KC_ADMIN_USER" --password "$KC_ADMIN_PASSWORD" && break
                 sleep 10
               done
-              $K update realms/wely-realm --config $C -f /settings/realm-settings.json
-              $K get realms/wely-realm --config $C --fields displayName,supportedLocales,defaultLocale,editUsernameAllowed
+              $K update realms/$REALM --config $C -f /settings/realm-settings.json
+              $K get realms/$REALM --config $C --fields displayName,supportedLocales,defaultLocale,editUsernameAllowed
               $K update realms/master --config $C -f /settings/master-settings.json
               $K get realms/master --config $C --fields loginTheme,displayName,defaultLocale
-              $K add-roles -r wely-realm --config $C --uusername service-account-wely-users-api-client \
+              $K add-roles -r $REALM --config $C --uusername service-account-$USERS_CLIENT \
                 --cclientid realm-management --rolename manage-users
-              $K get-roles -r wely-realm --config $C --uusername service-account-wely-users-api-client \
+              $K get-roles -r $REALM --config $C --uusername service-account-$USERS_CLIENT \
                 --cclientid realm-management --effective | grep -q '"manage-users"' \
                 || { echo "manage-users is missing on the wely-users service account"; exit 1; }
 
               FLOW="wely registration"
               F="authentication/flows/wely%20registration%20registration%20form/executions"
-              $K get authentication/flows -r wely-realm --config $C --fields alias --format csv --noquotes \
+              $K get authentication/flows -r $REALM --config $C --fields alias --format csv --noquotes \
                 | grep -qx "$FLOW" \
-                || $K create authentication/flows/registration/copy -r wely-realm --config $C -s "newName=$FLOW"
-              step() { $K get $F -r wely-realm --config $C --fields id,providerId --format csv --noquotes \
+                || $K create authentication/flows/registration/copy -r $REALM --config $C -s "newName=$FLOW"
+              step() { $K get $F -r $REALM --config $C --fields id,providerId --format csv --noquotes \
                          | grep ',wely-users-registration$' | cut -d, -f1; }
               for i in $(seq 1 30); do
                 [ -n "$(step)" ] && break
-                $K create $F/execution -r wely-realm --config $C -s provider=wely-users-registration && break
+                $K create $F/execution -r $REALM --config $C -s provider=wely-users-registration && break
                 sleep 10
               done
               [ -n "$(step)" ] || { echo "wely-users-registration could not be added"; exit 1; }
               # An execution update always sets the priority too (0 when omitted), and the copied
               # steps share low priorities: an explicit, much higher one keeps this step last,
               # after the step that creates the Keycloak user.
-              $K update $F -r wely-realm --config $C \
+              $K update $F -r $REALM --config $C \
                 -b "{\"id\":\"$(step)\",\"requirement\":\"REQUIRED\",\"priority\":1000}"
-              last() { $K get $F -r wely-realm --config $C --fields providerId --format csv --noquotes | tail -1; }
+              last() { $K get $F -r $REALM --config $C --fields providerId --format csv --noquotes | tail -1; }
               [ "$(last)" = "wely-users-registration" ] || { echo "wely-users-registration is not last"; exit 1; }
-              $K update realms/wely-realm --config $C -s "registrationFlow=$FLOW"
-              $K get realms/wely-realm --config $C --fields registrationFlow
-              $K get $F -r wely-realm --config $C --fields displayName,providerId,requirement
+              $K update realms/$REALM --config $C -s "registrationFlow=$FLOW"
+              $K get realms/$REALM --config $C --fields registrationFlow
+              $K get $F -r $REALM --config $C --fields displayName,providerId,requirement
 
-              CID=$($K get clients -r wely-realm --config $C -q clientId=wely-client --fields id --format csv --noquotes)
+              CID=$($K get clients -r $REALM --config $C -q clientId=$WEB_CLIENT --fields id --format csv --noquotes)
               IOS_REDIRECT="wely://oauth-callback"
-              URIS=$($K get clients/$CID -r wely-realm --config $C --fields redirectUris | tr -d '\n ' \
+              URIS=$($K get clients/$CID -r $REALM --config $C --fields redirectUris | tr -d '\n ' \
                 | sed 's/.*\[\(.*\)\].*/\1/')
               echo "$URIS" | grep -qF "\"$IOS_REDIRECT\"" \
-                || $K update clients/$CID -r wely-realm --config $C -s "redirectUris=[${URIS:+$URIS,}\"$IOS_REDIRECT\"]"
-              $K get clients/$CID -r wely-realm --config $C --fields redirectUris
+                || $K update clients/$CID -r $REALM --config $C -s "redirectUris=[${URIS:+$URIS,}\"$IOS_REDIRECT\"]"
+              $K get clients/$CID -r $REALM --config $C --fields redirectUris
 
-              # wely-mcp-client: the public client an MCP client (Claude) signs in through to reach
+              # $MCP_CLIENT: the public client an MCP client (Claude) signs in through to reach
               # wely-mcp. Declared here because the realm refuses anonymous dynamic client
               # registration (Trusted Hosts policy), so a client cannot register itself.
-              mcp_cid() { $K get clients -r wely-realm --config $C -q clientId=wely-mcp-client \
+              mcp_cid() { $K get clients -r $REALM --config $C -q clientId=$MCP_CLIENT \
                             --fields id --format csv --noquotes; }
               [ -n "$(mcp_cid)" ] \
-                || $K create clients -r wely-realm --config $C -f /settings/wely-mcp-client.json
+                || { sed "s/__MCP_CLIENT__/$MCP_CLIENT/g" /settings/mcp-client.json > /tmp/mcp-client.json
+                     $K create clients -r $REALM --config $C -f /tmp/mcp-client.json; }
               MCP_CID=$(mcp_cid)
-              [ -n "$MCP_CID" ] || { echo "wely-mcp-client could not be created"; exit 1; }
+              [ -n "$MCP_CID" ] || { echo "$MCP_CLIENT could not be created"; exit 1; }
 
               # PKCE is mandatory on a public client: without it an intercepted code is enough.
-              $K update clients/$MCP_CID -r wely-realm --config $C \
+              $K update clients/$MCP_CID -r $REALM --config $C \
                 -s 'attributes."pkce.code.challenge.method"=S256'
 
               # business-scope carries the businessId claim. Without it the token is valid and
               # every call behind the gateway still fails, which is a confusing way to break.
-              BSID=$($K get client-scopes -r wely-realm --config $C --fields id,name --format csv \
+              BSID=$($K get client-scopes -r $REALM --config $C --fields id,name --format csv \
                        --noquotes | grep ',business-scope$' | cut -d, -f1)
               [ -n "$BSID" ] || { echo "business-scope is missing from the realm"; exit 1; }
-              $K get clients/$MCP_CID/default-client-scopes -r wely-realm --config $C --fields name \
+              $K get clients/$MCP_CID/default-client-scopes -r $REALM --config $C --fields name \
                 --format csv --noquotes | grep -qx business-scope \
-                || $K update clients/$MCP_CID/default-client-scopes/$BSID -r wely-realm --config $C
+                || $K update clients/$MCP_CID/default-client-scopes/$BSID -r $REALM --config $C
+
+              # The audience of every token minted through business-scope. It names the RESOURCE
+              # the token may be spent on, not the client that asked for it: the services check
+              # it with spring.security.oauth2.resourceserver.jwt.audiences, so a client that was
+              # never granted this scope cannot spend its token on the API. The export shipped
+              # 'included.client.audience: wely-client', i.e. the caller — validating that would
+              # have accepted every token. included.custom.audience replaces it.
+              AUD_ID=$($K get client-scopes/$BSID/protocol-mappers/models -r $REALM --config $C \
+                         --fields id,name --format csv --noquotes | grep ',audience-mapper$' | cut -d, -f1)
+              AUD_BODY='{"name":"audience-mapper","protocol":"openid-connect",
+                         "protocolMapper":"oidc-audience-mapper",
+                         "config":{"included.custom.audience":"'"$API_AUDIENCE"'",
+                                   "included.client.audience":"",
+                                   "id.token.claim":"false","access.token.claim":"true",
+                                   "introspection.token.claim":"true","lightweight.claim":"false"}}'
+              if [ -n "$AUD_ID" ]; then
+                $K update client-scopes/$BSID/protocol-mappers/models/$AUD_ID -r $REALM --config $C \
+                  -b "$(echo "$AUD_BODY" | sed "s/{\"name\"/{\"id\":\"$AUD_ID\",\"name\"/")"
+              else
+                $K create client-scopes/$BSID/protocol-mappers/models -r $REALM --config $C -b "$AUD_BODY"
+              fi
+              $K get client-scopes/$BSID/protocol-mappers/models -r $REALM --config $C \
+                | grep -q "\"included.custom.audience\" *: *\"$API_AUDIENCE\"" \
+                || { echo "the audience mapper does not carry $API_AUDIENCE: setting jwt.audiences would reject every token"; exit 1; }
+              echo "business-scope stamps aud=$API_AUDIENCE"
 
               # Redirect URIs are appended, never rewritten: Claude's exact callback may differ from
               # the two below, and whatever is added by hand must survive the next sync.
               for MCP_REDIRECT in https://claude.ai/api/mcp/auth_callback https://claude.com/api/mcp/auth_callback; do
-                MCP_URIS=$($K get clients/$MCP_CID -r wely-realm --config $C --fields redirectUris \
+                MCP_URIS=$($K get clients/$MCP_CID -r $REALM --config $C --fields redirectUris \
                              | tr -d '\n ' | sed 's/.*\[\(.*\)\].*/\1/')
                 echo "$MCP_URIS" | grep -qF "\"$MCP_REDIRECT\"" \
-                  || $K update clients/$MCP_CID -r wely-realm --config $C \
+                  || $K update clients/$MCP_CID -r $REALM --config $C \
                        -s "redirectUris=[${MCP_URIS:+$MCP_URIS,}\"$MCP_REDIRECT\"]"
               done
-              $K get clients/$MCP_CID -r wely-realm --config $C \
+              $K get clients/$MCP_CID -r $REALM --config $C \
                 --fields clientId,publicClient,standardFlowEnabled,redirectUris
-              $K get clients/$MCP_CID/default-client-scopes -r wely-realm --config $C --fields name \
+              $K get clients/$MCP_CID/default-client-scopes -r $REALM --config $C --fields name \
                 --format csv --noquotes | grep -qx business-scope \
-                || { echo "wely-mcp-client lacks business-scope: its tokens would carry no businessId"; exit 1; }
+                || { echo "$MCP_CLIENT lacks business-scope: its tokens would carry no businessId"; exit 1; }
 
               # auth_time comes from the AUTH_TIME note mapper of the 'basic' scope, a default scope
               # of wely-client, and lightweight access tokens would drop it.
-              SID=$($K get client-scopes -r wely-realm --config $C --fields id,name --format csv --noquotes \
+              SID=$($K get client-scopes -r $REALM --config $C --fields id,name --format csv --noquotes \
                 | grep ',basic$' | cut -d, -f1)
               auth_time() {
-                $K get clients/$CID -r wely-realm --config $C --fields 'attributes(*)' \
+                $K get clients/$CID -r $REALM --config $C --fields 'attributes(*)' \
                   | grep -q '"client.use.lightweight.access.token.enabled" *: *"true"' && return 1
-                $K get clients/$CID/default-client-scopes -r wely-realm --config $C --fields name --format csv \
+                $K get clients/$CID/default-client-scopes -r $REALM --config $C --fields name --format csv \
                   --noquotes | grep -qx basic || return 1
-                for M in $($K get client-scopes/$SID/protocol-mappers/models -r wely-realm --config $C \
+                for M in $($K get client-scopes/$SID/protocol-mappers/models -r $REALM --config $C \
                              --fields id,protocolMapper --format csv --noquotes \
                              | grep ',oidc-usersessionmodel-note-mapper$' | cut -d, -f1); do
-                  J=$($K get client-scopes/$SID/protocol-mappers/models/$M -r wely-realm --config $C)
+                  J=$($K get client-scopes/$SID/protocol-mappers/models/$M -r $REALM --config $C)
                   echo "$J" | grep -q '"user.session.note" *: *"AUTH_TIME"' \
                     && echo "$J" | grep -q '"access.token.claim" *: *"true"' \
                     && echo "$J" | grep -q '"claim.name" *: *"auth_time"' && return 0
                 done
                 return 1
               }
-              auth_time || { echo "wely-client access tokens lack auth_time: DELETE /profile would always answer USR-BUS-010"; exit 1; }
-              echo "wely-client access tokens carry auth_time"
+              auth_time || { echo "$WEB_CLIENT access tokens lack auth_time: DELETE /profile would always answer USR-BUS-010"; exit 1; }
+              echo "$WEB_CLIENT access tokens carry auth_time"
           env:
+            # One Keycloak serves every environment, one realm each. These four names are the only
+            # difference between two runs of this job, so the overlay instantiates it per realm
+            # rather than duplicating the script.
+            - name: REALM
+              value: "wely-dev"
+            - name: WEB_CLIENT
+              value: "wely-web-dev-client"
+            - name: MCP_CLIENT
+              value: "wely-mcp-dev-client"
+            - name: USERS_CLIENT
+              value: "wely-users-dev-client"
+            # Named after the resource the token is spent on, checked by every backend service.
+            - name: API_AUDIENCE
+              value: "wely-api-dev"
             - name: KC_ADMIN_USER
               valueFrom:
-                secretKeyRef: { name: dev-wely-secrets-dev, key: kc-admin-username }
+                secretKeyRef: { name: wely-secrets-platform, key: kc-admin-username }
             - name: KC_ADMIN_PASSWORD
               valueFrom:
-                secretKeyRef: { name: dev-wely-secrets-dev, key: kc-admin-password }
+                secretKeyRef: { name: wely-secrets-platform, key: kc-admin-password }
           volumeMounts: [{ name: settings, mountPath: /settings }]
           resources:
             requests: { cpu: 50m, memory: 128Mi }

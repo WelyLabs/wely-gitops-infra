@@ -1,0 +1,45 @@
+# auth (Keycloak): JWKS for every service, admin API for users, browser login,
+# and the realm configuration job.
+#
+# Keycloak now serves every environment from wely-platform, so the callers no longer sit in this
+# namespace. A bare podSelector only matches pods of the policy's own namespace and would deny them
+# all; each rule below therefore pairs a namespaceSelector with the pod labels. Inside one `from`
+# element the two selectors are ANDed, which is what makes "this app, in an environment namespace"
+# expressible at all.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-auth
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-auth
+  policyTypes: [Ingress]
+  ingress:
+    # Every environment namespace, i.e. any namespace labelled wely.dev/env (see
+    # overlays/<env>/namespace.yaml). Adding an environment needs no change here.
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - { key: wely.dev/env, operator: Exists }
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - wely-gateway        # JWT validation (JWKS)
+                  - wely-users          # JWKS + admin API
+                  - wely-social         # JWKS
+                  - wely-chat           # JWKS
+                  - wely-events         # JWKS
+                  - wely-media          # JWKS
+                  - wely-notifications  # JWKS
+                  - wely-mcp            # JWKS
+                  - cloudflared         # browser login, reverse-proxied by the tunnel
+      ports:
+        - { protocol: TCP, port: 8080 }
+    # The realm job runs beside Keycloak, in this namespace.
+    - from:
+        - podSelector: { matchLabels: { app: wely-realm-settings } }
+      ports:
+        - { protocol: TCP, port: 8080 }
