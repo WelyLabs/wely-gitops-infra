@@ -34,4 +34,4 @@ configMapGenerator:
 images:
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
-  newTag: sha-c764de65bce585f554c26ef78e602b4e092eb277
+  newTag: sha-2a1b054725f4a4928a3da7dc38788ed6d52dc5f4
