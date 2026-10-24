@@ -22,3 +22,21 @@ resources:
 # Read by Grafana (optional: true, so it starts without them).
 - wely-sealed-grafana.yaml
 - wely-sealed-grafana-alerting.yaml
+
+# Grafana reads its two optional Secrets at pod start, so a rotation needs a restart: bump this
+# once the seal is live. It moved here with Grafana; it used to sit in the dev overlay, patching
+# a Deployment that is no longer in that namespace.
+patches:
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wely-grafana
+    spec:
+      template:
+        metadata:
+          annotations:
+            wely.dev/grafana-secrets: "1"
+  target:
+    kind: Deployment
+    name: wely-grafana

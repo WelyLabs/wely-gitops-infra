@@ -16,7 +16,8 @@ resources:
 # realm/ moved to platform/: one Keycloak, one realm per environment, configured there.
 # Observability moved to observability/shared, in wely-observability: it watches the
 # environments rather than belonging to one. It reads this namespace's pods through a Role
-# granted there — see observability/shared/watched-namespaces-rbac.yaml.
+# granted there — see base/prometheus-rbac.yaml, placed in this namespace by the transformer
+# below, and observability/shared/ for the scraper itself.
 
 # Dataset of the public demo account, replayed nightly by demo/demo-reset.yaml.
 configMapGenerator:
@@ -407,28 +408,6 @@ patches:
   target:
     kind: Job
     name: wely-kafka-topics
-# namePrefix renames the Prometheus Service, not a value that spells its name.
-- patch: |-
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: wely-grafana
-    spec:
-      template:
-        metadata:
-          annotations:
-            # Its optional Secrets are read at pod start: bump this once dev-wely-grafana or
-            # dev-wely-grafana-alerting is sealed, rotated, and live.
-            wely.dev/grafana-secrets: "1"
-        spec:
-          containers:
-          - name: grafana
-            env:
-            - name: PROMETHEUS_URL
-              value: "http://dev-wely-prometheus-service:9090"
-  target:
-    kind: Deployment
-    name: wely-grafana
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment
