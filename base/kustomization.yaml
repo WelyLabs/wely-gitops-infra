@@ -1,9 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# Keycloak, its database and Kafka moved to platform/: one instance serves every environment.
 resources:
   - cloudflared.yaml
-  - wely-auth.yaml
   - wely-web.yaml
   - wely-gateway.yaml
   - wely-events.yaml
@@ -15,12 +15,8 @@ resources:
   - wely-mcp.yaml
   - wely-mongodb.yaml
   - wely-neo4j.yaml
-  - wely-postgres-auth.yaml
   - wely-postgres-users.yaml
   - wely-redis.yaml
-  - wely-kafka.yaml
-  - wely-kafka-topics.yaml
-  - wely-kafka-ui.yaml
   - wely-garage.yaml
   - wely-garage-setup.yaml
   - wely-garage-backup.yaml

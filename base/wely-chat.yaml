@@ -88,11 +88,11 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         - name: KAFKA_BOOTSTRAP_SERVER
-          value: "wely-kafka-service:9092"
+          value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
         - name: KEYCLOAK_ISSUER_URI
-          value: "https://auth.welylabs.app/realms/wely-realm"
+          value: "https://auth.welylabs.app/realms/wely-prod"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-          value: "http://wely-auth-service:8080/realms/wely-realm/protocol/openid-connect/certs"
+          value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-prod/protocol/openid-connect/certs"
         # Pages through wely-users' deleted-users list for the daily erasure reconciliation.
         - name: USERS_API_URL
           value: "http://wely-users-service:8082"

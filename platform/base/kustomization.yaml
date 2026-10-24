@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The shared singletons as a reusable base: one Keycloak and one Kafka.
+#
+# Keycloak isolates environments by REALM (wely-dev, wely-prod), Kafka by TOPIC PREFIX
+# (dev.*, prod.*). Both are real tenancy boundaries of their product, which is why sharing the
+# runtime is sound — and why observability stayed out: Prometheus holds a Role scoped to the
+# namespace it watches, so moving it would mean RBAC in every environment for no gain while prod
+# cannot start.
+#
+# Two consumers, deliberately:
+#   - platform/shared/ — the instance on the Pi, in wely-platform, serving wely-dev and wely-prod;
+#   - overlays/local/  — a throwaway cluster where everything lives in one namespace, which is
+#     also what proves the realm export can build a working realm from nothing.
+# Hence no namespace and no realm job here: both belong to the consumer.
+resources:
+- wely-auth.yaml
+- wely-postgres-auth.yaml
+- wely-kafka.yaml
+- wely-kafka-topics.yaml
+- wely-kafka-ui.yaml
+- networkpolicies

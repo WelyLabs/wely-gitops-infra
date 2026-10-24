@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The shared Keycloak and Kafka of the Raspberry Pi, serving wely-dev and wely-prod.
+#
+# What is shared is also a shared failure domain: upgrading Keycloak signs every environment out
+# at once. That is the trade accepted on one Pi, where a single environment already reserves
+# ~4.5 Gi.
+namespace: wely-platform
+
+resources:
+- ../base
+- namespace.yaml
+- wely-sealed-secrets-platform.yaml
+- realm/realm-settings-job.yaml
+
+# Read by the realm job. mcp-client.json is a template: the job substitutes __MCP_CLIENT__ with
+# the realm's client id before creating it.
+configMapGenerator:
+- files:
+  - realm/realm-settings.json
+  - realm/master-settings.json
+  - realm/mcp-client.json
+  name: wely-realm-settings
+
+# Same tag the environments deploy, so kcadm in the realm job matches the running server and the
+# Pi already holds the image.
+images:
+- name: ghcr.io/welylabs/wely-keycloak
+  newName: ghcr.io/welylabs/wely-keycloak
+  newTag: sha-c764de65bce585f554c26ef78e602b4e092eb277

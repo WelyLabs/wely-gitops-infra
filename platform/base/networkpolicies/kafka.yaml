@@ -1,0 +1,35 @@
+# Kafka: the user topics and the event topics, now shared by every environment from wely-platform.
+# Isolation between environments is carried by the topic prefix (dev.*, prod.*), not by the broker:
+# see platform/wely-kafka-topics.yaml. The namespaceSelector pattern is explained in auth.yaml.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kafka
+spec:
+  podSelector:
+    matchLabels:
+      app: wely-kafka
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - { key: wely.dev/env, operator: Exists }
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - wely-users          # produces the user topics
+                  - wely-social         # consumes them, produces the friendship ones
+                  - wely-chat           # message and call fan-out, user deletion
+                  - wely-events         # event topics, user deletion
+                  - wely-notifications  # every notifying topic, user deletion
+      ports:
+        - { protocol: TCP, port: 9092 }
+    # The topic job and the UI run beside the broker, in this namespace.
+    - from:
+        - podSelector: { matchLabels: { app: wely-kafka-topics } }
+        - podSelector: { matchLabels: { app: wely-kafka-ui } }
+      ports:
+        - { protocol: TCP, port: 9092 }

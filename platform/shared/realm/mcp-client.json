@@ -1,7 +1,7 @@
 {
-  "clientId": "wely-mcp-client",
+  "clientId": "__MCP_CLIENT__",
   "name": "Wely MCP (LLM agents)",
-  "description": "Public client an MCP client signs in through to reach wely-mcp. Declared here because the realm refuses anonymous dynamic client registration.",
+  "description": "Public client an MCP client signs in through to reach wely-mcp. Declared here because the realm refuses anonymous dynamic client registration. __MCP_CLIENT__ is replaced with the realm's client id by realm-settings-job.yaml.",
   "enabled": true,
   "protocol": "openid-connect",
   "publicClient": true,

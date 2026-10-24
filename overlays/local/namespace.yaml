@@ -2,3 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: wely-local
+  labels:
+    # The NetworkPolicies of platform/base admit any namespace carrying this key. Here Keycloak,
+    # Kafka and their callers share one namespace, and a namespaceSelector matches the policy's own
+    # namespace too, so the same policies cover the co-located case without a second set.
+    wely.dev/env: local

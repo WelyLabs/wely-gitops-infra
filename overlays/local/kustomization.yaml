@@ -3,6 +3,11 @@ kind: Kustomization
 
 resources:
 - ../../base
+# Keycloak and Kafka, which base no longer carries: on a throwaway cluster they live in the same
+# namespace as everything else, and namePrefix gives them the local- names the patches below
+# already expect. This overlay is also what proves the realm export can build a realm from
+# nothing — the shared instance on the Pi never recreates one.
+- ../../platform/base
 - wely-secrets-local.yaml
 - wely-garage-local.yaml
 - wely-deleted-users-local.yaml

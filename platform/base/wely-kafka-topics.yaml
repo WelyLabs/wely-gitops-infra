@@ -51,8 +51,12 @@ spec:
             $T --bootstrap-server "$KAFKA_BOOTSTRAP" --list > /dev/null 2>&1 && break
             sleep 10
           done
+          for env in $KAFKA_ENVS; do
           for entry in $KAFKA_TOPICS; do
-            topic="${entry%%:*}"
+            # The environment is the topic's prefix, and the only thing separating dev from prod on
+            # this broker. A service that forgets its prefix variable reads an absent topic and says
+            # so, instead of quietly joining the other environment's traffic.
+            topic="$env.${entry%%:*}"
             configs=""
             case "$entry" in *:*) configs=$(policy "${entry#*:}") ;; esac
             create_configs=""
@@ -66,13 +70,23 @@ spec:
                  --entity-name "$topic" --add-config "$configs"
             fi
           done
+          done
           $T --bootstrap-server "$KAFKA_BOOTSTRAP" --list
           $C --bootstrap-server "$KAFKA_BOOTSTRAP" --describe --entity-type topics
         env:
         - name: KAFKA_BOOTSTRAP
           value: "wely-kafka-service:9092"
+        # One broker for every environment. Adding an environment is one word here, and its topics
+        # appear on the next sync.
+        - name: KAFKA_ENVS
+          value: "dev prod"
+        # Names without their prefix. Each is created once per environment as <env>.<name>.
         - name: KAFKA_TOPICS
-          value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal USER_BIRTHDAY:personal BIRTHDAY_NOTICES:personal FRIENDSHIP_NOTICES:personal FRIENDSHIP_STATE:state"
+          value: >-
+            user-created:personal user-deleted:erasure user-modified:personal
+            event-group-changed event-date-fixed friendship-changed:personal
+            user-birthday:personal birthday-notices:personal friendship-notices:personal
+            friendship-state:state message-broadcast:live call-events:live
         resources:
           requests: { cpu: 50m, memory: 128Mi }
           limits: { memory: 384Mi }

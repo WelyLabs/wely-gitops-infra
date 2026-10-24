@@ -2,3 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: wely-dev
+  labels:
+    # Read by the NetworkPolicies of wely-platform: they admit any namespace carrying this key,
+    # so a new environment is reachable by Keycloak and Kafka without touching the policies.
+    wely.dev/env: dev

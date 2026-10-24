@@ -45,12 +45,12 @@ spec:
         - name: KC_BOOTSTRAP_ADMIN_USERNAME
           valueFrom:
             secretKeyRef:
-              name: dev-wely-secrets-dev
+              name: wely-secrets-platform
               key: kc-admin-username
         - name: KC_BOOTSTRAP_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: dev-wely-secrets-dev
+              name: wely-secrets-platform
               key: kc-admin-password
         - name: KC_HTTP_ENABLED
           value: "true"
@@ -67,19 +67,26 @@ spec:
         - name: KC_DB_USERNAME
           valueFrom:
             secretKeyRef:
-              name: dev-wely-secrets-dev
+              name: wely-secrets-platform
               key: auth-db-username
         - name: KC_DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: dev-wely-secrets-dev
+              name: wely-secrets-platform
               key: auth-db-password
+        # Read by the BusinessIdMapper plugin and by BusinessUserRegistration when they call
+        # users-api. SINGLE-VALUED, and one Keycloak now serves several realms: every realm
+        # resolves its businessId against THIS environment. Correct while wely-dev is the only
+        # live realm, wrong the moment wely-prod exists — the plugin has to pick the users-api of
+        # the realm being authenticated (see UsersServiceClient, which reads one USERS_API_URL).
+        - name: USERS_API_URL
+          value: "http://wely-users-service.wely-dev.svc.cluster.local:8082"
         # Read by the BusinessIdMapper plugin when it calls users-api to resolve
         # a businessId. Must match app.internal-secret on the users-api side.
         - name: INTERNAL_SECRET
           valueFrom:
             secretKeyRef:
-              name: dev-wely-secrets-dev
+              name: wely-secrets-platform
               key: internal-secret
       volumes:
       - name: import-vol

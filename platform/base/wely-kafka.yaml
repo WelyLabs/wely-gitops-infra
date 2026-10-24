@@ -41,8 +41,12 @@ spec:
           value: "broker,controller"
         - name: KAFKA_LISTENERS
           value: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+        # Clients live in other namespaces (wely-dev, wely-prod), and a broker hands them this
+        # address to reconnect to: a bare Service name resolves only inside wely-platform, so the
+        # first produce after the metadata round-trip would fail. The local overlay keeps everything
+        # in one namespace, where the FQDN still resolves.
         - name: KAFKA_ADVERTISED_LISTENERS
-          value: "PLAINTEXT://wely-kafka-service:9092"
+          value: "PLAINTEXT://wely-kafka-service.wely-platform.svc.cluster.local:9092"
         - name: KAFKA_CONTROLLER_LISTENER_NAMES
           value: "CONTROLLER"
         - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
