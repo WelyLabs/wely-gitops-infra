@@ -42,7 +42,11 @@ kind: Service
 metadata:
   name: wely-kafka-ui-service
 spec:
-  type: LoadBalancer
+  # ClusterIP, not LoadBalancer: no controller assigns an address on this cluster, the Service
+  # stayed <pending>, and ArgoCD treats a pending LoadBalancer as Progressing — which held the
+  # whole application back and kept the realm hook from running. The UI runs at 0 replicas and is
+  # reached with kubectl port-forward anyway.
+  type: ClusterIP
   selector:
     app: wely-kafka-ui
   ports:
