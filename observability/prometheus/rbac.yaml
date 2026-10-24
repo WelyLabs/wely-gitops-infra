@@ -1,6 +1,9 @@
-# Pod discovery in Prometheus's own namespace, read-only. A Role, not a ClusterRole: Prometheus
-# sees the pods of this environment and no other namespace's. The one cluster-scoped grant, at the
-# end of this file, covers Node objects and the kubelet's metrics, nothing namespaced.
+# The service account Prometheus runs as, and its one cluster-scoped grant.
+#
+# Pod discovery is NOT granted here. It is still a Role rather than a ClusterRole — Prometheus
+# must not be able to list the pods of every namespace — but the Role now lives in each watched
+# environment, which hands it to this account: see observability/shared/watched-namespaces-rbac.yaml.
+# The grant at the end of this file covers Node objects and the kubelet's metrics, nothing namespaced.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -8,33 +11,6 @@ metadata:
   labels:
     app: wely
     component: prometheus
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: wely-prometheus
-  labels:
-    app: wely
-    component: prometheus
-rules:
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "list", "watch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: wely-prometheus
-  labels:
-    app: wely
-    component: prometheus
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: wely-prometheus
-subjects:
-  - kind: ServiceAccount
-    name: wely-prometheus
 ---
 # The kubelet's cAdvisor endpoint (job kubelet-cadvisor in prometheus.yml): Prometheus's only
 # cluster-scoped grant, needed because Nodes are cluster-scoped objects. Kept to the minimum:

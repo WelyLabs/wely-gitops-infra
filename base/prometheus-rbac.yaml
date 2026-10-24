@@ -1,0 +1,37 @@
+# This environment granting the shared Prometheus read access to its own pods.
+#
+# It lives in base, not in observability/, because the grant belongs to the environment that makes
+# it: each overlay's namespace transformer places the pair in its own namespace, and an environment
+# that should not be scraped simply leaves it out. A ClusterRole in the observability overlay would
+# have been one object instead of two per environment — and it would let the scraper list the pods
+# of every namespace, wely-platform included, where Keycloak's pods carry its secrets.
+#
+# The subject's namespace is written out: the service account lives in wely-observability and is
+# not part of this kustomization, so nothing rewrites it.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: wely-prometheus
+  labels:
+    app: wely
+    component: prometheus
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: wely-prometheus
+  labels:
+    app: wely
+    component: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: wely-prometheus
+subjects:
+  - kind: ServiceAccount
+    name: wely-prometheus
+    namespace: wely-observability

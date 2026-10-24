@@ -22,6 +22,27 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: wely-observability
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/WelyLabs/wely-gitops-infra.git
+    targetRevision: HEAD
+    path: observability/shared
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wely-observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: wely-dev
   namespace: argocd
 spec:
