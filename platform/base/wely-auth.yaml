@@ -56,8 +56,12 @@ spec:
           value: "true"
         - name: KC_PROXY
           value: "edge"
+        # The scheme matters: without it Keycloak advertises http:// in its discovery document and
+        # mints tokens with an http:// issuer, which every service rejects — it validates against
+        # https://auth.welylabs.app/realms/<realm>. The realm answers 200 either way, so the
+        # mismatch only shows up as a failed login.
         - name: KC_HOSTNAME
-          value: "auth.welylabs.app"
+          value: "https://auth.welylabs.app"
         - name: KC_HOSTNAME_STRICT_HTTPS
           value: "true"
         - name: KC_DB
