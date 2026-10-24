@@ -29,15 +29,34 @@ spec:
             memory: 896Mi
         imagePullPolicy: IfNotPresent
         args: ["start"]
-        # No probes here yet, deliberately. Keycloak's health endpoints moved to a
-        # separate management port in version 25 (:9000/health/ready) from the main
-        # port before it (:8080/health/ready), and this image is built from
-        # quay.io/keycloak/keycloak:latest — so which of the two applies is unknown
-        # until the tag is pinned. A liveness probe on the wrong port would put the
-        # identity provider in CrashLoopBackOff and take the whole platform with it.
+        # The prerequisite the previous comment set is met: wely-identity's Dockerfile pins
+        # quay.io/keycloak/keycloak:26.8.0, and the running server reports 26.8.0 — so health is
+        # on the management port (:9000), the form introduced in 25, not on :8080.
         #
-        # Prerequisite: pin the base image. Then set KC_HEALTH_ENABLED=true and point
-        # the probes at the port that version actually uses.
+        # Without a readinessProbe Kubernetes marks the container ready the moment it starts, so
+        # the Service got an endpoint while Keycloak was still booting — minutes, on this node —
+        # and cloudflared answered 502 to every login in the meantime. That is what these probes
+        # fix; it is also why readiness is the one that matters here.
+        #
+        # No livenessProbe on purpose. This is a single replica serving every environment: a
+        # liveness check that trips while the server is merely slow under memory pressure would
+        # restart the identity provider the whole platform authenticates against, turning a
+        # slowdown into an outage. Readiness takes it out of rotation without killing it.
+        #
+        # Unlike the Spring services, whose readiness deliberately ignores their databases,
+        # Keycloak's /health/ready includes its datasource — and that is right: with no database
+        # it cannot authenticate anyone, so serving traffic would be pretending.
+        startupProbe:
+          # Generous: a cold start on this node takes minutes, and until this passes the other
+          # probes are not run at all, so a slow boot is never mistaken for a failure.
+          httpGet: { path: /health/started, port: 9000 }
+          periodSeconds: 10
+          failureThreshold: 60
+        readinessProbe:
+          httpGet: { path: /health/ready, port: 9000 }
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
         env:
         # Heap at most 55% of the limit, leaving room for metaspace and threads under 896Mi.
         - name: JAVA_OPTS_KC_HEAP
@@ -52,6 +71,10 @@ spec:
             secretKeyRef:
               name: wely-secrets-platform
               key: kc-admin-password
+        # Serves /health/* on the management port. Off by default, and the probes above are
+        # useless without it: port 9000 simply refuses connections.
+        - name: KC_HEALTH_ENABLED
+          value: "true"
         - name: KC_HTTP_ENABLED
           value: "true"
         - name: KC_PROXY
