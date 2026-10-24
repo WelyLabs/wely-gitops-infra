@@ -61,6 +61,10 @@ spec:
               key: users-db-username
         - name: KEYCLOAK_ISSUER_URI
           value: "https://auth.welylabs.app/realms/wely-prod"
+        # The audience this API accepts, stamped by business-scope's mapper. Empty would accept any
+        # authentic token of the realm, whoever asked for it.
+        - name: JWT_AUDIENCES
+          value: "wely-api-prod"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
           value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-prod/protocol/openid-connect/certs"
         - name: KEYCLOAK_INTERNAL_TOKEN_URI
@@ -79,6 +83,10 @@ spec:
               key: kc-client-secret
         - name: KAFKA_BOOTSTRAP_SERVER
           value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+        # One broker for every environment; this prefix is what separates them. It must match the
+        # environment list of platform/base/wely-kafka-topics.yaml.
+        - name: TOPIC_PREFIX
+          value: "prod."
         - name: SPRING_R2DBC_PROPERTIES_SSLMODE
           value: "disable"
         - name: INTERNAL_SECRET

@@ -43,6 +43,10 @@ spec:
           value: "prod"
         - name: KEYCLOAK_ISSUER_URI
           value: "https://auth.welylabs.app/realms/wely-prod"
+        # The audience this API accepts, stamped by business-scope's mapper. Empty would accept any
+        # authentic token of the realm, whoever asked for it.
+        - name: JWT_AUDIENCES
+          value: "wely-api-prod"
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
           value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-prod/protocol/openid-connect/certs"
         - name: USERS_API_URL

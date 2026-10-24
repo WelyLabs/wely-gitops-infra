@@ -86,6 +86,8 @@ patches:
             env:
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
+            - name: JWT_AUDIENCES
+              value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-dev/protocol/openid-connect/certs"
             - name: USERS_API_URL
@@ -165,6 +167,8 @@ patches:
               value: "jdbc:postgresql://dev-wely-postgres-users-service:5432/users?sslmode=disable"
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
+            - name: JWT_AUDIENCES
+              value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-dev/protocol/openid-connect/certs"
             - name: KEYCLOAK_INTERNAL_TOKEN_URI
@@ -173,6 +177,10 @@ patches:
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+            # A topic per environment, so two environments sharing the broker never read each
+            # other's records. Created by the topics Job: the binder is not allowed to.
+            - name: TOPIC_PREFIX
+              value: "dev."
             # DELETE /profile answers 403 USR-BUS-011 for these accounts.
             - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
               valueFrom:
@@ -198,8 +206,14 @@ patches:
               value: "neo4j://dev-wely-neo4j-service:7687"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+            # A topic per environment, so two environments sharing the broker never read each
+            # other's records. Created by the topics Job: the binder is not allowed to.
+            - name: TOPIC_PREFIX
+              value: "dev."
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
+            - name: JWT_AUDIENCES
+              value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-dev/protocol/openid-connect/certs"
             # Demo accounts never count as or become community admins, on any leave.
@@ -231,6 +245,8 @@ patches:
               value: "http://dev-wely-gateway-service:8081"
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
+            - name: JWT_AUDIENCES
+              value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-dev/protocol/openid-connect/certs"
   target:
@@ -276,16 +292,16 @@ patches:
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/chat_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
+            - name: JWT_AUDIENCES
+              value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-dev/protocol/openid-connect/certs"
-            # A topic per environment, so two environments sharing a broker never read each
-            # other's records. Created by the topics Job: the binder is not allowed to.
-            - name: CHAT_BROADCAST_TOPIC
-              value: "DEV_MESSAGE_BROADCAST"
-            - name: CHAT_CALL_TOPIC
-              value: "DEV_CALL_EVENTS"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+            # A topic per environment, so two environments sharing the broker never read each
+            # other's records. Created by the topics Job: the binder is not allowed to.
+            - name: TOPIC_PREFIX
+              value: "dev."
             # The deleted-users list; namePrefix renames the Service, not a value that spells its name.
             - name: USERS_API_URL
               value: "http://dev-wely-users-service:8082"
@@ -319,6 +335,8 @@ patches:
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/events_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
+            - name: JWT_AUDIENCES
+              value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-dev/protocol/openid-connect/certs"
             # namePrefix renames the Service, not a value that spells its name.
@@ -327,6 +345,10 @@ patches:
             # Publishes EVENT_GROUP_CHANGED to the in-cluster broker, like wely-users.
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+            # A topic per environment, so two environments sharing the broker never read each
+            # other's records. Created by the topics Job: the binder is not allowed to.
+            - name: TOPIC_PREFIX
+              value: "dev."
             # Demo accounts are never erased nor handed an event by the USER_DELETED consumer.
             - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
               valueFrom:
@@ -473,10 +495,16 @@ patches:
               value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/notifications_db?authSource=admin"
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
+            - name: JWT_AUDIENCES
+              value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-dev/protocol/openid-connect/certs"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+            # A topic per environment, so two environments sharing the broker never read each
+            # other's records. Created by the topics Job: the binder is not allowed to.
+            - name: TOPIC_PREFIX
+              value: "dev."
             # The chat's own dev topics.
             - name: CALL_EVENTS_TOPIC
               value: "DEV_CALL_EVENTS"

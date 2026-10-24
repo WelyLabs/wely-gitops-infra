@@ -75,12 +75,13 @@ spec:
               name: wely-secrets-platform
               key: auth-db-password
         # Read by the BusinessIdMapper plugin and by BusinessUserRegistration when they call
-        # users-api. SINGLE-VALUED, and one Keycloak now serves several realms: every realm
-        # resolves its businessId against THIS environment. Correct while wely-dev is the only
-        # live realm, wrong the moment wely-prod exists — the plugin has to pick the users-api of
-        # the realm being authenticated (see UsersServiceClient, which reads one USERS_API_URL).
+        # users-api. {env} is substituted with the environment of the realm being authenticated
+        # (wely-dev -> dev), because one Keycloak serves several realms and each has its own
+        # users-api: a fixed URL would hand every realm the business ids of one environment, with
+        # a valid signature and a valid audience to go with them. A realm not named wely-<env> is
+        # refused rather than guessed — see UsersServiceClient.baseUrlFor.
         - name: USERS_API_URL
-          value: "http://wely-users-service.wely-dev.svc.cluster.local:8082"
+          value: "http://wely-users-service.wely-{env}.svc.cluster.local:8082"
         # Read by the BusinessIdMapper plugin when it calls users-api to resolve
         # a businessId. Must match app.internal-secret on the users-api side.
         - name: INTERNAL_SECRET
