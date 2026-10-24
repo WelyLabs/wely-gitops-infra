@@ -115,6 +115,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: wely-prometheus-service
+  annotations:
+    # Put this Service on the tailnet. The Tailscale operator (platform/tailscale) notices the
+    # annotation and runs a proxy that joins the tailnet and forwards here, so the UI is reachable
+    # from your own devices at the hostname below — and from nowhere else. It replaces a
+    # kubectl port-forward; it does not remove any public exposure, because there never was one.
+    tailscale.com/expose: "true"
+    tailscale.com/hostname: "wely-prometheus"
   labels:
     app: wely
     component: prometheus

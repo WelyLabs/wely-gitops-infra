@@ -1,0 +1,26 @@
+---
+# The OAuth client the operator authenticates to the tailnet with.
+#
+# Upstream names this Secret operator-oauth with keys client_id / client_secret, and the
+# Deployment mounts it as files (CLIENT_ID_FILE / CLIENT_SECRET_FILE). The ciphertext below is the
+# one already sealed for wely-dev: the seals in this repo are cluster-wide, so it is bound to
+# neither a name nor a namespace, and only the key names differ. Rotating the OAuth client means
+# resealing in both places until the dev copy is retired with the hand-written manifest.
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: operator-oauth
+  namespace: tailscale
+  annotations:
+    sealedsecrets.bitnami.com/cluster-wide: "true"
+spec:
+  encryptedData:
+    client_id: AgAA/UMYVmD1AApKIydGB0AoTGM6pAZySwa94V5UQtRyaZOFqO2wngA/4aCZdpiRy9c+/bWTqcDuTmzbyGt0HTHIC4gIbZ5wFEXd+SynVB5XmrYbwAwJzAbQ7j+UtPt+VrCUcAx78NDVVrBQOyppxYMoRccIvYbQ2VcYvD57XxWZfwVbkn+qAjwaCpjvjfjN2F15k3cC8WK3QjwnPjntC2tYqLEcyX4Y7WiiO3W4k6M3iO54VuU58eRwZlxolwyS2DRSNT4Fk8NGqMuYczwAdkR/gHOBZgxz5y+/8JQl75aDbErCJG++kjzkp0C5ucOQhc/eFmehq6NX7+scz2MIn9j2tUG4f8jPEyq2rx6TazrqzOqfHOxqT68KpsxUzxVINkoNRgAY1dJW18/UFZLwjRCl4xPuSDe1MtloNdpnVpDivq2VBHodrle9YOl5Xqhzc/iQvKWko/lEkHYDEbn1AA2FOc54Pbe+LVAbjoiOoR2fMo57egWwZQhGpKNbhdxg8brlM8S3MXqwhaU9NnfO9P9/+8ebWC/NjlKGdPCC3a5pS3V4QTdjQ7D7G9aMOpZaC8qAC/f7DeXVauzncLlL1D+2OSVnFTrY37bLyVo9jLFFhQiz/8gxetTyoRJGoO5j/+0mULata+oxytDre/RzR9avBkKcKHL7BcGreHaB+6b7NtmzGocaed5ItpwUrxbbzhaQ+w1kOpFfwpiyzwGM13A/uw==
+    client_secret: AgBZ5DedM28DBnN1N9OP+ED1TCMMVBiPNuxM8x7kIijKZIxVXYutCGAubrv5xt+2CExWaS/SDBT0CPnuIepRORoqvuG4kIdbEuZi6U0cgzV5AZaAk5cS3X6HpTB6VZapxi1iTutu9GImy82evm6cDiy9StHO9yxhdsKFZbpobr84y5Ep+n8sj8ABiu0PnWneuOlVZTQIQtwpym4dU+w0d2m1MxbPKCVdZ8FGLB0djUR8F/J/19EfAl9ibYmg4hI5/0wDZVEtfg2l8Jt8qBfTRqQTrhAWOljK3hEWj05nrDxIm1XAnZErWnNnLObaZVfajc35t8hjDYGeeUAcSRGCOHuu3J7vMf7M6t3mjc+qolfy+9y6XFRyMGe3vsCvNXZMQe859XQAI3ccymg4SQnXNoEeXBq+4NoISiPFNhmO2G0vS6HGF8vuz1x3VBT1MelAOXVKEjyMRdlFM3DEqyIYIaDxYgSUMMb62fOhk3oV6rqwHwt0tV7PAUz9p0f4rIk45oaD7iNKf5cSnTQrb4jIGZ7zJ57ohN/IxpikCsQfsyR5fZXIRZEhoq1YOcIzAWPQ99krz74wa/lSqRIxBtj4/86CZH4lg0OqIYtfmF4ilPyvXNABgBcC4xNEd8CpxcbjTzmWQvzyCtrIEmQzPkdXjmKDQaYqsCDPk5/lJyg3anl8gkvi+hvDNtvdcjW+gTweWHu+ZAQLpZ7GGru/8ZW9qb1G774FaBGx5H4CDDac5zBVG5G6It9W67QdezHSnfsFR/KDK3CXFfBqXI/fO4KtINw=
+  template:
+    metadata:
+      name: operator-oauth
+      namespace: tailscale
+      annotations:
+        sealedsecrets.bitnami.com/cluster-wide: "true"
+    type: Opaque

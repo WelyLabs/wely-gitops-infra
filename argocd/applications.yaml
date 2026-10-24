@@ -22,6 +22,29 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: wely-tailscale
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/WelyLabs/wely-gitops-infra.git
+    targetRevision: HEAD
+    path: platform/tailscale
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tailscale
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # The CRDs are large enough that a client-side apply exceeds the annotation size limit.
+      - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: wely-observability
   namespace: argocd
 spec:
