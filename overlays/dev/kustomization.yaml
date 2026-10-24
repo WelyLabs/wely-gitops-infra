@@ -181,6 +181,8 @@ patches:
             # other's records. Created by the topics Job: the binder is not allowed to.
             - name: TOPIC_PREFIX
               value: "dev."
+            - name: KEYCLOAK_ADMIN_CLIENT_ID
+              value: "wely-users-dev-client"
             # DELETE /profile answers 403 USR-BUS-011 for these accounts.
             - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
               valueFrom:
