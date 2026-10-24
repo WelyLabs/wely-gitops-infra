@@ -493,7 +493,7 @@ images:
   newTag: sha-ec5cdb967d32f809cd77b09f472d9272df35bed0
 - name: ghcr.io/welylabs/wely-mcp
   newName: ghcr.io/welylabs/wely-mcp
-  newTag: sha-9fd145b83c03cee858244d0eb13cf62e6a3d7be0
+  newTag: sha-1a0ab27d783aedc0a02bf60eebd7c7fdccacf664
 - name: ghcr.io/welylabs/wely-media
   newName: ghcr.io/welylabs/wely-media
   newTag: sha-853f182ab8c1c320fc67fa5a5f98ccc77293f466
