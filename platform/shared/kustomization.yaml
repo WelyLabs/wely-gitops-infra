@@ -12,7 +12,13 @@ resources:
 - ../base
 - namespace.yaml
 - wely-sealed-secrets-platform.yaml
-- realm/realm-settings-job.yaml
+# - realm/realm-settings-job.yaml
+#   Taken out of the sync path on 2026-10-24. As a PostSync hook it gates every deployment, and it
+#   cannot finish on this node: its script makes ~40 kcadm calls, each of which starts a JVM, and
+#   `set -e` aborts the whole run on the first one that times out. It then blocked the sync of
+#   everything behind it, including a Keycloak fix. Its work is re-assertion, not setup — the realm
+#   already carries those settings — so leaving it out costs nothing today. Re-enable it when the
+#   node has headroom, or split it into steps that can fail independently.
 
 # Read by the realm job. mcp-client.json is a template: the job substitutes __MCP_CLIENT__ with
 # the realm's client id before creating it.
