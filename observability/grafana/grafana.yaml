@@ -13,10 +13,9 @@
 # that change only lasts until the next restart (emptyDir). The pod is reachable through
 # `kubectl port-forward` only, so this fallback needs cluster credentials to exploit.
 #
-# Not exposed: a ClusterIP Service, no route in the tunnel, no ingress admitted
-# (networkpolicy.yaml). Open it with
-#   kubectl -n <ns> port-forward svc/<prefix>wely-grafana-service 3000:3000
-# then http://localhost:3000.
+# Not exposed publicly: a ClusterIP Service and no route in the tunnel. Reachable on the tailnet
+# over HTTPS through the Tailscale Ingress in ingress.yaml, which is the normal way in;
+# `kubectl -n <ns> port-forward svc/<prefix>wely-grafana-service 3000:3000` still works.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -87,8 +86,12 @@ spec:
           value: "false"
         - name: GF_USERS_ALLOW_SIGN_UP
           value: "false"
+        # The address Grafana builds its redirects and share links from. It must be the one the
+        # browser used, or logging in bounces back to a host nobody can reach. Hard-coded to the
+        # tailnet name because that is the only way in; a port-forward still works, Grafana just
+        # sends you back here.
         - name: GF_SERVER_ROOT_URL
-          value: "http://localhost:3000/"
+          value: "https://wely-grafana.tail7a1c5b.ts.net/"
         # No calls home: usage reporting, update checks, news feed, avatars, and the plugins
         # Grafana 12 would otherwise download and load at every start (memory and start-up time).
         - name: GF_ANALYTICS_REPORTING_ENABLED
@@ -185,13 +188,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: wely-grafana-service
-  annotations:
-    # Put this Service on the tailnet. The Tailscale operator (platform/tailscale) notices the
-    # annotation and runs a proxy that joins the tailnet and forwards here, so the UI is reachable
-    # from your own devices at the hostname below — and from nowhere else. It replaces a
-    # kubectl port-forward; it does not remove any public exposure, because there never was one.
-    tailscale.com/expose: "true"
-    tailscale.com/hostname: "wely-grafana"
   labels:
     app: wely
     component: grafana

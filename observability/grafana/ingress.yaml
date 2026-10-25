@@ -1,0 +1,39 @@
+# Grafana on the tailnet, over HTTPS.
+#
+# A Tailscale Ingress rather than the tailscale.com/expose annotation on the Service: the operator
+# then terminates TLS with a real *.ts.net certificate, so the browser trusts it. That matters here
+# because this is a login form — over http:// a browser marks the page insecure, nags about the
+# password field, and withholds the APIs that only work in a secure context.
+#
+# What it does NOT add is transport encryption between your device and the proxy: Tailscale already
+# encrypts that with WireGuard either way. The gain is the browser's trust, not the wire.
+#
+# PREREQUISITE: HTTPS certificates must be enabled for the tailnet (admin console, DNS → HTTPS
+# Certificates). Without it the operator cannot obtain a certificate and this Ingress stays
+# pending — the UI is then unreachable, where the plain annotation would have served HTTP. If you
+# would rather not enable it, drop this file and put `tailscale.com/expose: "true"` back on the
+# Service.
+#
+# To restrict WHO may reach it, the lever is the tailnet policy, not Kubernetes: add
+# `tailscale.com/tags` here and write an ACL for that tag. Left out on purpose — a tag the OAuth
+# client does not own makes the proxy fail to come up, and that policy is yours to edit.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wely-grafana
+  labels:
+    app: wely
+    component: grafana
+  annotations:
+    # The device name on the tailnet; the address becomes <name>.<tailnet>.ts.net.
+    tailscale.com/hostname: "wely-grafana"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: wely-grafana-service
+      port:
+        number: 3000
+  tls:
+    - hosts:
+        - "wely-grafana"
