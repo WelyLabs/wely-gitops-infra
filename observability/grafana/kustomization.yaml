@@ -19,6 +19,8 @@ kind: Kustomization
 resources:
   - grafana.yaml
   - networkpolicy.yaml
+  # Tailnet access over HTTPS; needs the Tailscale operator (platform/tailscale).
+  - ingress.yaml
 
 # Generated, so any change renames the ConfigMap and rolls the pod. Grafana reads its
 # provisioning at start.
