@@ -11,6 +11,17 @@ kind: Kustomization
 # No `namespace:` transformer here: the upstream manifest carries its own namespaces, and the
 # transformer would move the namespace-scoped Roles out of `tailscale`, where their whole point is
 # to confine the operator's access to secrets.
+#
+# TWO THINGS LIVE IN THE TAILNET POLICY, NOT HERE, and the operator crash-loops without them:
+#
+#   1. `tag:k8s-operator` must exist in tagOwners, and the OAuth client must be allowed to use it.
+#      Otherwise the operator dies at startup with "requested tags [tag:k8s-operator] are invalid
+#      or not permitted (400)" — which is what happened on first install, 2026-10-25. The ACL needs
+#      at least:
+#          "tagOwners": { "tag:k8s-operator": [], "tag:k8s": ["tag:k8s-operator"] }
+#      The proxies the operator creates are tagged tag:k8s, so that second entry is not optional.
+#   2. HTTPS certificates must be enabled for the tailnet, or a Tailscale Ingress never gets one
+#      and stays without an address (observability/grafana/ingress.yaml depends on this).
 resources:
 - operator.yaml
 - wely-sealed-operator-oauth.yaml
