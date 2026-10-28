@@ -1,0 +1,47 @@
+# The shared platform granting the shared Prometheus read access to its own pods.
+#
+# A deliberate copy of base/prometheus-rbac.yaml rather than a shared base: that file sits in
+# base/, which only the environment overlays include, and a kustomization cannot pull a loose file
+# from outside its own root. Making it a base of its own would restructure base/ for twenty lines.
+# The duplication is the smaller change, and the two copies are independent on purpose — an
+# environment and the platform may be scraped by different Prometheis one day.
+#
+# Why a Role and not a ClusterRole: the scraper needs to list the pods of the namespaces it
+# watches, and nothing more. A ClusterRole would hand it every namespace in the cluster.
+#
+# Listing a pod exposes its spec — the NAMES of the secrets it mounts, never their contents. That
+# is what makes this grant acceptable next to Keycloak.
+#
+# The subject's namespace is written out: the service account lives in wely-observability and is
+# not part of this kustomization, so nothing rewrites it.
+#
+# Named -platform, not wely-prometheus like the environment copy: overlays/local folds base/ and
+# platform/base/ into a single namespace, where two Roles of the same name collide and kustomize
+# refuses to render.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: wely-prometheus-platform
+  labels:
+    app: wely
+    component: prometheus
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: wely-prometheus-platform
+  labels:
+    app: wely
+    component: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: wely-prometheus-platform
+subjects:
+  - kind: ServiceAccount
+    name: wely-prometheus
+    namespace: wely-observability

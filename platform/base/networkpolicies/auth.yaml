@@ -43,3 +43,14 @@ spec:
         - podSelector: { matchLabels: { app: wely-realm-settings } }
       ports:
         - { protocol: TCP, port: 8080 }
+    # The shared Prometheus, on the management port only. 9000 carries /metrics and /health and is
+    # not routed by the tunnel, so opening it here exposes nothing outside the cluster.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              wely.dev/role: observability
+          podSelector:
+            matchLabels:
+              app: wely-prometheus
+      ports:
+        - { protocol: TCP, port: 9000 }

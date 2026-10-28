@@ -21,3 +21,5 @@ resources:
 - wely-kafka-topics.yaml
 - wely-kafka-ui.yaml
 - networkpolicies
+# Lets the shared Prometheus list the pods of this namespace, so it can discover Keycloak.
+- prometheus-rbac.yaml
