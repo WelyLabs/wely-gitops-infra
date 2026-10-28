@@ -41,6 +41,9 @@ spec:
       labels:
         app: wely-garage
     spec:
+      # local-path volume: the data lives on pi5's disk, so the pod belongs there.
+      nodeSelector:
+        kubernetes.io/hostname: pi5
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
