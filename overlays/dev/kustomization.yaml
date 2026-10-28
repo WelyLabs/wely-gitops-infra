@@ -79,6 +79,29 @@ patches:
   target:
     kind: StatefulSet
     name: wely-garage
+# Exception: MongoDB stays on pi5, and the three services that query it stay with it.
+# serverwely1's CPU has no AVX, which MongoDB has required since 5.0 — mongod dies on an
+# illegal instruction at startup, there is no flag for it, and the last release without that
+# requirement is 4.4. The arm64 build on the Pi is unaffected. Keeping wely-chat, wely-events
+# and wely-notifications next to it is the same rule as everywhere else: a service and its
+# database on one node. wely-chat makes several Mongo round trips per message (bucket pattern),
+# so it is the one that would feel a tunnel hop.
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        kubernetes.io/hostname: pi5
+  target:
+    kind: StatefulSet
+    name: wely-mongodb
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        kubernetes.io/hostname: pi5
+  target:
+    kind: Deployment
+    name: wely-(chat|events|notifications)
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment
