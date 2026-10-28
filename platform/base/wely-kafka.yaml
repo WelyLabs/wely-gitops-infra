@@ -19,9 +19,6 @@ spec:
       labels:
         app: wely-kafka
     spec:
-      # local-path volume: the log segments live on pi5's disk, so the pod belongs there.
-      nodeSelector:
-        kubernetes.io/hostname: pi5
       containers:
       - name: kafka
         image: apache/kafka:3.8.0
