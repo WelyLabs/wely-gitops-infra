@@ -42,6 +42,43 @@ namespace: wely-dev
 namePrefix: dev-
 
 patches:
+# Placement. Everything of this namespace runs on the workload node, data and services
+# together: serverwely1 has an SSD where the Pi writes to an SD card — the component that dies
+# first on these machines, and the one Kafka, Postgres, Mongo and Neo4j write to continuously —
+# plus 11.6 Gi allocatable against the Pi's 7.9, which is already at 99% of its memory limits.
+# Observability went the other way, onto pi5: a scraper that lives on the node it watches is a
+# scraper you lose together with the node. The two roles are one label with two values, so the
+# swap is two `kubectl label` calls and no manifest change.
+#
+# A blanket patch rather than a nodeSelector per file: new workloads land on the right node
+# without anyone remembering to add it, which is how the orphan-patch class of bug starts.
+# Its only cost is that an exception has to be written back, as wely-garage is below.
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        wely.dev/role: workload
+  target:
+    kind: Deployment
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        wely.dev/role: workload
+  target:
+    kind: StatefulSet
+# Exception: Garage keeps its 5 Gi of photos on pi5. Its image is distroless, so neither
+# `kubectl cp` nor a dump runs inside it, and moving object storage would mean a migration Job
+# of its own. It costs nothing where it is: the browser fetches photos straight from Garage
+# through the tunnel with a signed URL, so wely-media never carries the bytes.
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        kubernetes.io/hostname: pi5
+  target:
+    kind: StatefulSet
+    name: wely-garage
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment

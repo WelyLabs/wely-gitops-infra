@@ -35,3 +35,30 @@ images:
 - name: ghcr.io/welylabs/wely-keycloak
   newName: ghcr.io/welylabs/wely-keycloak
   newTag: sha-1f8f82ba402b4b56d904d6dbe02931a25f26e7fb
+
+patches:
+# Placement. Keycloak, its PostgreSQL and Kafka run on the workload node with the services that
+# query them: serverwely1 has an SSD where the Pi writes to an SD card — the component that dies
+# first on these machines, and the one Kafka, Postgres, Mongo and Neo4j write to continuously —
+# plus 11.6 Gi allocatable against the Pi's 7.9, which is already at 99% of its memory limits.
+# Observability went the other way, onto pi5: a scraper that lives on the node it watches is a
+# scraper you lose together with the node. The two roles are one label with two values, so the
+# swap is two `kubectl label` calls and no manifest change.
+#
+# A blanket patch rather than a nodeSelector per file, so a workload added here lands on the
+# right node without anyone remembering to write it.
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        wely.dev/role: workload
+  target:
+    kind: Deployment
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        wely.dev/role: workload
+  target:
+    kind: StatefulSet
+
