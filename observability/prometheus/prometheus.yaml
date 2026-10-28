@@ -26,6 +26,17 @@ spec:
       labels:
         app: wely-prometheus
     spec:
+      # Pinned to a node labelled for observability rather than to a hostname, so renaming or
+      # replacing the machine does not mean editing manifests.
+      nodeSelector:
+        wely.dev/role: observability
+      # The observability nodes carry wely.dev/remote=true:NoSchedule so that nothing lands on them
+      # by accident. This stack is the exception: it is meant to live off the node it observes.
+      tolerations:
+      - key: wely.dev/remote
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
       serviceAccountName: wely-prometheus
       # Non-root: the image's own user (nobody). local-path creates its directories world-writable,
       # as Garage's claim already relies on.

@@ -35,6 +35,14 @@ spec:
         prometheus.io/port: "9100"
         prometheus.io/path: /metrics
     spec:
+      # Toleration but no nodeSelector: this DaemonSet must measure every node, the tainted ones
+      # included. The DaemonSet controller tolerates the built-in node-condition taints on its own,
+      # never a custom one, so without this the exporter stops coming back on those nodes.
+      tolerations:
+      - key: wely.dev/remote
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
       # Talks to nothing in the cluster.
       automountServiceAccountToken: false
       enableServiceLinks: false
