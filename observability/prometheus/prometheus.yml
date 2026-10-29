@@ -25,6 +25,11 @@ scrape_configs:
             # The shared platform, for Keycloak. Kafka and PostgreSQL are in this namespace too
             # but expose no Prometheus endpoint: each would need an exporter sidecar.
             - wely-platform
+            # This namespace, for node-exporter. It is not an environment, so the per-environment
+            # Roles of base/prometheus-rbac.yaml do not cover it — the grant is in
+            # prometheus/rbac.yaml. Left out until 2026-10-29, node-exporter ran on both nodes and
+            # was scraped by nobody: the job had no target and nothing said so.
+            - wely-observability
     relabel_configs:
       # Opt-in only.
       - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
@@ -55,6 +60,12 @@ scrape_configs:
         target_label: pod
       - source_labels: [__meta_kubernetes_pod_label_app]
         target_label: app
+      # Which machine the pod is on. The cluster has had two nodes since 2026-10-28 and the
+      # placement is deliberate (see the project's CLAUDE.md), so "where does this run" is now a
+      # question every panel can be asked. node-exporter's series carry it too, which is what
+      # turns one DaemonSet into per-machine metrics.
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node
 
   # cAdvisor, as embedded in the kubelet: container memory, CPU and throttling, which the JVMs
   # cannot report about themselves, plus the node's own network interfaces.

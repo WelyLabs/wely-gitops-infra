@@ -52,3 +52,36 @@ subjects:
   # The overlay's namespace transformer fills in the ServiceAccount's namespace.
   - kind: ServiceAccount
     name: wely-prometheus
+---
+# Pod discovery in this namespace, for node-exporter.
+#
+# Not covered by the per-environment Roles of base/prometheus-rbac.yaml: those grant access to the
+# environments being watched, and the scraper's own namespace is not one of them. Without this
+# Role the kubernetes-pods job simply found no targets here, which is exactly the quiet failure
+# that comment warned about — node-exporter ran on both nodes for a day, scraped by nobody.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: wely-prometheus-own-namespace
+  labels:
+    app: wely
+    component: prometheus
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: wely-prometheus-own-namespace
+  labels:
+    app: wely
+    component: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: wely-prometheus-own-namespace
+subjects:
+  - kind: ServiceAccount
+    name: wely-prometheus
