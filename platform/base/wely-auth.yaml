@@ -97,6 +97,17 @@ spec:
         # the scrape target simply returns 404 — the pod stays green and the dashboards stay empty.
         - name: KC_METRICS_ENABLED
           value: "true"
+        # Metrics per user event — logins, login failures, token refreshes, per realm. Without
+        # this, /metrics carries HTTP traffic, the connection pool and the JVM, but nothing that
+        # says whether anyone actually logged in: keycloak_* is four families, none of them about
+        # authentication. The feature is a build-time option, and this image is pre-built, so
+        # `start` without --optimized re-augments at boot — a slower start, no rebuild.
+        # KC_EVENT_METRICS_USER_TAGS is left at its default, realm alone: adding clientId
+        # multiplies the series by every client.
+        - name: KC_FEATURES
+          value: "user-event-metrics"
+        - name: KC_EVENT_METRICS_USER_ENABLED
+          value: "true"
         - name: KC_HTTP_ENABLED
           value: "true"
         - name: KC_PROXY
