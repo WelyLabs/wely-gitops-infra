@@ -54,6 +54,38 @@
   "templating": {
     "list": [
       {
+        "name": "node",
+        "label": "Machine",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(node_load1, node)",
+        "query": {
+          "query": "label_values(node_load1, node)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery",
+          "qryType": 1
+        },
+        "refresh": 2,
+        "sort": 1,
+        "regex": "",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": []
+      },
+      {
         "name": "app",
         "label": "Service",
         "type": "query",
@@ -115,7 +147,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app, command) (rate(mongodb_driver_commands_seconds_sum{app=~\"$app\"}[$__rate_interval])) / sum by (app, command) (rate(mongodb_driver_commands_seconds_count{app=~\"$app\"}[$__rate_interval]))",
+          "expr": "sum by (app, command) (rate(mongodb_driver_commands_seconds_sum{app=~\"$app\", node=~\"$node\"}[$__rate_interval])) / sum by (app, command) (rate(mongodb_driver_commands_seconds_count{app=~\"$app\", node=~\"$node\"}[$__rate_interval]))",
           "legendFormat": "{{app}} {{command}}",
           "range": true,
           "instant": false,
@@ -181,7 +213,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max by (app, command) (mongodb_driver_commands_seconds_max{app=~\"$app\"})",
+          "expr": "max by (app, command) (mongodb_driver_commands_seconds_max{app=~\"$app\", node=~\"$node\"})",
           "legendFormat": "{{app}} {{command}}",
           "range": true,
           "instant": false,
@@ -247,7 +279,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app, command) (rate(mongodb_driver_commands_seconds_count{app=~\"$app\"}[$__rate_interval]))",
+          "expr": "sum by (app, command) (rate(mongodb_driver_commands_seconds_count{app=~\"$app\", node=~\"$node\"}[$__rate_interval]))",
           "legendFormat": "{{app}} {{command}}",
           "range": true,
           "instant": false,
@@ -312,7 +344,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app) (mongodb_driver_pool_checkedout{app=~\"$app\"})",
+          "expr": "sum by (app) (mongodb_driver_pool_checkedout{app=~\"$app\", node=~\"$node\"})",
           "legendFormat": "{{app}} in use",
           "range": true,
           "instant": false,
@@ -324,7 +356,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app) (mongodb_driver_pool_size{app=~\"$app\"})",
+          "expr": "sum by (app) (mongodb_driver_pool_size{app=~\"$app\", node=~\"$node\"})",
           "legendFormat": "{{app}} open",
           "range": true,
           "instant": false,
@@ -565,7 +597,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app, topic) (kafka_consumer_fetch_manager_records_lag{app=~\"$app\"})",
+          "expr": "sum by (app, topic) (kafka_consumer_fetch_manager_records_lag{app=~\"$app\", node=~\"$node\"})",
           "legendFormat": "{{app}} {{topic}}",
           "range": true,
           "instant": false,
@@ -632,7 +664,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max by (app, topic) (label_replace(kafka_consumer_fetch_manager_records_lag_max{app=~\"$app\"}, \"topic\", \"$1\", \"spring_id\", \"([^.]+)\\\\.consumer\\\\..*\"))",
+          "expr": "max by (app, topic) (label_replace(kafka_consumer_fetch_manager_records_lag_max{app=~\"$app\", node=~\"$node\"}, \"topic\", \"$1\", \"spring_id\", \"([^.]+)\\\\.consumer\\\\..*\"))",
           "legendFormat": "{{app}} {{topic}}",
           "range": true,
           "instant": false,
@@ -699,7 +731,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app, destination, result) (label_replace(rate(spring_kafka_listener_seconds_count{app=~\"$app\"}[$__rate_interval]), \"destination\", \"$1\", \"name\", \".*consumerDestinationName='([^']+)'.*\"))",
+          "expr": "sum by (app, destination, result) (label_replace(rate(spring_kafka_listener_seconds_count{app=~\"$app\", node=~\"$node\"}[$__rate_interval]), \"destination\", \"$1\", \"name\", \".*consumerDestinationName='([^']+)'.*\"))",
           "legendFormat": "{{app}} {{destination}} {{result}}",
           "range": true,
           "instant": false,
@@ -765,7 +797,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app, destination) (label_replace(rate(spring_kafka_listener_seconds_sum{app=~\"$app\"}[$__rate_interval]), \"destination\", \"$1\", \"name\", \".*consumerDestinationName='([^']+)'.*\")) / sum by (app, destination) (label_replace(rate(spring_kafka_listener_seconds_count{app=~\"$app\"}[$__rate_interval]), \"destination\", \"$1\", \"name\", \".*consumerDestinationName='([^']+)'.*\"))",
+          "expr": "sum by (app, destination) (label_replace(rate(spring_kafka_listener_seconds_sum{app=~\"$app\", node=~\"$node\"}[$__rate_interval]), \"destination\", \"$1\", \"name\", \".*consumerDestinationName='([^']+)'.*\")) / sum by (app, destination) (label_replace(rate(spring_kafka_listener_seconds_count{app=~\"$app\", node=~\"$node\"}[$__rate_interval]), \"destination\", \"$1\", \"name\", \".*consumerDestinationName='([^']+)'.*\"))",
           "legendFormat": "{{app}} {{destination}}",
           "range": true,
           "instant": false,
@@ -843,7 +875,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max by (app, outbox) (wely_outbox_pending{app=~\"$app\"})",
+          "expr": "max by (app, outbox) (wely_outbox_pending{app=~\"$app\", node=~\"$node\"})",
           "legendFormat": "{{app}} {{outbox}}",
           "range": true,
           "instant": false,

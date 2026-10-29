@@ -54,6 +54,38 @@
   "templating": {
     "list": [
       {
+        "name": "node",
+        "label": "Machine",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(node_load1, node)",
+        "query": {
+          "query": "label_values(node_load1, node)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery",
+          "qryType": 1
+        },
+        "refresh": 2,
+        "sort": 1,
+        "regex": "",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": []
+      },
+      {
         "name": "app",
         "label": "Service",
         "type": "query",
@@ -115,7 +147,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max by (app) (up{job=\"kubernetes-pods\", app=~\"$app\"})",
+          "expr": "max by (app) (up{job=\"kubernetes-pods\", app=~\"$app\", node=~\"$node\"})",
           "legendFormat": "{{app}}",
           "range": false,
           "instant": true,
@@ -213,7 +245,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app, uri) (rate(http_server_requests_seconds_count{app=~\"$app\", app!=\"wely-gateway\", uri!~\"/actuator.*|/livez|/readyz\"}[$__rate_interval]))",
+          "expr": "sum by (app, uri) (rate(http_server_requests_seconds_count{app=~\"$app\", node=~\"$node\", app!=\"wely-gateway\", uri!~\"/actuator.*|/livez|/readyz\"}[$__rate_interval]))",
           "legendFormat": "{{app}} {{uri}}",
           "range": true,
           "instant": false,
@@ -279,7 +311,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app) (rate(http_server_requests_seconds_count{app=~\"$app\", status=~\"4..\", uri!~\"/actuator.*|/livez|/readyz\"}[$__rate_interval]))",
+          "expr": "sum by (app) (rate(http_server_requests_seconds_count{app=~\"$app\", node=~\"$node\", status=~\"4..\", uri!~\"/actuator.*|/livez|/readyz\"}[$__rate_interval]))",
           "legendFormat": "{{app}}",
           "range": true,
           "instant": false,
@@ -345,7 +377,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app) (rate(http_server_requests_seconds_count{app=~\"$app\", status=~\"5..\", uri!~\"/actuator.*|/livez|/readyz\"}[$__rate_interval]))",
+          "expr": "sum by (app) (rate(http_server_requests_seconds_count{app=~\"$app\", node=~\"$node\", status=~\"5..\", uri!~\"/actuator.*|/livez|/readyz\"}[$__rate_interval]))",
           "legendFormat": "{{app}}",
           "range": true,
           "instant": false,
@@ -411,7 +443,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (app, le) (rate(http_server_requests_seconds_bucket{app=~\"$app\", uri!~\"/actuator.*|/livez|/readyz\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (app, le) (rate(http_server_requests_seconds_bucket{app=~\"$app\", node=~\"$node\", uri!~\"/actuator.*|/livez|/readyz\"}[$__rate_interval])))",
           "legendFormat": "{{app}}",
           "range": true,
           "instant": false,
@@ -491,7 +523,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app, code, source) (increase(wely_errors_technical_total{app=~\"$app\"}[$__range])) > 0",
+          "expr": "sum by (app, code, source) (increase(wely_errors_technical_total{app=~\"$app\", node=~\"$node\"}[$__range])) > 0",
           "legendFormat": "__auto",
           "range": false,
           "instant": true,
@@ -574,7 +606,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app, code, source) (increase(wely_errors_technical_total{app=~\"$app\"}[$__rate_interval])) > 0",
+          "expr": "sum by (app, code, source) (increase(wely_errors_technical_total{app=~\"$app\", node=~\"$node\"}[$__rate_interval])) > 0",
           "legendFormat": "{{app}} {{code}} ({{source}})",
           "range": true,
           "instant": false,

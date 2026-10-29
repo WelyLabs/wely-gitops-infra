@@ -144,7 +144,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "{{ $labels.app }}: heap at {{ humanizePercentage $values.A.Value }} of its maximum"
+          summary: "{{ $labels.app }} on {{ $labels.node }}: heap at {{ humanizePercentage $values.A.Value }} of its maximum"
           description: "Pod {{ $labels.pod }} has used more than 90% of its maximum heap for 5 minutes."
         data:
           - refId: A
@@ -153,9 +153,9 @@ groups:
             model:
               refId: A
               expr: |
-                sum by (app, pod) (jvm_memory_used_bytes{area="heap"})
+                sum by (node, app, pod) (jvm_memory_used_bytes{area="heap"})
                   /
-                sum by (app, pod) (jvm_memory_max_bytes{area="heap"})
+                sum by (node, app, pod) (jvm_memory_max_bytes{area="heap"})
               instant: true
               range: false
               intervalMs: 60000
@@ -183,7 +183,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "{{ $labels.mountpoint }} has {{ humanizePercentage $values.A.Value }} free"
+          summary: "{{ $labels.node }}: {{ $labels.mountpoint }} has {{ humanizePercentage $values.A.Value }} free"
           description: "Filesystem {{ $labels.device }} mounted on {{ $labels.mountpoint }} has had less than 10% free space for 10 minutes. Prometheus and every claim live on the root filesystem."
         data:
           - refId: A
@@ -192,7 +192,7 @@ groups:
             model:
               refId: A
               expr: |
-                min by (device, mountpoint) (
+                min by (node, device, mountpoint) (
                   node_filesystem_avail_bytes{fstype!~"tmpfs|ramfs"}
                     /
                   node_filesystem_size_bytes{fstype!~"tmpfs|ramfs"}
@@ -246,3 +246,113 @@ groups:
               datasource: { type: __expr__, uid: __expr__ }
               conditions:
                 - evaluator: { type: gt, params: [0] }
+
+      # ── Keycloak: server errors ───────────────────────────────────────────────────────────────
+      # 5xx from the identity provider. No rule for "Keycloak is down": the Service down rule
+      # above watches every target and Keycloak is one of them since 2026-10-24. This one catches
+      # the worse case — it answers, so nothing looks broken, and it answers 500.
+      # Templated URIs, so one series covers every realm.
+      - uid: wely-keycloak-server-errors
+        title: Keycloak server errors
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "Keycloak is answering {{ $labels.status }} on {{ $labels.uri }}"
+          description: "More than 0.05 server errors per second for 5 minutes on {{ $labels.uri }}. Every environment authenticates against this one Keycloak, so logins are failing everywhere."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 600, to: 0 }
+            model:
+              refId: A
+              expr: sum by (uri, status) (rate(http_server_requests_seconds_count{app="wely-auth", outcome="SERVER_ERROR"}[5m]))
+              instant: true
+              range: false
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: gt, params: [0.05] }
+
+      # ── Keycloak: database pool saturated ─────────────────────────────────────────────────────
+      # Requests blocked waiting for a PostgreSQL connection. Keycloak queries its database on
+      # every token it issues, so anything above zero here is logins queueing — the shape the
+      # outage takes a few minutes before it becomes a 502 at the gateway.
+      - uid: wely-keycloak-pool-saturated
+        title: Keycloak database pool saturated
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "Keycloak has requests waiting on its {{ $labels.datasource }} pool"
+          description: "{{ $labels.datasource }} has had requests blocked waiting for a connection for 5 minutes. Every token Keycloak issues needs one."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 300, to: 0 }
+            model:
+              refId: A
+              expr: max by (datasource) (agroal_awaiting_count{app="wely-auth"})
+              instant: true
+              range: false
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: gt, params: [0] }
+
+      # ── Keycloak: failed logins ───────────────────────────────────────────────────────────────
+      # A burst of login errors in one realm: either someone is guessing passwords, or a client
+      # was deployed with the wrong secret and is retrying. Both are worth a message.
+      # keycloak_user_events_total only exists once the event has happened at least once, so
+      # noDataState is OK — an untouched realm has no series, not a problem.
+      - uid: wely-keycloak-login-failures
+        title: Keycloak login failures
+        condition: C
+        for: 0m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.realm }}: burst of failed logins ({{ $labels.error }})"
+          description: "More than 20 login errors in 10 minutes on realm {{ $labels.realm }}, reason {{ $labels.error }}. Password guessing, or a client deployed with a stale secret."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 600, to: 0 }
+            model:
+              refId: A
+              expr: sum by (realm, error) (increase(keycloak_user_events_total{app="wely-auth", event="login", error!=""}[10m]))
+              instant: true
+              range: false
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: gt, params: [20] }

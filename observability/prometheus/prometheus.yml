@@ -105,10 +105,13 @@ scrape_configs:
       #      see them (observability/node-exporter).
       #    container_fs_usage_bytes is not kept: with containerd, this kubelet reports it for the
       #    root cgroup only, which node-exporter's filesystem collector already covers.
-      #    The namespace is written out: this file is deployed by overlays/dev only.
+      #    The three namespaces are written out, the same list the pod job watches. It read
+      #    wely-dev alone until 2026-10-29, from when this file lived in overlays/dev — so the
+      #    memory of Keycloak, Kafka and both PostgreSQL was invisible, which is most of what
+      #    runs on the workload node.
       - source_labels: [__name__, namespace, container, id, interface]
         action: keep
-        regex: "container_(memory_working_set_bytes|spec_memory_limit_bytes|cpu_usage_seconds_total);wely-dev;[^;]+;[^;]*;|container_cpu_cfs_(throttled_periods|periods)_total;wely-dev;;[^;]*;|container_network_(receive|transmit)_bytes_total;;;/;(eth0|wlan0|tailscale0)"
+        regex: "container_(memory_working_set_bytes|spec_memory_limit_bytes|cpu_usage_seconds_total);(wely-dev|wely-platform|wely-observability);[^;]+;[^;]*;|container_cpu_cfs_(throttled_periods|periods)_total;(wely-dev|wely-platform|wely-observability);;[^;]*;|container_network_(receive|transmit)_bytes_total;;;/;(eth0|wlan0|tailscale0)"
       # 3. The cgroup path, the containerd id and the image digest change on every restart or
       #    deploy and identify nothing namespace/pod/container do not.
       - action: labeldrop

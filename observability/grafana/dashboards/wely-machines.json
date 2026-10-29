@@ -1,7 +1,7 @@
 {
   "uid": "wely-pi-jvms",
-  "title": "Wely — Pi & JVMs",
-  "description": "The Raspberry Pi node, the containers on it and the JVMs of the services.",
+  "title": "Wely — machines & JVMs",
+  "description": "The two machines of the cluster side by side, and the JVMs on them. Every node-level query is grouped by node: before 2026-10-29 they averaged both machines into one number, which was true of neither.",
   "tags": [
     "wely"
   ],
@@ -54,6 +54,38 @@
   "templating": {
     "list": [
       {
+        "name": "node",
+        "label": "Machine",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(node_load1, node)",
+        "query": {
+          "query": "label_values(node_load1, node)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery",
+          "qryType": 1
+        },
+        "refresh": 2,
+        "sort": 1,
+        "regex": "",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": []
+      },
+      {
         "name": "app",
         "label": "Service",
         "type": "query",
@@ -90,14 +122,307 @@
   "panels": [
     {
       "type": "row",
-      "id": 1,
-      "title": "Raspberry Pi (node-exporter)",
+      "title": "Where things run",
       "collapsed": false,
+      "panels": [],
+      "id": 900,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
+      }
+    },
+    {
+      "type": "table",
+      "title": "What runs where",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "One row per service and the machine its pod is on, from the node label the scrape config attaches to every pod series. Placement is deliberate — see the project's CLAUDE.md — so this table is the check that the cluster matches it.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count by (node, app) (up{job=\"kubernetes-pods\", node=~\"$node\"} == 1)",
+          "legendFormat": "",
+          "editorMode": "code",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "id": 901,
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 0,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "node"
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "node": "Machine",
+              "app": "Service"
+            },
+            "excludeByName": {
+              "Time": true,
+              "Value": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Written to disk since boot",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Cumulative bytes written to each machine's main block device, from boot. The Pi writes to an SD card — the part that fails first on these machines — which is why the datastores moved to the SSD node. This is the number that justified the move, so it is the one to watch.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "node_disk_written_bytes_total{device=~\"sda|nvme0n1|mmcblk0\", node=~\"$node\"}",
+          "legendFormat": "{{node}} {{device}}",
+          "editorMode": "code",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "id": 902,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 10,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 1,
+          "mappings": [],
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "area",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "wideLayout": true,
+        "showPercentChange": false
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Write rate per machine",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (node) (rate(node_disk_written_bytes_total{device=~\"sda|nvme0n1|mmcblk0\", node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}}",
+          "editorMode": "code",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "description": "Bytes per second written per machine. Four of the five continuous writers — Kafka, both PostgreSQL and Neo4j — left the SD card on 2026-10-29; MongoDB and Garage stayed. The Pi's line is what they still cost it.",
+      "id": 903,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Inter-node traffic (tailscale0)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (node) (rate(container_network_receive_bytes_total{job=\"kubelet-cadvisor\", interface=\"tailscale0\", node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}} in",
+          "editorMode": "code",
+          "range": true,
+          "instant": false
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (node) (rate(container_network_transmit_bytes_total{job=\"kubelet-cadvisor\", interface=\"tailscale0\", node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}} out",
+          "editorMode": "code",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "description": "Everything between the two nodes rides the tailnet: serverwely1 registered its kubelet with its Tailscale address, so flannel, the kubelet and pod-to-pod traffic all cross this interface. It is the cost of the split — and the reason a service sits on the machine that holds its data.",
+      "id": 904,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "id": 1,
+      "title": "Machines (node-exporter)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 16
       },
       "panels": []
     },
@@ -115,8 +440,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max(node_thermal_zone_temp{type=~\"cpu-thermal|cpu_thermal\"}) or max(node_hwmon_temp_celsius)",
-          "legendFormat": "SoC",
+          "expr": "max by (node) (node_thermal_zone_temp{type=~\"cpu-thermal|cpu_thermal|x86_pkg_temp\", node=~\"$node\"}) or max by (node) (node_hwmon_temp_celsius{node=~\"$node\"})",
+          "legendFormat": "{{node}}",
           "range": false,
           "instant": true,
           "editorMode": "code"
@@ -166,13 +491,13 @@
         "wideLayout": true,
         "showPercentChange": false
       },
-      "description": "The SoC sensor (thermal_zone0, cpu-thermal). A Raspberry Pi 5 starts throttling its CPU at 85°C.",
+      "description": "The SoC sensor on the Pi (cpu-thermal) and the package sensor on the x86 node. A Raspberry Pi 5 throttles at 85°C; the Pentium is rated far higher.",
       "id": 2,
       "gridPos": {
         "h": 5,
         "w": 4,
         "x": 0,
-        "y": 1
+        "y": 17
       }
     },
     {
@@ -189,8 +514,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval]))",
-          "legendFormat": "CPU",
+          "expr": "1 - avg by (node) (rate(node_cpu_seconds_total{mode=\"idle\", node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}}",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -245,7 +570,7 @@
         "h": 5,
         "w": 4,
         "x": 4,
-        "y": 1
+        "y": 17
       }
     },
     {
@@ -262,8 +587,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes",
-          "legendFormat": "RAM",
+          "expr": "1 - (node_memory_MemAvailable_bytes{node=~\"$node\"} / node_memory_MemTotal_bytes{node=~\"$node\"})",
+          "legendFormat": "{{node}}",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -318,7 +643,7 @@
         "h": 5,
         "w": 4,
         "x": 8,
-        "y": 1
+        "y": 17
       }
     },
     {
@@ -335,8 +660,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "node_load1 / scalar(count(count by (cpu) (node_cpu_seconds_total)))",
-          "legendFormat": "load",
+          "expr": "node_load1{node=~\"$node\"} / on(node) group_left() count by (node) (count by (node, cpu) (node_cpu_seconds_total{node=~\"$node\"}))",
+          "legendFormat": "{{node}}",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -391,7 +716,7 @@
         "h": 5,
         "w": 4,
         "x": 12,
-        "y": 1
+        "y": 17
       }
     },
     {
@@ -408,8 +733,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "node_filesystem_avail_bytes{fstype!~\"tmpfs|ramfs\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|ramfs\"}",
-          "legendFormat": "{{mountpoint}}",
+          "expr": "node_filesystem_avail_bytes{fstype!~\"tmpfs|ramfs\", node=~\"$node\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|ramfs\", node=~\"$node\"}",
+          "legendFormat": "{{node}} {{mountpoint}}",
           "range": false,
           "instant": true,
           "editorMode": "code"
@@ -467,7 +792,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 1
+        "y": 17
       }
     },
     {
@@ -484,8 +809,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max(node_thermal_zone_temp{type=~\"cpu-thermal|cpu_thermal\"}) or max(node_hwmon_temp_celsius)",
-          "legendFormat": "SoC",
+          "expr": "max by (node) (node_thermal_zone_temp{type=~\"cpu-thermal|cpu_thermal|x86_pkg_temp\", node=~\"$node\"}) or max by (node) (node_hwmon_temp_celsius{node=~\"$node\"})",
+          "legendFormat": "{{node}}",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -532,8 +857,9 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 6
-      }
+        "y": 22
+      },
+      "description": "The SoC sensor on the Pi (cpu-thermal) and the package sensor on the x86 node. A Raspberry Pi 5 throttles at 85°C; the Pentium is rated far higher."
     },
     {
       "type": "timeseries",
@@ -549,8 +875,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (mode) (rate(node_cpu_seconds_total{mode!=\"idle\"}[$__rate_interval])) / scalar(count(count by (cpu) (node_cpu_seconds_total)))",
-          "legendFormat": "{{mode}}",
+          "expr": "sum by (node, mode) (rate(node_cpu_seconds_total{mode!=\"idle\", node=~\"$node\"}[$__rate_interval])) / on(node) group_left() count by (node) (count by (node, cpu) (node_cpu_seconds_total{node=~\"$node\"}))",
+          "legendFormat": "{{node}} {{mode}}",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -598,7 +924,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 6
+        "y": 22
       }
     },
     {
@@ -615,8 +941,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "node_load1",
-          "legendFormat": "1m",
+          "expr": "node_load1{node=~\"$node\"}",
+          "legendFormat": "{{node}} 1m",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -627,8 +953,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "node_load5",
-          "legendFormat": "5m",
+          "expr": "node_load5{node=~\"$node\"}",
+          "legendFormat": "{{node}} 5m",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -639,8 +965,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "node_load15",
-          "legendFormat": "15m",
+          "expr": "node_load15{node=~\"$node\"}",
+          "legendFormat": "{{node}} 15m",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -651,8 +977,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count(count by (cpu) (node_cpu_seconds_total))",
-          "legendFormat": "cores",
+          "expr": "count by (node) (count by (node, cpu) (node_cpu_seconds_total{node=~\"$node\"}))",
+          "legendFormat": "{{node}} cores",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -722,7 +1048,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 6
+        "y": 22
       }
     },
     {
@@ -739,8 +1065,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
-          "legendFormat": "used",
+          "expr": "node_memory_MemTotal_bytes{node=~\"$node\"} - node_memory_MemAvailable_bytes{node=~\"$node\"}",
+          "legendFormat": "{{node}} used",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -751,8 +1077,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "node_memory_MemTotal_bytes",
-          "legendFormat": "total",
+          "expr": "node_memory_MemTotal_bytes{node=~\"$node\"}",
+          "legendFormat": "{{node}} total",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -823,7 +1149,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 14
+        "y": 30
       }
     },
     {
@@ -840,8 +1166,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "node_filesystem_avail_bytes{fstype!~\"tmpfs|ramfs\"}",
-          "legendFormat": "{{mountpoint}}",
+          "expr": "node_filesystem_avail_bytes{fstype!~\"tmpfs|ramfs\", node=~\"$node\"}",
+          "legendFormat": "{{node}} {{mountpoint}}",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -888,7 +1214,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 14
+        "y": 30
       }
     },
     {
@@ -905,8 +1231,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (device) (rate(node_disk_read_bytes_total[$__rate_interval]))",
-          "legendFormat": "{{device}} read",
+          "expr": "sum by (node, device) (rate(node_disk_read_bytes_total{node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}} {{device}} read",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -917,8 +1243,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (device) (rate(node_disk_written_bytes_total[$__rate_interval]))",
-          "legendFormat": "{{device}} written",
+          "expr": "sum by (node, device) (rate(node_disk_written_bytes_total{node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}} {{device}} written",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -978,7 +1304,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 14
+        "y": 30
       }
     },
     {
@@ -995,8 +1321,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (interface) (rate(container_network_receive_bytes_total{job=\"kubelet-cadvisor\"}[$__rate_interval]))",
-          "legendFormat": "{{interface}} in",
+          "expr": "sum by (node, interface) (rate(container_network_receive_bytes_total{job=\"kubelet-cadvisor\", node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}} {{interface}} in",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1007,8 +1333,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (interface) (rate(container_network_transmit_bytes_total{job=\"kubelet-cadvisor\"}[$__rate_interval]))",
-          "legendFormat": "{{interface}} out",
+          "expr": "sum by (node, interface) (rate(container_network_transmit_bytes_total{job=\"kubelet-cadvisor\", node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}} {{interface}} out",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1068,7 +1394,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 38
       }
     },
     {
@@ -1080,7 +1406,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 46
       },
       "panels": []
     },
@@ -1098,8 +1424,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max by (pod, container) (container_memory_working_set_bytes{job=\"kubelet-cadvisor\", container!=\"\"}) / max by (pod, container) (container_spec_memory_limit_bytes{job=\"kubelet-cadvisor\", container!=\"\"} > 0)",
-          "legendFormat": "{{container}} ({{pod}})",
+          "expr": "max by (node, pod, container) (container_memory_working_set_bytes{job=\"kubelet-cadvisor\", container!=\"\", node=~\"$node\"}) / max by (node, pod, container) (container_spec_memory_limit_bytes{job=\"kubelet-cadvisor\", container!=\"\", node=~\"$node\"} > 0)",
+          "legendFormat": "{{node}} {{container}}",
           "range": false,
           "instant": true,
           "editorMode": "code"
@@ -1157,7 +1483,7 @@
         "h": 12,
         "w": 10,
         "x": 0,
-        "y": 31
+        "y": 47
       }
     },
     {
@@ -1174,8 +1500,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (container) (container_memory_working_set_bytes{job=\"kubelet-cadvisor\", container!=\"\"})",
-          "legendFormat": "{{container}}",
+          "expr": "sum by (node, container) (container_memory_working_set_bytes{job=\"kubelet-cadvisor\", container!=\"\", node=~\"$node\"})",
+          "legendFormat": "{{node}} {{container}}",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1186,8 +1512,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (container) (container_spec_memory_limit_bytes{job=\"kubelet-cadvisor\", container!=\"\"} > 0)",
-          "legendFormat": "{{container}} limit",
+          "expr": "sum by (node, container) (container_spec_memory_limit_bytes{job=\"kubelet-cadvisor\", container!=\"\", node=~\"$node\"} > 0)",
+          "legendFormat": "{{node}} {{container}} limit",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1258,7 +1584,7 @@
         "h": 12,
         "w": 14,
         "x": 10,
-        "y": 31
+        "y": 47
       }
     },
     {
@@ -1275,8 +1601,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (container) (rate(container_cpu_usage_seconds_total{job=\"kubelet-cadvisor\", container!=\"\"}[$__rate_interval]))",
-          "legendFormat": "{{container}}",
+          "expr": "sum by (node, container) (rate(container_cpu_usage_seconds_total{job=\"kubelet-cadvisor\", container!=\"\", node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}} {{container}}",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1324,7 +1650,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 43
+        "y": 59
       }
     },
     {
@@ -1341,8 +1667,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (pod) (rate(container_cpu_cfs_throttled_periods_total{job=\"kubelet-cadvisor\"}[$__rate_interval])) / sum by (pod) (rate(container_cpu_cfs_periods_total{job=\"kubelet-cadvisor\"}[$__rate_interval]))",
-          "legendFormat": "{{pod}}",
+          "expr": "sum by (node, pod) (rate(container_cpu_cfs_throttled_periods_total{job=\"kubelet-cadvisor\", node=~\"$node\"}[$__rate_interval])) / sum by (node, pod) (rate(container_cpu_cfs_periods_total{job=\"kubelet-cadvisor\", node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{node}} {{pod}}",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1390,7 +1716,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 43
+        "y": 59
       }
     },
     {
@@ -1402,7 +1728,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 67
       },
       "panels": []
     },
@@ -1420,8 +1746,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app) (jvm_memory_used_bytes{area=\"heap\", app=~\"$app\"})",
-          "legendFormat": "{{app}}",
+          "expr": "sum by (node, app) (jvm_memory_used_bytes{area=\"heap\", app=~\"$app\", node=~\"$node\"})",
+          "legendFormat": "{{app}} ({{node}})",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1432,7 +1758,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app) (jvm_memory_max_bytes{area=\"heap\", app=~\"$app\"})",
+          "expr": "sum by (node, app) (jvm_memory_max_bytes{area=\"heap\", app=~\"$app\", node=~\"$node\"})",
           "legendFormat": "{{app}} max",
           "range": true,
           "instant": false,
@@ -1504,7 +1830,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 52
+        "y": 68
       }
     },
     {
@@ -1521,8 +1847,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (app) (rate(jvm_gc_pause_seconds_sum{app=~\"$app\"}[$__rate_interval]))",
-          "legendFormat": "{{app}}",
+          "expr": "sum by (node, app) (rate(jvm_gc_pause_seconds_sum{app=~\"$app\", node=~\"$node\"}[$__rate_interval]))",
+          "legendFormat": "{{app}} ({{node}})",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1570,7 +1896,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 52
+        "y": 68
       }
     },
     {
@@ -1587,8 +1913,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max by (app) (process_cpu_usage{app=~\"$app\"})",
-          "legendFormat": "{{app}}",
+          "expr": "max by (node, app) (process_cpu_usage{app=~\"$app\", node=~\"$node\"})",
+          "legendFormat": "{{app}} ({{node}})",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1636,7 +1962,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 60
+        "y": 76
       }
     },
     {
@@ -1653,8 +1979,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max by (app) (jvm_threads_live_threads{app=~\"$app\"})",
-          "legendFormat": "{{app}}",
+          "expr": "max by (node, app) (jvm_threads_live_threads{app=~\"$app\", node=~\"$node\"})",
+          "legendFormat": "{{app}} ({{node}})",
           "range": true,
           "instant": false,
           "editorMode": "code"
@@ -1702,7 +2028,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 60
+        "y": 76
       }
     }
   ]

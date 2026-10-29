@@ -5,7 +5,7 @@
 #   provisioning/datasources.yaml       the Prometheus datasource, uid "prometheus"
 #   provisioning/dashboard-provider.yaml loads dashboards/*.json into the folder "Wely"
 #   provisioning/alerting/*.yaml        contact point "discord", notification policy, alert rules
-#   dashboards/*.json                   the four dashboards, plain Grafana JSON
+#   dashboards/*.json                   the six dashboards, plain Grafana JSON
 #
 # Not part of base/, like Prometheus: an overlay opts in by listing this directory and pointing
 # PROMETHEUS_URL at its own Prometheus Service (overlays/dev does).
@@ -36,10 +36,14 @@ configMapGenerator:
       - provisioning/alerting/contact-points.yaml
       - provisioning/alerting/notification-policies.yaml
       - provisioning/alerting/rules.yaml
-  # One ConfigMap for the four dashboards: about 100KB, far from the 1MiB a ConfigMap may hold.
+  # One ConfigMap for the six dashboards: about 140KB, far from the 1MiB a ConfigMap may hold.
   - name: wely-grafana-dashboards
     files:
       - dashboards/wely-overview.json
-      - dashboards/wely-pi-jvms.json
+      # wely-pi-jvms.json until 2026-10-29. Renamed with the cluster: it was written for one
+      # machine and averaged two into numbers that were true of neither. The uid is unchanged, so
+      # existing links and bookmarks still resolve.
+      - dashboards/wely-machines.json
       - dashboards/wely-data-messaging.json
       - dashboards/wely-product.json
+      - dashboards/wely-keycloak.json
