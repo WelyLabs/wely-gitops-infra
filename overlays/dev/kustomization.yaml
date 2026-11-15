@@ -72,8 +72,9 @@ patches:
     kind: StatefulSet
 # Two of each stateless service, one on each mini PC (role=workload): losing a node leaves every service
 # up. DoNotSchedule rather than ScheduleAnyway, or the scheduler may put both on one node and the pair
-# protects nothing; while a node is down, the second pod waits Pending. matchLabelKeys narrows the
-# selector to the pod's own app and ReplicaSet, so a rollout spreads the new pods among themselves.
+# protects nothing; while a node is down, the second pod waits Pending. pod-template-hash is unique to
+# each Deployment's revision, so it narrows the count to the pod's own service and spreads a rollout's
+# new pods among themselves. A key cannot be both there and in labelSelector: the API refuses the pod.
 # Not doubled: wely-mcp (STREAMABLE MCP keeps its sessions in the pod's memory), Redis (stateful, one
 # copy), and the platform's Keycloak and Kafka.
 - patch: |-
@@ -89,7 +90,7 @@ patches:
           labelSelector:
             matchExpressions:
               - { key: app, operator: Exists }
-          matchLabelKeys: [app, pod-template-hash]
+          matchLabelKeys: [pod-template-hash]
   target:
     kind: Deployment
     name: (cloudflared-connector|wely-(gateway|web|users|social|chat|events|notifications|media))
