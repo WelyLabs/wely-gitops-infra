@@ -597,13 +597,13 @@ images:
   newTag: sha-2a1b054725f4a4928a3da7dc38788ed6d52dc5f4
 - name: ghcr.io/welylabs/wely-notifications
   newName: ghcr.io/welylabs/wely-notifications
-  newTag: sha-ec5cdb967d32f809cd77b09f472d9272df35bed0
+  newTag: sha-8be3852473f351b0a868cf084a8e7cacb7f53464
 - name: ghcr.io/welylabs/wely-media
   newName: ghcr.io/welylabs/wely-media
   newTag: sha-853f182ab8c1c320fc67fa5a5f98ccc77293f466
 - name: ghcr.io/welylabs/wely-social
   newName: ghcr.io/welylabs/wely-social
-  newTag: sha-7aea6d76e128f02822c41949121c26bbfc606424
+  newTag: sha-f755927267e3cd8c2cea50b8d7cb96dbe4346c4f
 - name: ghcr.io/welylabs/wely-users
   newName: ghcr.io/welylabs/wely-users
   newTag: sha-67fc6ca9a431de0be7126fbbf6655ebf3fd80436
