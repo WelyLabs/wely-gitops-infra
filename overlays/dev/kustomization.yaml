@@ -132,6 +132,25 @@ patches:
     kind: NetworkPolicy
     metadata:
       name: allow-postgres-users
+# Nor wely-social's Neo4j: it is on Aura since 2026-11-15, its PVC kept on serverwely1 like PostgreSQL's.
+- patch: |-
+    $patch: delete
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: wely-neo4j
+- patch: |-
+    $patch: delete
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: wely-neo4j-service
+- patch: |-
+    $patch: delete
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: allow-neo4j
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment
@@ -315,8 +334,16 @@ patches:
           containers:
           - name: social
             env:
+            # Neo4j is on Aura (AuraDB Free, instance wely-dev), the password sealed in
+            # wely-sealed-cloud-dev.yaml. neo4j+s: TLS with the certificate checked.
             - name: NEO4J_URI
-              value: "neo4j://dev-wely-neo4j-service:7687"
+              value: "neo4j+s://870a5eb0.databases.neo4j.io"
+            - name: NEO4J_USERNAME
+              value: "870a5eb0"
+              valueFrom: null
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: neo4j-password }
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
             # Confluent Cloud, cluster wely-dev-kafka: SASL_SSL as the service account wely-dev-services.
