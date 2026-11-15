@@ -253,6 +253,10 @@ patches:
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef: { name: dev-wely-cloud, key: users-db-password }
+            # The base disables R2DBC's TLS for the in-cluster PostgreSQL; Neon refuses plain connections
+            # ("connection is insecure"), so application.properties' verify-full applies instead.
+            - name: SPRING_R2DBC_PROPERTIES_SSLMODE
+              $patch: delete
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
             - name: JWT_AUDIENCES
