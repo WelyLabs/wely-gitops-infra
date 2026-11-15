@@ -237,7 +237,16 @@ patches:
             - name: KEYCLOAK_BASE_URL
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080"
             - name: KAFKA_BOOTSTRAP_SERVER
-              value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+              value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
+            # Confluent Cloud, cluster wely-dev-kafka: SASL_SSL as the service account wely-dev-services.
+            - name: KAFKA_SECURITY_PROTOCOL
+              value: "SASL_SSL"
+            - name: KAFKA_API_KEY
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-key }
+            - name: KAFKA_API_SECRET
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-secret }
             # A topic per environment, so two environments sharing the broker never read each
             # other's records. Created by the topics Job: the binder is not allowed to.
             - name: TOPIC_PREFIX
@@ -268,7 +277,16 @@ patches:
             - name: NEO4J_URI
               value: "neo4j://dev-wely-neo4j-service:7687"
             - name: KAFKA_BOOTSTRAP_SERVER
-              value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+              value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
+            # Confluent Cloud, cluster wely-dev-kafka: SASL_SSL as the service account wely-dev-services.
+            - name: KAFKA_SECURITY_PROTOCOL
+              value: "SASL_SSL"
+            - name: KAFKA_API_KEY
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-key }
+            - name: KAFKA_API_SECRET
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-secret }
             # A topic per environment, so two environments sharing the broker never read each
             # other's records. Created by the topics Job: the binder is not allowed to.
             - name: TOPIC_PREFIX
@@ -356,7 +374,16 @@ patches:
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-dev/protocol/openid-connect/certs"
             - name: KAFKA_BOOTSTRAP_SERVER
-              value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+              value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
+            # Confluent Cloud, cluster wely-dev-kafka: SASL_SSL as the service account wely-dev-services.
+            - name: KAFKA_SECURITY_PROTOCOL
+              value: "SASL_SSL"
+            - name: KAFKA_API_KEY
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-key }
+            - name: KAFKA_API_SECRET
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-secret }
             # A topic per environment, so two environments sharing the broker never read each
             # other's records. Created by the topics Job: the binder is not allowed to.
             - name: TOPIC_PREFIX
@@ -402,9 +429,18 @@ patches:
             # namePrefix renames the Service, not a value that spells its name.
             - name: SOCIAL_API_URL
               value: "http://dev-wely-social-service:8083"
-            # Publishes EVENT_GROUP_CHANGED to the in-cluster broker, like wely-users.
+            # Publishes EVENT_GROUP_CHANGED to the broker, like wely-users.
             - name: KAFKA_BOOTSTRAP_SERVER
-              value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+              value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
+            # Confluent Cloud, cluster wely-dev-kafka: SASL_SSL as the service account wely-dev-services.
+            - name: KAFKA_SECURITY_PROTOCOL
+              value: "SASL_SSL"
+            - name: KAFKA_API_KEY
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-key }
+            - name: KAFKA_API_SECRET
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-secret }
             # A topic per environment, so two environments sharing the broker never read each
             # other's records. Created by the topics Job: the binder is not allowed to.
             - name: TOPIC_PREFIX
@@ -521,7 +557,16 @@ patches:
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
               value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-dev/protocol/openid-connect/certs"
             - name: KAFKA_BOOTSTRAP_SERVER
-              value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
+              value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
+            # Confluent Cloud, cluster wely-dev-kafka: SASL_SSL as the service account wely-dev-services.
+            - name: KAFKA_SECURITY_PROTOCOL
+              value: "SASL_SSL"
+            - name: KAFKA_API_KEY
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-key }
+            - name: KAFKA_API_SECRET
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: kafka-api-secret }
             # A topic per environment, so two environments sharing the broker never read each
             # other's records. Created by the topics Job: the binder is not allowed to.
             - name: TOPIC_PREFIX
