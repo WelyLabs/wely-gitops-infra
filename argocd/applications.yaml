@@ -83,37 +83,13 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-# wely-prod is commented out on purpose, not forgotten.
+# No wely-prod Application here: overlays/prod was removed on 2026-11-15. A production environment
+# will be built as a copy of overlays/dev — same images, same managed services, different realm and
+# topic prefix — rather than kept as a half-written overlay nothing deploys.
 #
-# overlays/prod cannot start: its images are tagged latest and it defines no Secret. Applying this
-# file used to create the Application anyway, and `prune: true` + `selfHeal: true` then pushed the
-# whole of prod onto the single node — pods pulling images, a Redis running, a cloudflared
-# connector scheduled, all of it unable to come up. That happened on 2026-10-25, from an apply
-# meant only to add wely-tailscale.
-#
-# Deleting the Application does not undo it: there is no resources-finalizer here, so the
-# namespace and its workloads are left orphaned and have to be removed by hand.
-#
-# Uncomment it when overlays/prod has pinned images and sealed secrets, and when the node has room
-# for a second environment — not before.
-#
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: wely-prod
-#   namespace: argocd
-# spec:
-#   project: default
-#   source:
-#     repoURL: https://github.com/WelyLabs/wely-gitops-infra.git
-#     targetRevision: HEAD
-#     path: overlays/prod
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: wely-prod
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#       - CreateNamespace=true
+# Two lessons from the one that existed, worth keeping when it comes back:
+#   - `kubectl apply -f` on this file applies EVERY Application in it. On 2026-10-25 an apply meant
+#     only to add wely-tailscale also created wely-prod, and `prune: true` + `selfHeal: true` pushed
+#     the whole of prod onto the single node within seconds. Apply a file that holds one Application.
+#   - Deleting the Application does not undo it: there is no resources-finalizer here, so the
+#     namespace and its workloads are left orphaned and have to be removed by hand.

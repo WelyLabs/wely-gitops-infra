@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
 - auth.yaml
 - postgres-auth.yaml
-- kafka.yaml
+# kafka.yaml moved to platform/kafka/networkpolicy.yaml with the broker it guards.

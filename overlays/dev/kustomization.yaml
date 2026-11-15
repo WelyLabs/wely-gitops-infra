@@ -93,68 +93,9 @@ patches:
   target:
     kind: Deployment
     name: (cloudflared-connector|wely-(gateway|web|users|social|chat|events|notifications|media))
-# No MongoDB in dev since 2026-11-15: wely-chat, -events and -notifications use Atlas (project
-# wely-dev, URIs in wely-sealed-cloud-dev.yaml), so they follow the placement above like any service.
-# The old data was not kept. Pruning never reaches a StatefulSet's PVC: dev-wely-mongodb's is deleted by hand.
-- patch: |-
-    $patch: delete
-    apiVersion: apps/v1
-    kind: StatefulSet
-    metadata:
-      name: wely-mongodb
-- patch: |-
-    $patch: delete
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: wely-mongodb-service
-- patch: |-
-    $patch: delete
-    apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    metadata:
-      name: allow-mongodb
-# Nor wely-users' PostgreSQL: it is on Neon since 2026-11-15. Its data was on serverwely1's SSD, out of
-# reach while that node is down: the PVC is kept, not deleted, in case the node comes back.
-- patch: |-
-    $patch: delete
-    apiVersion: apps/v1
-    kind: StatefulSet
-    metadata:
-      name: wely-postgres-users
-- patch: |-
-    $patch: delete
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: wely-postgres-users-service
-- patch: |-
-    $patch: delete
-    apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    metadata:
-      name: allow-postgres-users
-# Nor wely-social's Neo4j: it is on Aura since 2026-11-15, its PVC kept on serverwely1 like PostgreSQL's.
-- patch: |-
-    $patch: delete
-    apiVersion: apps/v1
-    kind: StatefulSet
-    metadata:
-      name: wely-neo4j
-- patch: |-
-    $patch: delete
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: wely-neo4j-service
-- patch: |-
-    $patch: delete
-    apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    metadata:
-      name: allow-neo4j
-# Nor Garage: pictures are on R2. Its setup job and its backup go with it. Both its volumes are kept
-# (garage-data, from the StatefulSet's template, and dev-wely-garage-backup, still declared by the base).
+# No Garage in dev since 2026-11-15: pictures are on R2. Its setup job and its backup go with it.
+# Both its volumes are kept (garage-data, from the StatefulSet's template, and dev-wely-garage-backup,
+# still declared by the base); pruning never reaches a StatefulSet's PVC.
 - patch: |-
     $patch: delete
     apiVersion: apps/v1

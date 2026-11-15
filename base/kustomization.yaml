@@ -13,9 +13,6 @@ resources:
   - wely-media.yaml
   - wely-notifications.yaml
   - wely-mcp.yaml
-  - wely-mongodb.yaml
-  - wely-neo4j.yaml
-  - wely-postgres-users.yaml
   - wely-redis.yaml
   - wely-garage.yaml
   - wely-garage-setup.yaml

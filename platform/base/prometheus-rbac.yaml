@@ -15,9 +15,9 @@
 # The subject's namespace is written out: the service account lives in wely-observability and is
 # not part of this kustomization, so nothing rewrites it.
 #
-# Named -platform, not wely-prometheus like the environment copy: overlays/local folds base/ and
-# platform/base/ into a single namespace, where two Roles of the same name collide and kustomize
-# refuses to render.
+# Named -platform, not wely-prometheus like the environment copy: an overlay that folds base/ and
+# platform/base/ into a single namespace would otherwise hit two Roles of the same name, which
+# kustomize refuses to render.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:

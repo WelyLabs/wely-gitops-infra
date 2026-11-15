@@ -2,8 +2,9 @@
 # a trimmed set of container metrics from the node's kubelet (cAdvisor, job kubelet-cadvisor).
 # Read through observability/grafana; node metrics come from observability/node-exporter.
 #
-# Not part of base/: base/ is also rendered by overlays/prod, which Argo CD deploys onto the same
-# Raspberry Pi. An overlay opts in by listing this directory in its resources (overlays/dev does).
+# Not part of base/: one scraper serves every environment, so it must not be duplicated by each
+# overlay that renders base/. It lives in observability/shared, and base/prometheus-rbac.yaml gives
+# it the Role it needs in each environment's namespace.
 #
 # A pod is scraped when its template carries:
 #   prometheus.io/scrape: "true"

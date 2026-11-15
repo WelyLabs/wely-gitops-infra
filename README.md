@@ -33,7 +33,7 @@ Deux conséquences :
 
 ```
 ├── argocd/
-│   └── applications.yaml         Applications ArgoCD (dev, prod)
+│   └── applications.yaml         Applications ArgoCD (platform, observability, dev)
 ├── base/                         manifestes communs à tous les environnements
 │   ├── wely-gateway.yaml         ─┐
 │   ├── wely-users.yaml            │  services applicatifs
@@ -47,7 +47,6 @@ Deux conséquences :
 │   ├── wely-postgres-users.yaml   │  bases de données
 │   ├── wely-mongodb.yaml          │  (StatefulSets)
 │   ├── wely-neo4j.yaml           ─┘
-│   ├── wely-kafka.yaml           broker + UI
 │   ├── wely-redis.yaml           compteurs de quota de la gateway (sans persistance)
 │   ├── cloudflared.yaml          tunnel Cloudflare (exposition publique)
 │   └── wely-tailscale.yaml       opérateur Tailscale (accès administrateur)
@@ -56,9 +55,7 @@ Deux conséquences :
 │   ├── node-exporter/            node metrics of the Pi (CPU, RAM, disks, temperature)
 │   └── grafana/                  dashboards + Discord alerts, provisioned from Git (port-forward)
 └── overlays/
-    ├── local/                    Kubernetes local — secrets en clair, images locales
-    ├── dev/                      cluster Raspberry Pi — SealedSecrets, images par SHA
-    └── prod/                     namespace séparé, réplicas augmentés
+    └── dev/                      cluster Raspberry Pi — SealedSecrets, images par SHA
 ```
 
 ### Composition Kustomize
@@ -68,16 +65,16 @@ Deux conséquences :
                       │       base/      │   déploiements, services,
                       │                  │   StatefulSets, config commune
                       └────────┬─────────┘
-                ┌──────────────┼──────────────┐
-                ▼              ▼              ▼
-        ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-        │   local/    │ │    dev/     │ │   prod/     │
-        │             │ │             │ │             │
-        │ ns: wely-   │ │ namePrefix  │ │ ns: wely-   │
-        │     local   │ │   dev-      │ │     prod    │
-        │ secrets     │ │ SealedSecr. │ │ replicas: 2 │
-        │  en clair   │ │ images @SHA │ │             │
-        └─────────────┘ └─────────────┘ └─────────────┘
+                               │
+                               ▼
+                        ┌─────────────┐
+                        │    dev/     │
+                        │             │
+                        │ namePrefix  │
+                        │   dev-      │
+                        │ SealedSecr. │
+                        │ images @SHA │
+                        └─────────────┘
 ```
 
 ---
@@ -91,8 +88,6 @@ kubeseal --format yaml < secret.yaml > overlays/dev/wely-sealed-secrets-dev.yaml
 ```
 
 C'est ce qui rend le modèle GitOps praticable : sans cela, il faudrait une source de secrets hors Git et l'état du cluster ne serait plus entièrement décrit par le dépôt.
-
-L'overlay `local` utilise des secrets en clair, délibérément — il ne cible qu'un cluster de développement sur poste.
 
 ---
 
@@ -130,10 +125,10 @@ wely-users deletes the account (tombstone, Keycloak user, avatars); wely-social,
 
 | Setting | Where | Effect |
 |---|---|---|
-| `ACCOUNT_DELETION_ENABLED` | wely-users: `"true"` in the dev and local patches | Turns account deletion on. wely-users defaults to off: `DELETE /profile` and `GET /profile/deletion` both answer 403 `USR-BUS-014`. prod leaves it off. |
-| `ACCOUNT_DELETION_PROTECTED_USER_IDS` | dev: ConfigMap `wely-account-deletion`, generated in `overlays/dev/kustomization.yaml`, read by wely-users, wely-social and wely-events | The ten demo accounts of `demo/demo-reset.yaml`. wely-users refuses their deletion (403 `USR-BUS-011`). wely-events never erases them nor hands them a deleted organizer's events. wely-social never counts them as or promotes them to community admin, on any leave: an admin who leaves a community where only demo accounts remain gets `COMMUNITY_LAST_MEMBER`, or deletes it with `deleteIfLast`. Unset in local and prod. |
-| `DELETED_USERS_READER_SECRET` | wely-users and the four consumers, from the optional Secret `dev-wely-deleted-users` | wely-users checks it on `GET /user-service/internal/deleted-users`; the consumers send it when their reconciliation pages through that list. Unset, wely-users refuses every call (401) and a consumer's pass fails without calling it. local: `overlays/local/wely-deleted-users-local.yaml` in plaintext. dev: not sealed yet. |
-| `USERS_API_URL` | wely-social, wely-chat, wely-events and wely-notifications: `http://wely-users-service:8082` in the base, the `dev-` or `local-` Service name in each overlay's patch | Where the reconciliation reads the deleted-users list: straight on the wely-users Service, since the gateway answers 404 for `/api/v1/*/internal/**`. |
+| `ACCOUNT_DELETION_ENABLED` | wely-users: `"true"` in the dev patch | Turns account deletion on. wely-users defaults to off: `DELETE /profile` and `GET /profile/deletion` both answer 403 `USR-BUS-014`. prod leaves it off. |
+| `ACCOUNT_DELETION_PROTECTED_USER_IDS` | dev: ConfigMap `wely-account-deletion`, generated in `overlays/dev/kustomization.yaml`, read by wely-users, wely-social and wely-events | The ten demo accounts of `demo/demo-reset.yaml`. wely-users refuses their deletion (403 `USR-BUS-011`). wely-events never erases them nor hands them a deleted organizer's events. wely-social never counts them as or promotes them to community admin, on any leave: an admin who leaves a community where only demo accounts remain gets `COMMUNITY_LAST_MEMBER`, or deletes it with `deleteIfLast`. Unset in prod. |
+| `DELETED_USERS_READER_SECRET` | wely-users and the four consumers, from the optional Secret `dev-wely-deleted-users` | wely-users checks it on `GET /user-service/internal/deleted-users`; the consumers send it when their reconciliation pages through that list. Unset, wely-users refuses every call (401) and a consumer's pass fails without calling it. dev: not sealed yet. |
+| `USERS_API_URL` | wely-social, wely-chat, wely-events and wely-notifications: `http://wely-users-service:8082` in the base, the `dev-` Service name in the overlay's patch | Where the reconciliation reads the deleted-users list: straight on the wely-users Service, since the gateway answers 404 for `/api/v1/*/internal/**`. |
 
 The demo accounts must stay protected: their credentials are public, the nightly reset neither recreates their Keycloak user nor survives a tombstone (`account_deletion` references the row), and the consumers keep a permanent deleted-user marker. A deleted demo account would be gone for good. Keep the ConfigMap and `DEMO_USER_IDS` in step; a change to the ConfigMap restarts its three readers.
 
@@ -172,70 +167,29 @@ A rotation takes the same two commits. Note the Secret's `resourceVersion` (`kub
 
 ## Kafka retention
 
-`base/wely-kafka-topics.yaml` creates the topics and sets their retention. Each `KAFKA_TOPICS` entry is `NAME` or `NAME:policy`, and each overlay lists its own topic names. The Job passes a policy's settings on create (`--config`) and re-applies them at every run with `kafka-configs.sh --alter --add-config`, because `--create --if-not-exists` leaves an existing topic untouched. It is an Argo CD PostSync hook, so every dev sync re-applies the values. An unknown policy, a failed create or a failed alter exits non-zero, and Argo CD shows the failed hook.
+Le broker est **Confluent Cloud** depuis le 2026-11-15 (cluster `wely-dev-kafka`, SASL_SSL ; bootstrap et clés dans `wely-sealed-cloud-dev.yaml`). Le broker en cluster, son UI et le Job qui créait les topics ont été supprimés avec l'overlay `local`, seul consommateur restant. **Les topics et leur rétention se règlent donc dans la console Confluent**, plus dans Git — les valeurs ci-dessous sont celles que le Job appliquait et restent la référence à reproduire.
 
-| Policy | Topics | `retention.ms` | `segment.ms` | Longest a record stays |
+| Politique | Topics | `retention.ms` | `segment.ms` | Durée de vie max d'un enregistrement |
 |---|---|---|---|---|
-| `live` | `MESSAGE_BROADCAST`, `CALL_EVENTS` (local), `DEV_MESSAGE_BROADCAST`, `DEV_CALL_EVENTS` (dev) | 3600000 (1 h) | 900000 (15 min) | about 1 h 20 |
-| `personal` | `USER_CREATED`, `USER_MODIFIED`, `FRIENDSHIP_CHANGED` | 259200000 (3 d) | 86400000 (1 d) | about 4 d |
-| `erasure` | `USER_DELETED` | 604800000 (7 d) | 86400000 (1 d) | about 8 d |
-| none | `EVENT_GROUP_CHANGED`, `EVENT_DATE_FIXED` | broker default (7 d) | broker default (7 d) | about 14 d |
+| `live` | `DEV_MESSAGE_BROADCAST`, `DEV_CALL_EVENTS` | 3600000 (1 h) | 900000 (15 min) | environ 1 h 20 |
+| `personal` | `USER_CREATED`, `USER_MODIFIED`, `FRIENDSHIP_CHANGED`, `USER_BIRTHDAY`, `BIRTHDAY_NOTICES`, `FRIENDSHIP_NOTICES` | 259200000 (3 j) | 86400000 (1 j) | environ 4 j |
+| `erasure` | `USER_DELETED` | 604800000 (7 j) | 86400000 (1 j) | environ 8 j |
+| `state` | `FRIENDSHIP_STATE` | défaut du broker | défaut du broker | — |
+| aucune | `EVENT_GROUP_CHANGED`, `EVENT_DATE_FIXED` | défaut du broker (7 j) | défaut du broker (7 j) | environ 14 j |
 
-Kafka only deletes closed segments, so a record can outlive `retention.ms` by up to `segment.ms`, plus the broker's 5-minute retention check. prod gets the same policies on the topics it creates, which are the base's (no broadcast topic).
+Kafka ne supprime que les segments fermés : un enregistrement peut survivre à `retention.ms` de `segment.ms`, plus les 5 minutes du cycle de rétention.
 
-**Why this is safe for account deletion.** Erasure never depends on Kafka retention. `USER_DELETED` only makes it fast: the consumers' daily reconciliation pages through wely-users' tombstones, which are permanent, so a consumer that misses a record (down longer than the retention, or a new consumer group) still erases the account at its next pass.
+**Pourquoi c'est sans danger pour la suppression de compte.** L'effacement ne dépend jamais de la rétention Kafka. `USER_DELETED` ne fait que l'accélérer : la réconciliation quotidienne des consommateurs parcourt les pierres tombales de wely-users, qui sont permanentes — un consommateur qui rate un enregistrement (arrêt plus long que la rétention, ou nouveau groupe) efface quand même le compte à sa passe suivante.
 
-**What the shorter windows cost.**
+**Ce que coûtent les fenêtres courtes.**
 
-- `live`: wely-chat reads these topics from the latest offset with one group per pod, so it never needs a backlog. wely-notifications keeps one group: down for more than about 1 h, it loses the message and call notifications of the outage. The messages themselves stay in wely-chat.
-- `personal`: a wely-social stopped for more than about 3 d loses the creations and renames published meanwhile, and nothing reconciles them (only deletions are). A wely-notifications stopped as long loses friend-request notifications.
-- The first sync applies the new values at once: segments older than their policy are deleted within minutes, which cannot be undone.
-
-**Post-sync check (read-only).** The Job ends with `kafka-configs.sh --describe`, so its log lists the dynamic configs of every topic. Each tagged topic shows its policy's `retention.ms` and `segment.ms`; `EVENT_GROUP_CHANGED` and `EVENT_DATE_FIXED` show none.
-
-```bash
-kubectl logs -n wely-dev job/dev-wely-kafka-topics --tail=40
-# or on demand, inside the broker pod (reads the configs, changes nothing):
-kubectl exec -n wely-dev dev-wely-kafka-0 -- /opt/kafka/bin/kafka-configs.sh \
-  --bootstrap-server localhost:9092 --describe --entity-type topics
-```
-
-To change a value, edit `policy()` in `base/wely-kafka-topics.yaml`. A commit that changes only this Job leaves the dev application Synced, because Argo CD keeps hooks out of the sync status, so no automatic sync runs it: start a sync from Argo CD. Removing a tag does not reset a topic: that takes `kafka-configs.sh --alter --entity-type topics --entity-name <topic> --delete-config retention.ms,segment.ms`. On the local cluster the Job is immutable: see [`README-LOCAL.md`](README-LOCAL.md).
-
-## Environnement local
-
-Toute la plateforme démarre en une commande sur un Kubernetes local.
-
-### Prérequis
-
-Un Kubernetes local — [OrbStack](https://orbstack.dev/) (recommandé), Docker Desktop, Minikube ou k3d — et `kubectl`.
-
-```bash
-kubectl apply -k overlays/local --server-side
-```
-
-Cela déploie le namespace `wely-local`, les quatre bases, Keycloak, la gateway, le frontend et les quatre microservices, avec leurs secrets locaux préconfigurés.
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost |
-| Keycloak | http://localhost:8080 *(admin / admin)* |
-| Gateway | http://localhost:8081 |
-
-```bash
-kubectl delete -k overlays/local        # nettoyage
-```
-
-Voir [`README-LOCAL.md`](README-LOCAL.md) pour le détail.
-
----
+- `live` : wely-chat lit ces topics depuis le dernier offset, avec un groupe par pod — aucun backlog nécessaire. wely-notifications garde un seul groupe : arrêté plus d'environ 1 h, il perd les notifications de messages et d'appels de la panne. Les messages eux-mêmes restent dans wely-chat.
+- `personal` : un wely-social arrêté plus d'environ 3 j perd les créations et renommages publiés entre-temps, et rien ne les réconcilie (seules les suppressions le sont). Un wely-notifications arrêté aussi longtemps perd les notifications de demandes d'ami.
 
 ## Commandes utiles
 
 ```bash
 kubectl kustomize overlays/dev          # rendu des manifestes sans appliquer
-kubectl kustomize overlays/prod
-kubectl apply -k overlays/local --server-side
 
 argocd app list
 argocd app get wely-dev
@@ -251,7 +205,7 @@ argocd app diff wely-dev                # écart entre Git et le cluster
 - **Keycloak n'a pas de probes.** Ses endpoints de santé ont changé de port en version 25 (`:9000/health/ready` au lieu de `:8080/health/ready`), et l'image est construite sur `quay.io/keycloak/keycloak:latest` : impossible de savoir lequel s'applique avant d'épingler le tag. Une probe sur le mauvais port mettrait l'IdP en `CrashLoopBackOff` et couperait toute la plateforme. **Prérequis : épingler l'image.**
 - **Le frontend n'a pas `readOnlyRootFilesystem`.** `entrypoint.sh` réécrit `index.html` au démarrage pour injecter `KEYCLOAK_URL`, et nginx écrit son cache. Servir cette configuration depuis un ConfigMap au lieu de muter l'artefact permettrait de verrouiller ce conteneur aussi.
 - **Pas de `NetworkPolicy`** : tout pod peut joindre tout autre pod, y compris les bases.
-- **L'overlay `prod` n'est pas opérationnel** : il utilise `newTag: latest` — non reproductible et indétectable par ArgoCD — et ne définit aucun Secret, alors que la base y fait référence.
+- **Il n'y a pas d'environnement de production.** `overlays/prod` a été supprimé le 2026-11-15 : images en `latest`, aucun Secret, déployé par personne. Une prod se construira comme une copie de `overlays/dev` — mêmes images, mêmes services managés, realm et préfixe de topic différents.
 - **Les patches de l'overlay `dev` sont positionnels** (`/env/0/value`, `/env/1/value`…). Insérer une variable d'environnement dans la base décale tous les indices et réaffecte silencieusement les mauvaises valeurs. À remplacer par des patches stratégiques nommés.
 - **La base référence un Secret préfixé `dev-`**, ce qui inverse la logique Kustomize : la base ne devrait rien savoir des overlays.
 - **Secrets en clair dans `base/wely-secrets-dev.yaml`** — à remplacer par un SealedSecret ou un fichier d'exemple.
