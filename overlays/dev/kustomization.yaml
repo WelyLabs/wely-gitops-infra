@@ -14,6 +14,7 @@ resources:
 - wely-sealed-notifications-dev.yaml
 # Credentials of the managed cloud services (Atlas...), sealed with seal-cloud-secret.sh.
 - wely-sealed-cloud-dev.yaml
+- pod-disruption-budgets.yaml
 - demo/demo-reset.yaml
 # realm/ moved to platform/: one Keycloak, one realm per environment, configured there.
 # Observability moved to observability/shared, in wely-observability: it watches the
@@ -81,6 +82,29 @@ patches:
   target:
     kind: StatefulSet
     name: wely-garage
+# Two of each stateless service, one on each mini PC (role=workload): losing a node leaves every service
+# up. DoNotSchedule rather than ScheduleAnyway, or the scheduler may put both on one node and the pair
+# protects nothing; while a node is down, the second pod waits Pending. matchLabelKeys narrows the
+# selector to the pod's own app and ReplicaSet, so a rollout spreads the new pods among themselves.
+# Not doubled: wely-mcp (STREAMABLE MCP keeps its sessions in the pod's memory), Redis and Garage
+# (stateful, one copy), and the platform's Keycloak and Kafka.
+- patch: |-
+    - op: add
+      path: /spec/replicas
+      value: 2
+    - op: add
+      path: /spec/template/spec/topologySpreadConstraints
+      value:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchExpressions:
+              - { key: app, operator: Exists }
+          matchLabelKeys: [app, pod-template-hash]
+  target:
+    kind: Deployment
+    name: (cloudflared-connector|wely-(gateway|web|users|social|chat|events|notifications|media))
 # garage-setup runs as a Sync hook here, not PostSync: a PostSync hook waits for every resource to be
 # healthy, and while a datastore is being moved to the cloud one of them is not, so every sync stayed
 # Running and no later commit was applied. The job still reruns on each sync, and waits for Garage itself.

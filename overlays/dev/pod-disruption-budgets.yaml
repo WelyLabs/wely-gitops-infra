@@ -1,0 +1,92 @@
+# One pod of each doubled service always stays up while a node is drained (see the replicas patch in
+# kustomization.yaml): a drain evicts the other one only once a replacement is ready elsewhere.
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cloudflared
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: cloudflared
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wely-gateway
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: wely-gateway
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wely-web
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: wely-web
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wely-users
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: wely-users
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wely-social
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: wely-social
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wely-chat
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: wely-chat
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wely-events
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: wely-events
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wely-notifications
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: wely-notifications
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wely-media
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: wely-media
