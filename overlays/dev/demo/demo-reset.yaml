@@ -143,12 +143,10 @@ spec:
                 - -c
                 - |
                   for i in $(seq 1 20); do
-                    mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin" \
-                      -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD" \
+                    mongosh --quiet "$MONGODB_URI" \
                       --eval 'db.getSiblingDB("chat_db").conversations.find({ participantIds: { $in: process.env.DEMO_USER_IDS.trim().split(/\s+/) } }, { _id: 1 }).forEach(c => print(c._id.toString()))' \
                       > /work/conversations && echo "$(wc -l < /work/conversations) demo conversations" \
-                    && mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin" \
-                      -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD" \
+                    && mongosh --quiet "$MONGODB_URI" \
                       --eval 'db.getSiblingDB("events_db").events.find({ organizerId: { $in: process.env.DEMO_USER_IDS.trim().split(/\s+/) } }, { _id: 1 }).forEach(e => print(e._id.toString()))' \
                       > /work/events && echo "$(wc -l < /work/events) demo events" \
                     && exit 0
@@ -164,12 +162,11 @@ spec:
                     0fa728fe-fd0e-4997-b226-fd049c6b0659 15d05360-522a-4ff1-93a9-07d63346e4c1
                     4d6501b7-caed-4a98-b960-199db1bd4106 66e332e6-8d98-49c6-ac22-27095c35cf9d
                     f4be7974-0ed3-457e-80d3-8aa08e0c5197 cdc6f71d-065c-4af5-9775-692411fc9504
-                - name: MONGO_USERNAME
+                # Atlas, chat_db's URI: the scripts reach events_db through getSiblingDB, which the
+                # Atlas user of the wely-dev project is allowed to.
+                - name: MONGODB_URI
                   valueFrom:
-                    secretKeyRef: { name: dev-wely-secrets-dev, key: mongo-root-username }
-                - name: MONGO_PASSWORD
-                  valueFrom:
-                    secretKeyRef: { name: dev-wely-secrets-dev, key: mongo-root-password }
+                    secretKeyRef: { name: dev-wely-cloud, key: mongodb-uri-chat }
               volumeMounts: [{ name: work, mountPath: /work }]
               resources:
                 requests: { cpu: 20m, memory: 64Mi }
@@ -229,17 +226,16 @@ spec:
                 - -c
                 - |
                   for i in $(seq 1 20); do
-                    mongosh --quiet "mongodb://dev-wely-mongodb-service:27017/?authSource=admin" -u "$MONGO_USERNAME" -p "$MONGO_PASSWORD" --file /scripts/seed-mongo.js && exit 0
+                    mongosh --quiet "$MONGODB_URI" --file /scripts/seed-mongo.js && exit 0
                     echo "events/chat seed attempt $i failed, retrying in 5s"; sleep 5
                   done
                   echo "events/chat seed failed after retries"; exit 1
               env:
-                - name: MONGO_USERNAME
+                # Atlas, chat_db's URI: the scripts reach events_db through getSiblingDB, which the
+                # Atlas user of the wely-dev project is allowed to.
+                - name: MONGODB_URI
                   valueFrom:
-                    secretKeyRef: { name: dev-wely-secrets-dev, key: mongo-root-username }
-                - name: MONGO_PASSWORD
-                  valueFrom:
-                    secretKeyRef: { name: dev-wely-secrets-dev, key: mongo-root-password }
+                    secretKeyRef: { name: dev-wely-cloud, key: mongodb-uri-chat }
               volumeMounts: [{ name: scripts, mountPath: /scripts }]
               resources:
                 requests: { cpu: 50m, memory: 64Mi }

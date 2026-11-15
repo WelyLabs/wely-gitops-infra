@@ -12,6 +12,8 @@ resources:
 - wely-sealed-calls-dev.yaml
 # VAPID keys of wely-notifications (Web Push).
 - wely-sealed-notifications-dev.yaml
+# Credentials of the managed cloud services (Atlas...), sealed with seal-cloud-secret.sh.
+- wely-sealed-cloud-dev.yaml
 - demo/demo-reset.yaml
 # realm/ moved to platform/: one Keycloak, one realm per environment, configured there.
 # Observability moved to observability/shared, in wely-observability: it watches the
@@ -334,23 +336,19 @@ patches:
             env:
             - name: MEDIA_API_URL
               value: "http://dev-wely-media-service:8085"
-            # MONGO_USERNAME and MONGO_PASSWORD are repeated here, unchanged from the base,
-            # only to pin their position. Kubernetes expands $(VAR) from variables declared
-            # *earlier* in the list and leaves a forward reference as literal text, and a merge
-            # patch puts the entries it names first — so without these two, MONGODB_URI would
-            # be patched to the front and the pod would try to log in as "$(MONGO_USERNAME)".
+            # MongoDB is on Atlas (project wely-dev), sealed in wely-sealed-cloud-dev.yaml. value: null drops
+            # the base's in-cluster URI, which would otherwise sit next to valueFrom; the two base
+            # credentials it expanded are deleted with it.
             - name: MONGO_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: dev-wely-secrets-dev
-                  key: mongo-root-username
+              $patch: delete
             - name: MONGO_PASSWORD
+              $patch: delete
+            - name: MONGODB_URI
+              value: null
               valueFrom:
                 secretKeyRef:
-                  name: dev-wely-secrets-dev
-                  key: mongo-root-password
-            - name: MONGODB_URI
-              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/chat_db?authSource=admin"
+                  name: dev-wely-cloud
+                  key: mongodb-uri-chat
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
             - name: JWT_AUDIENCES
@@ -382,18 +380,19 @@ patches:
             env:
             - name: MEDIA_API_URL
               value: "http://dev-wely-media-service:8085"
+            # MongoDB is on Atlas (project wely-dev), sealed in wely-sealed-cloud-dev.yaml. value: null drops
+            # the base's in-cluster URI, which would otherwise sit next to valueFrom; the two base
+            # credentials it expanded are deleted with it.
             - name: MONGO_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  key: mongo-root-username
-                  name: dev-wely-secrets-dev
+              $patch: delete
             - name: MONGO_PASSWORD
+              $patch: delete
+            - name: MONGODB_URI
+              value: null
               valueFrom:
                 secretKeyRef:
-                  key: mongo-root-password
-                  name: dev-wely-secrets-dev
-            - name: MONGODB_URI
-              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/events_db?authSource=admin"
+                  name: dev-wely-cloud
+                  key: mongodb-uri-events
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
             - name: JWT_AUDIENCES
@@ -502,19 +501,19 @@ patches:
           containers:
           - name: notifications-api
             env:
-            # Repeated before MONGODB_URI, which expands them: a patch moves the entries it names first.
+            # MongoDB is on Atlas (project wely-dev), sealed in wely-sealed-cloud-dev.yaml. value: null drops
+            # the base's in-cluster URI, which would otherwise sit next to valueFrom; the two base
+            # credentials it expanded are deleted with it.
             - name: MONGO_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  key: mongo-root-username
-                  name: dev-wely-secrets-dev
+              $patch: delete
             - name: MONGO_PASSWORD
+              $patch: delete
+            - name: MONGODB_URI
+              value: null
               valueFrom:
                 secretKeyRef:
-                  key: mongo-root-password
-                  name: dev-wely-secrets-dev
-            - name: MONGODB_URI
-              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@dev-wely-mongodb-service:27017/notifications_db?authSource=admin"
+                  name: dev-wely-cloud
+                  key: mongodb-uri-notifications
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
             - name: JWT_AUDIENCES
