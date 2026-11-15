@@ -179,7 +179,7 @@ spec:
                 limits: { memory: 256Mi }
             # Pictures a visitor uploaded on a demo account: removed, so the next visitor sees the
             # seeded avatars, which seed-users.sql has just put back; and the photos sent in the
-            # demo conversations. rclone, with the wely-demo-reset Garage key; purge succeeds when
+            # demo conversations. rclone, with the wely-demo-reset R2 token; purge succeeds when
             # there is nothing to remove.
             - name: avatars
               image: rclone/rclone:1.75.2

@@ -5,8 +5,10 @@ resources:
 - ../../base
 - namespace.yaml
 - wely-sealed-secrets-dev.yaml
-# Garage's RPC secret, admin token and keys, sealed apart from the shared secret (see
-# base/wely-secrets.example.yaml, second document).
+# The per-service X-Internal-Secret of wely-media, sealed apart from the shared secret (see
+# base/wely-secrets.example.yaml, second document). Still named dev-wely-garage, and still holding
+# the dead garage-* keys: both go at the next reseal — the credentials of a storage that no longer
+# exists.
 - wely-sealed-garage-dev.yaml
 # Cloudflare Realtime keys for calls (SFU and TURN), read by wely-chat only.
 - wely-sealed-calls-dev.yaml
@@ -55,7 +57,6 @@ patches:
 #
 # A blanket patch rather than a nodeSelector per file: new workloads land on the right node
 # without anyone remembering to add it, which is how the orphan-patch class of bug starts.
-# Its only cost is that an exception has to be written back, as wely-garage is below.
 - patch: |-
     - op: add
       path: /spec/template/spec/nodeSelector
@@ -94,51 +95,6 @@ patches:
   target:
     kind: Deployment
     name: (cloudflared-connector|wely-(gateway|web|users|social|chat|events|notifications|media))
-# No Garage in dev since 2026-11-15: pictures are on R2. Its setup job and its backup go with it.
-# Both its volumes are kept (garage-data, from the StatefulSet's template, and dev-wely-garage-backup,
-# still declared by the base); pruning never reaches a StatefulSet's PVC.
-- patch: |-
-    $patch: delete
-    apiVersion: apps/v1
-    kind: StatefulSet
-    metadata:
-      name: wely-garage
-- patch: |-
-    $patch: delete
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: wely-garage-service
-- patch: |-
-    $patch: delete
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: wely-garage-admin
-- patch: |-
-    $patch: delete
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: wely-garage-config
-- patch: |-
-    $patch: delete
-    apiVersion: networking.k8s.io/v1
-    kind: NetworkPolicy
-    metadata:
-      name: allow-garage
-- patch: |-
-    $patch: delete
-    apiVersion: batch/v1
-    kind: Job
-    metadata:
-      name: wely-garage-setup
-- patch: |-
-    $patch: delete
-    apiVersion: batch/v1
-    kind: CronJob
-    metadata:
-      name: wely-garage-backup
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment

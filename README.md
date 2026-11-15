@@ -102,22 +102,14 @@ Le cluster tourne sur un ensemble de Raspberry Pi derrière une connexion résid
 
 ---
 
-## Sauvegardes de Garage
+## Stockage des photos
 
-Les photos (avatars, photos des conversations, couvertures et tickets d'événement) vivent dans Garage, sur le disque du Pi. `base/wely-garage-backup.yaml` les sauvegarde chaque nuit à 03:00 UTC, sans clé S3 ni interruption :
+Les photos (avatars, photos des conversations, couvertures et tickets d'événement) sont sur **Cloudflare R2** depuis le 2026-11-15, buckets `wely-dev-*`. `wely-media` normalise et signe, le navigateur va chercher les octets chez R2 avec l'URL signée. Garage, son job d'initialisation et sa sauvegarde nocturne ont été supprimés avec le disque qu'ils protégeaient : R2 réplique ses objets lui-même, il n'y a plus de volume à sauvegarder.
 
-1. un conteneur demande à Garage un **snapshot cohérent de ses métadonnées** (`CreateMetadataSnapshot`, API d'administration) ;
-2. un second monte le volume de Garage **en lecture seule** et recopie dans `wely-garage-backup` (10 Gio) le snapshot, la clé du nœud et le layout, puis les **blocs** : ils sont adressés par leur contenu et jamais réécrits, donc chaque jour reprend ceux de la veille par **lien dur** et ne copie que les nouveaux ; un bloc n'est jamais écrasé (ce qui modifierait aussi les jours précédents à travers le lien) ;
-3. 7 jours sont gardés.
-
-Restaurer : passer le StatefulSet `dev-wely-garage` à 0 réplica, recopier `<jour>/meta/*` dans `meta/` (le snapshot devient `db.sqlite`) et `<jour>/data/` dans `data/` du volume `garage-data-dev-wely-garage-0`, repasser à 1.
-
-> **Même disque.** Ce volume protège d'une suppression malheureuse, d'un bug ou d'une base corrompue, pas de la perte du disque du Pi. Une copie hors du Pi de `wely-garage-backup` reste à décider (machine de la maison via Tailscale, ou stockage externe).
-
-> **Restore after account deletions.** Restoring day J brings back the media that account deletions removed after J, which nothing references any more:
+> **Restauration après des suppressions de compte.** R2 ne versionne pas les buckets par défaut. Si une restauration devient nécessaire, elle remonte des médias que les suppressions de compte avaient retirés et que plus rien ne référence :
 >
-> - avatars: in `dev-wely-postgres-users`, run `UPDATE account_deletion SET media_deleted_at = NULL, next_attempt_at = now() WHERE requested_at > now() - interval '8 days';` and wely-users' `AccountDeletionWorker` purges `avatars/<businessId>/` again for those accounts;
-> - event media in `wely-event-media`: the receipts wely-events dropped from the deleted users' expenses, and the cover and receipts of the events the erasure deleted. Their keys are already gone from `events_db`, so nothing deletes them again. List `events/` (rclone, as in `demo/demo-reset.yaml`) and delete every object last modified before the restore that no `events.image` and no `expenses.receiptKey` references. No tool does this sweep yet: until one exists, skipping it leaves a copy of the deleted users' receipts in Garage.
+> - avatars : dans Neon, `UPDATE account_deletion SET media_deleted_at = NULL, next_attempt_at = now() WHERE requested_at > now() - interval '8 days';` et l'`AccountDeletionWorker` de wely-users purge à nouveau `avatars/<businessId>/` pour ces comptes ;
+> - médias d'événement dans `wely-dev-event-media` : les tickets que wely-events a retirés des dépenses des comptes supprimés, plus la couverture et les tickets des événements effacés. Leurs clés ont déjà disparu d'`events_db`, donc rien ne les resupprime. Lister `events/` (rclone, comme dans `demo/demo-reset.yaml`) et supprimer tout objet antérieur à la restauration qu'aucun `events.image` ni `expenses.receiptKey` ne référence. Aucun outil ne fait ce balayage.
 
 ## Account deletion
 

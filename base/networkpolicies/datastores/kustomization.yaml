@@ -6,4 +6,3 @@ kind: Kustomization
 # reach them over the internet, which no policy here restricts.
 resources:
   - redis.yaml
-  - garage.yaml

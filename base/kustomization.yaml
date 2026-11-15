@@ -14,9 +14,6 @@ resources:
   - wely-notifications.yaml
   - wely-mcp.yaml
   - wely-redis.yaml
-  - wely-garage.yaml
-  - wely-garage-setup.yaml
-  - wely-garage-backup.yaml
   - prometheus-rbac.yaml
   - networkpolicies/datastores
   - networkpolicies/services

@@ -32,7 +32,7 @@ Traffic flows: browser → cloudflared → web (nginx, reverse proxy) → gatewa
   these are applied, not decorative.
 - **Kubelet health probes are NOT affected**: verified that k3s/kube-router lets
   them through a deny-all policy, so no CrashLoop risk.
-- **Jobs that touch a datastore** (demo-reset, garage-setup, backup,
+- **Jobs that touch a datastore** (demo-reset,
   kafka-topics, realm-settings) get a stable `app` label in their own manifests
   so they can be named here; without that, the nightly reset and backups break.
 - **cloudflared's hostname→service mapping** lives in the Cloudflare dashboard
