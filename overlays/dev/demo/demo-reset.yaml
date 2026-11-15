@@ -56,7 +56,7 @@ spec:
                 - -c
                 - |
                   for i in $(seq 1 20); do
-                    psql --host=dev-wely-postgres-users-service --dbname=users \
+                    psql --host=ep-old-breeze-b947m9wm.c-7.eu-central-1.aws.neon.tech --dbname=users \
                          --set=demo_keycloak_id="$DEMO_KEYCLOAK_ID" --file=/scripts/seed-users.sql && exit 0
                     echo "users seed attempt $i failed, retrying in 5s"; sleep 5
                   done
@@ -65,12 +65,16 @@ spec:
                 # Id of the Keycloak user "camille" (login: demo@welylabs.app) in wely-realm.
                 - name: DEMO_KEYCLOAK_ID
                   value: be30df9c-665b-4f3f-91fc-d00b0a1cf47a
+                # Neon, as wely-users. verify-full with the image's system CAs (psql 16+).
                 - name: PGUSER
-                  valueFrom:
-                    secretKeyRef: { name: dev-wely-secrets-dev, key: users-db-username }
+                  value: wely-users
                 - name: PGPASSWORD
                   valueFrom:
-                    secretKeyRef: { name: dev-wely-secrets-dev, key: users-db-password }
+                    secretKeyRef: { name: dev-wely-cloud, key: users-db-password }
+                - name: PGSSLMODE
+                  value: verify-full
+                - name: PGSSLROOTCERT
+                  value: system
               volumeMounts: [{ name: scripts, mountPath: /scripts }]
               resources:
                 requests: { cpu: 10m, memory: 32Mi }

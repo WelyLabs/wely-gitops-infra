@@ -102,6 +102,26 @@ patches:
     kind: NetworkPolicy
     metadata:
       name: allow-mongodb
+# Nor wely-users' PostgreSQL: it is on Neon since 2026-11-15. Its data was on serverwely1's SSD, out of
+# reach while that node is down: the PVC is kept, not deleted, in case the node comes back.
+- patch: |-
+    $patch: delete
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: wely-postgres-users
+- patch: |-
+    $patch: delete
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: wely-postgres-users-service
+- patch: |-
+    $patch: delete
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: allow-postgres-users
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment
@@ -220,10 +240,19 @@ patches:
               value: "http://dev-wely-media-service:8085"
             - name: SOCIAL_API_URL
               value: "http://dev-wely-social-service:8083"
+            # PostgreSQL is on Neon (project wely-dev, branch dev, role wely-users), the password sealed in
+            # wely-sealed-cloud-dev.yaml. verify-full checks Neon's certificate and host name against the
+            # JDK's CAs, for R2DBC (sslMode, application.properties) and for Flyway's JDBC URL alike.
             - name: DB_URL
-              value: "r2dbc:postgresql://dev-wely-postgres-users-service:5432/users"
+              value: "r2dbc:postgresql://ep-old-breeze-b947m9wm.c-7.eu-central-1.aws.neon.tech/users"
             - name: DB_JDBC_URL
-              value: "jdbc:postgresql://dev-wely-postgres-users-service:5432/users?sslmode=disable"
+              value: "jdbc:postgresql://ep-old-breeze-b947m9wm.c-7.eu-central-1.aws.neon.tech/users?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+            - name: DB_USERNAME
+              value: "wely-users"
+              valueFrom: null
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: users-db-password }
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/realms/wely-dev"
             - name: JWT_AUDIENCES
