@@ -81,6 +81,16 @@ patches:
   target:
     kind: StatefulSet
     name: wely-garage
+# garage-setup runs as a Sync hook here, not PostSync: a PostSync hook waits for every resource to be
+# healthy, and while a datastore is being moved to the cloud one of them is not, so every sync stayed
+# Running and no later commit was applied. The job still reruns on each sync, and waits for Garage itself.
+- patch: |-
+    - op: replace
+      path: /metadata/annotations/argocd.argoproj.io~1hook
+      value: Sync
+  target:
+    kind: Job
+    name: wely-garage-setup
 # No MongoDB in dev since 2026-11-15: wely-chat, -events and -notifications use Atlas (project
 # wely-dev, URIs in wely-sealed-cloud-dev.yaml), so they follow the placement above like any service.
 # The old data was not kept. Pruning never reaches a StatefulSet's PVC: dev-wely-mongodb's is deleted by hand.
