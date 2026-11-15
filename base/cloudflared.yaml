@@ -21,7 +21,9 @@ spec:
             memory: 32Mi
           limits:
             memory: 128Mi
-        args: ["tunnel", "--no-autoupdate", "run"]
+        # HTTP/2 over TCP 443 rather than QUIC over UDP 7844: mini-pc-2's network drops outbound UDP, and
+        # cloudflared kept retrying QUIC there without ever registering a connection (530 on every hostname).
+        args: ["tunnel", "--no-autoupdate", "--protocol", "http2", "run"]
         env:
         - name: TUNNEL_TOKEN
           valueFrom:
