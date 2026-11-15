@@ -45,7 +45,9 @@ spec:
               emptyDir: {}
           initContainers:
             - name: users
-              image: postgres:17
+              # Alpine, not Debian: postgres:17 ships no CA bundle, so verify-full against Neon failed with
+              # "certificate verify failed"; postgres:17-alpine has /etc/ssl/certs and seq.
+              image: postgres:17-alpine
               # Each step retries its first connection: a freshly created Job pod may send it
               # before kube-router has programmed this pod into the NetworkPolicy ingress sets,
               # which it then rejects (connection refused). The seed scripts are idempotent, so
