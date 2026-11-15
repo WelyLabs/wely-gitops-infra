@@ -70,24 +70,12 @@ patches:
         wely.dev/role: workload
   target:
     kind: StatefulSet
-# Exception: Garage keeps its 5 Gi of photos on pi5. Its image is distroless, so neither
-# `kubectl cp` nor a dump runs inside it, and moving object storage would mean a migration Job
-# of its own. It costs nothing where it is: the browser fetches photos straight from Garage
-# through the tunnel with a signed URL, so wely-media never carries the bytes.
-- patch: |-
-    - op: add
-      path: /spec/template/spec/nodeSelector
-      value:
-        kubernetes.io/hostname: pi5
-  target:
-    kind: StatefulSet
-    name: wely-garage
 # Two of each stateless service, one on each mini PC (role=workload): losing a node leaves every service
 # up. DoNotSchedule rather than ScheduleAnyway, or the scheduler may put both on one node and the pair
 # protects nothing; while a node is down, the second pod waits Pending. matchLabelKeys narrows the
 # selector to the pod's own app and ReplicaSet, so a rollout spreads the new pods among themselves.
-# Not doubled: wely-mcp (STREAMABLE MCP keeps its sessions in the pod's memory), Redis and Garage
-# (stateful, one copy), and the platform's Keycloak and Kafka.
+# Not doubled: wely-mcp (STREAMABLE MCP keeps its sessions in the pod's memory), Redis (stateful, one
+# copy), and the platform's Keycloak and Kafka.
 - patch: |-
     - op: add
       path: /spec/replicas
@@ -105,16 +93,6 @@ patches:
   target:
     kind: Deployment
     name: (cloudflared-connector|wely-(gateway|web|users|social|chat|events|notifications|media))
-# garage-setup runs as a Sync hook here, not PostSync: a PostSync hook waits for every resource to be
-# healthy, and while a datastore is being moved to the cloud one of them is not, so every sync stayed
-# Running and no later commit was applied. The job still reruns on each sync, and waits for Garage itself.
-- patch: |-
-    - op: replace
-      path: /metadata/annotations/argocd.argoproj.io~1hook
-      value: Sync
-  target:
-    kind: Job
-    name: wely-garage-setup
 # No MongoDB in dev since 2026-11-15: wely-chat, -events and -notifications use Atlas (project
 # wely-dev, URIs in wely-sealed-cloud-dev.yaml), so they follow the placement above like any service.
 # The old data was not kept. Pruning never reaches a StatefulSet's PVC: dev-wely-mongodb's is deleted by hand.
@@ -175,6 +153,50 @@ patches:
     kind: NetworkPolicy
     metadata:
       name: allow-neo4j
+# Nor Garage: pictures are on R2. Its setup job and its backup go with it. Both its volumes are kept
+# (garage-data, from the StatefulSet's template, and dev-wely-garage-backup, still declared by the base).
+- patch: |-
+    $patch: delete
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: wely-garage
+- patch: |-
+    $patch: delete
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: wely-garage-service
+- patch: |-
+    $patch: delete
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: wely-garage-admin
+- patch: |-
+    $patch: delete
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: wely-garage-config
+- patch: |-
+    $patch: delete
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: allow-garage
+- patch: |-
+    $patch: delete
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: wely-garage-setup
+- patch: |-
+    $patch: delete
+    apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: wely-garage-backup
 - patch: |-
     apiVersion: apps/v1
     kind: Deployment
@@ -548,54 +570,6 @@ patches:
     kind: Deployment
     name: wely-events
 - patch: |-
-    # namePrefix renames the Service and the StatefulSet's claim, not values that spell their names.
-    - op: replace
-      path: /spec/jobTemplate/spec/template/spec/initContainers/0/env/0/value
-      value: "dev-wely-garage-0.dev-wely-garage-admin:3903"
-    - op: replace
-      path: /spec/jobTemplate/spec/template/spec/volumes/0/persistentVolumeClaim/claimName
-      value: "garage-data-dev-wely-garage-0"
-  target:
-    kind: CronJob
-    name: wely-garage-backup
-- patch: |-
-    apiVersion: batch/v1
-    kind: Job
-    metadata:
-      name: wely-garage-setup
-    spec:
-      template:
-        spec:
-          containers:
-          - name: setup
-            env:
-            # namePrefix renames the Services, not a value that spells their names.
-            - name: GARAGE_ADMIN
-              value: "dev-wely-garage-0.dev-wely-garage-admin:3903"
-  target:
-    kind: Job
-    name: wely-garage-setup
-- patch: |-
-    apiVersion: batch/v1
-    kind: Job
-    metadata:
-      name: wely-kafka-topics
-    spec:
-      template:
-        spec:
-          containers:
-          - name: topics
-            env:
-            # namePrefix renames the Service, not a value that spells its name.
-            - name: KAFKA_BOOTSTRAP
-              value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
-            # NAME:policy, as in the base; the chat's DEV_ topics are live fan-out, read from latest.
-            - name: KAFKA_TOPICS
-              value: "USER_CREATED:personal USER_DELETED:erasure USER_MODIFIED:personal DEV_MESSAGE_BROADCAST:live DEV_CALL_EVENTS:live EVENT_GROUP_CHANGED EVENT_DATE_FIXED FRIENDSHIP_CHANGED:personal USER_BIRTHDAY:personal BIRTHDAY_NOTICES:personal FRIENDSHIP_NOTICES:personal FRIENDSHIP_STATE:state"
-  target:
-    kind: Job
-    name: wely-kafka-topics
-- patch: |-
     apiVersion: apps/v1
     kind: Deployment
     metadata:
@@ -606,11 +580,29 @@ patches:
           containers:
           - name: media
             env:
+            # Pictures are on Cloudflare R2 since 2026-11-15, buckets wely-dev-*, token wely-dev-media sealed in
+            # wely-sealed-cloud-dev.yaml. Writes and signed reads both name R2's S3 endpoint: the browser
+            # fetches a picture from R2 with the signed URL, wely-media never carries the bytes.
             - name: MEDIA_INTERNAL_ENDPOINT
-              value: "http://dev-wely-garage-service:3900"
-            # The public host the signed URLs name: the signature covers it.
+              value: "https://8ff69e80b72df2e5541b83562ac4189e.r2.cloudflarestorage.com"
             - name: MEDIA_PUBLIC_ENDPOINT
-              value: "https://dev-media.welylabs.app"
+              value: "https://8ff69e80b72df2e5541b83562ac4189e.r2.cloudflarestorage.com"
+            - name: MEDIA_REGION
+              value: "auto"
+            - name: AVATARS_BUCKET
+              value: "wely-dev-avatars"
+            - name: CHAT_BUCKET
+              value: "wely-dev-chat-media"
+            - name: EVENTS_BUCKET
+              value: "wely-dev-event-media"
+            - name: COMMUNITIES_BUCKET
+              value: "wely-dev-community-media"
+            - name: MEDIA_ACCESS_KEY
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: media-access-key, optional: false }
+            - name: MEDIA_SECRET_KEY
+              valueFrom:
+                secretKeyRef: { name: dev-wely-cloud, key: media-secret-key, optional: false }
   target:
     kind: Deployment
     name: wely-media

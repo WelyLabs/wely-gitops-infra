@@ -189,13 +189,13 @@ spec:
                 - |
                   run() {
                     set -e
-                    R=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-avatars/avatars"
+                    R=":s3,provider=Cloudflare,endpoint=https://8ff69e80b72df2e5541b83562ac4189e.r2.cloudflarestorage.com,region=auto,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-dev-avatars/avatars"
                     for id in $DEMO_USER_IDS; do rclone purge "$R/$id"; done
-                    C=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-chat-media/chat"
+                    C=":s3,provider=Cloudflare,endpoint=https://8ff69e80b72df2e5541b83562ac4189e.r2.cloudflarestorage.com,region=auto,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-dev-chat-media/chat"
                     while read -r conversation; do rclone purge "$C/$conversation"; done < /work/conversations
-                    E=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-event-media/events"
+                    E=":s3,provider=Cloudflare,endpoint=https://8ff69e80b72df2e5541b83562ac4189e.r2.cloudflarestorage.com,region=auto,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-dev-event-media/events"
                     while read -r event; do rclone purge "$E/$event"; done < /work/events
-                    M=":s3,provider=Other,endpoint=http://dev-wely-garage-service:3900,region=garage,force_path_style=true,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-community-media/communities"
+                    M=":s3,provider=Cloudflare,endpoint=https://8ff69e80b72df2e5541b83562ac4189e.r2.cloudflarestorage.com,region=auto,access_key_id=$ACCESS_KEY,secret_access_key=$SECRET_KEY:wely-dev-community-media/communities"
                     while read -r community; do rclone purge "$M/$community"; done < /work/communities
                     echo "demo pictures, photos, covers, receipts and community pictures removed"
                   }
@@ -216,10 +216,10 @@ spec:
                     f4be7974-0ed3-457e-80d3-8aa08e0c5197 cdc6f71d-065c-4af5-9775-692411fc9504
                 - name: ACCESS_KEY
                   valueFrom:
-                    secretKeyRef: { name: dev-wely-garage, key: garage-reset-access-key }
+                    secretKeyRef: { name: dev-wely-cloud, key: media-access-key }
                 - name: SECRET_KEY
                   valueFrom:
-                    secretKeyRef: { name: dev-wely-garage, key: garage-reset-secret-key }
+                    secretKeyRef: { name: dev-wely-cloud, key: media-secret-key }
               volumeMounts: [{ name: work, mountPath: /work }]
               resources:
                 requests: { cpu: 20m, memory: 32Mi }
