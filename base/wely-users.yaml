@@ -60,31 +60,27 @@ spec:
               name: dev-wely-secrets-dev
               key: users-db-username
         - name: KEYCLOAK_ISSUER_URI
-          value: "https://auth.welylabs.app/realms/wely-prod"
-        # The audience this API accepts, stamped by business-scope's mapper. Empty would accept any
-        # authentic token of the realm, whoever asked for it.
+          value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/"
+        # The audience this API accepts: the Auth0 API identifier. Empty would accept any authentic
+        # token of the tenant, whoever asked for it.
         - name: JWT_AUDIENCES
           value: "wely-api-prod"
-        # The confidential client wely-users signs in with to reach Keycloak's Admin API, named
-        # after its service and environment like every other one.
-        - name: KEYCLOAK_ADMIN_CLIENT_ID
-          value: "wely-users-prod-client"
+        # The Auth0 tenant, and the M2M client wely-users reads, updates and deletes identities with
+        # through the Management API (read/update/delete:users, delete:sessions).
+        - name: AUTH0_DOMAIN
+          value: "dev-8k6vch1dvh1qxrdz.eu.auth0.com"
+        - name: AUTH0_MGMT_CLIENT_ID
+          value: "Xu7NQtbhVT9Ve6HxuuxwM0dhLtCD6J7N"
+        - name: AUTH0_MGMT_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef: { name: dev-wely-cloud, key: auth0-mgmt-client-secret }
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-          value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-prod/protocol/openid-connect/certs"
-        - name: KEYCLOAK_INTERNAL_TOKEN_URI
-          value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080/realms/wely-prod/protocol/openid-connect/token"
-        - name: KEYCLOAK_BASE_URL
-          value: "http://wely-auth-service.wely-platform.svc.cluster.local:8080"
+          value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/.well-known/jwks.json"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: dev-wely-secrets-dev
               key: users-db-password
-        - name: KEYCLOAK_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: dev-wely-secrets-dev
-              key: kc-client-secret
         - name: KAFKA_BOOTSTRAP_SERVER
           value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
         # One broker for every environment; this prefix is what separates them. It must match the
@@ -93,11 +89,11 @@ spec:
           value: "prod."
         - name: SPRING_R2DBC_PROPERTIES_SSLMODE
           value: "disable"
+        # Checked on POST /profile/provision, called by the Auth0 Action: the same value is its
+        # INTERNAL_SECRET_<ENV> secret.
         - name: INTERNAL_SECRET
           valueFrom:
-            secretKeyRef:
-              name: dev-wely-secrets-dev
-              key: internal-secret
+            secretKeyRef: { name: dev-wely-cloud, key: users-internal-secret }
         # Guards GET /user-service/internal/deleted-users; distinct from INTERNAL_SECRET. Unset, the endpoint refuses.
         - name: DELETED_USERS_READER_SECRET
           valueFrom:

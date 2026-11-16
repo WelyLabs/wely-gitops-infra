@@ -41,7 +41,7 @@ spec:
           capabilities:
             drop: ["ALL"]
           # No readOnlyRootFilesystem here, unlike the Java services: entrypoint.sh
-          # rewrites index.html in place at start to inject KEYCLOAK_URL, and nginx
+          # rewrites index.html in place at start to inject the AUTH_* settings, and nginx
           # writes its own cache and pid. Serving the config from a ConfigMap instead
           # of mutating the built artifact would let this be locked down too.
         # Static files, so no slow start and no startupProbe: nginx either serves or
