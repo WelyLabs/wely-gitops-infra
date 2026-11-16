@@ -64,9 +64,10 @@ spec:
                   done
                   echo "users seed failed after retries"; exit 1
               env:
-                # Id of the Keycloak user "camille" (login: demo@welylabs.app) in wely-realm.
+                # Auth0 user_id of "camille" (login: demo@welylabs.app), connection wely-dev-users.
+                # The variable keeps its name until the keycloak_id column is renamed (AUDIT F1).
                 - name: DEMO_KEYCLOAK_ID
-                  value: be30df9c-665b-4f3f-91fc-d00b0a1cf47a
+                  value: "auth0|6afa926ed9d578714d9c3139"
                 # Neon, as wely-users. verify-full with the image's system CAs (psql 16+).
                 - name: PGUSER
                   value: wely-users
