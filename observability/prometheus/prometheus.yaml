@@ -39,7 +39,7 @@ spec:
         effect: NoSchedule
       serviceAccountName: wely-prometheus
       # Non-root: the image's own user (nobody). local-path creates its directories world-writable,
-      # as Garage's claim already relies on.
+      # which is what makes this work on its claim.
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534

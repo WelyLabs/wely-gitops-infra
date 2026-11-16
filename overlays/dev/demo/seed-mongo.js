@@ -65,7 +65,7 @@ const chat = db.getSiblingDB('chat_db');
 const touched = chat.conversations.find({ participantIds: { $in: DEMO_IDS } }, { _id: 1 })
   .toArray().map(c => c._id.toString());
 chat.message_buckets.deleteMany({ conversationId: { $in: touched } });
-// Their media tab too; the photo files themselves are purged from Garage by the job.
+// Their media tab too; the photo files themselves are purged from R2 by the job.
 chat.conversation_photos.deleteMany({ conversationId: { $in: touched } });
 chat.conversations.deleteMany({ participantIds: { $in: DEMO_IDS } });
 // wely-chat's friendships projection: the demo friendships are written straight into Neo4j,

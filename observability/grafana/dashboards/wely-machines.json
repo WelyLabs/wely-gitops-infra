@@ -296,7 +296,7 @@
           "instant": false
         }
       ],
-      "description": "Bytes per second written per machine. Four of the five continuous writers — Kafka, both PostgreSQL and Neo4j — left the SD card on 2026-10-29; MongoDB and Garage stayed. The Pi's line is what they still cost it.",
+      "description": "Bytes per second written per machine. Four of the five continuous writers — Kafka, both PostgreSQL and Neo4j — left the SD card on 2026-10-29; MongoDB and the picture store stayed. The Pi's line is what they still cost it.",
       "id": 903,
       "gridPos": {
         "h": 8,

@@ -41,18 +41,19 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
+        # Overridden per environment: each one names its own S3 endpoint (overlays/dev points at R2).
         - name: MEDIA_INTERNAL_ENDPOINT
-          value: "http://wely-garage-service:3900"
+          value: "https://<account>.r2.cloudflarestorage.com"
         - name: MEDIA_PUBLIC_ENDPOINT
           value: "https://media.welylabs.app"
-        # Its Garage key, on the avatar, chat, event and community buckets. Optional like every key sealed
+        # Its S3 key, on the avatar, chat, event and community buckets. Optional like every key sealed
         # apart: without it the service runs and answers MED-TEC-001.
         - name: MEDIA_ACCESS_KEY
           valueFrom:
-            secretKeyRef: { name: dev-wely-garage, key: garage-media-access-key, optional: true }
+            secretKeyRef: { name: dev-wely-cloud, key: media-access-key, optional: true }
         - name: MEDIA_SECRET_KEY
           valueFrom:
-            secretKeyRef: { name: dev-wely-garage, key: garage-media-secret-key, optional: true }
+            secretKeyRef: { name: dev-wely-cloud, key: media-secret-key, optional: true }
         # One secret per caller, each tied to its own key prefix. A missing one turns that caller
         # away (401) without affecting the others.
         - name: INTERNAL_SECRET_USERS

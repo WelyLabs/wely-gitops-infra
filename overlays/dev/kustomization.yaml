@@ -6,9 +6,9 @@ resources:
 - namespace.yaml
 - wely-sealed-secrets-dev.yaml
 # The per-service X-Internal-Secret of wely-media, sealed apart from the shared secret (see
-# base/wely-secrets.example.yaml, second document). Still named dev-wely-garage, and still holding
-# the dead garage-* keys: both go at the next reseal — the credentials of a storage that no longer
-# exists.
+# base/wely-secrets.example.yaml, second document). Still named dev-wely-garage after the storage that
+# held the pictures until 2026-11-15: a SealedSecret only decrypts for its original name, so the
+# rename waits for the next reseal of these four values.
 - wely-sealed-garage-dev.yaml
 # Cloudflare Realtime keys for calls (SFU and TURN), read by wely-chat only.
 - wely-sealed-calls-dev.yaml

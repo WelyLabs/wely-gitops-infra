@@ -78,7 +78,7 @@ DETACH DELETE c;
 
 // Six communities, with fixed ids so a re-run replaces them instead of piling up. No picture:
 // pictureKey stays null, as a seeded avatar does, and only what a visitor uploads lands in
-// Garage — which is exactly what demo-reset.yaml purges from communities/.
+// R2 — which is exactly what demo-reset.yaml purges from communities/.
 // Interests are lower-cased and at most five, as CommunityDraft normalizes them.
 UNWIND [
   {id: 'ef773bba-f02b-4999-a7e7-b4df37a29d39', by: '89a380b8-f66a-44d0-b9d9-616241080430',
