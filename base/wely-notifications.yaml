@@ -67,7 +67,7 @@ spec:
           value: "wely-kafka-service.wely-platform.svc.cluster.local:9092"
         # Web Push keys. Optional: without them notifications are still stored and streamed.
         # One broker for every environment; this prefix is what separates them. It must match the
-        # environment list of platform/base/wely-kafka-topics.yaml.
+        # topics created in the Confluent Cloud console (see the README).
         - name: TOPIC_PREFIX
           value: "prod."
         - name: VAPID_PUBLIC_KEY

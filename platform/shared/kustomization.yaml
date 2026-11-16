@@ -1,9 +1,0 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-# Emptied on 2026-11-16: identity moved from the shared Keycloak to Auth0 (tenant
-# dev-8k6vch1dvh1qxrdz, configured in wely-identity). Only the namespace is left, so ArgoCD prunes
-# Keycloak, its PostgreSQL and their policies; the Application and the namespace are removed by
-# hand afterwards (argocd/applications.yaml is not reconciled by anyone).
-resources:
-- namespace.yaml

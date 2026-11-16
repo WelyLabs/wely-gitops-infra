@@ -18,7 +18,6 @@ resources:
 - wely-sealed-cloud-dev.yaml
 - pod-disruption-budgets.yaml
 - demo/demo-reset.yaml
-# realm/ moved to platform/: one Keycloak, one realm per environment, configured there.
 # Observability moved to observability/shared, in wely-observability: it watches the
 # environments rather than belonging to one. It reads this namespace's pods through a Role
 # granted there — see base/prometheus-rbac.yaml, placed in this namespace by the transformer

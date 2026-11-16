@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Keycloak, its database and Kafka moved to platform/: one instance serves every environment.
+# Identity is Auth0 and Kafka is Confluent Cloud: neither runs in the cluster any more.
 resources:
   - cloudflared.yaml
   - wely-web.yaml
