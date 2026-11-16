@@ -16,6 +16,10 @@ resources:
 - wely-sealed-notifications-dev.yaml
 # Credentials of the managed cloud services (Atlas...), sealed with seal-cloud-secret.sh.
 - wely-sealed-cloud-dev.yaml
+# Guards GET /user-service/internal/**, and the four readers of the tombstones send it back.
+# Sealed with seal-deleted-users-secret.sh. It had never been created: wely-users fell back to an
+# empty reader secret, which by design answers 401, and every reconciliation pass failed hourly.
+- wely-sealed-deleted-users-dev.yaml
 - pod-disruption-budgets.yaml
 - demo/demo-reset.yaml
 # Observability moved to observability/shared, in wely-observability: it watches the

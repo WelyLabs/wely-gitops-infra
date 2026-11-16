@@ -1,0 +1,17 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  annotations:
+    sealedsecrets.bitnami.com/cluster-wide: "true"
+  name: wely-deleted-users
+  namespace: wely-dev
+spec:
+  encryptedData:
+    deleted-users-reader-secret: AgCjHxA5/ys5aWETqzKnL3R1ya3rpIxRmgExWW3sCX+WOp/fQaB24M2HLalsHQpyQ3krbq5cZsUEnoROLzom9M3KQ8Q4bA+9uNv6HixDs19aLHeHv4ldOHR2vr9tp6R1erVc8346jLiYcH38uUYATlB7phfl0i33+p3n2az9XWDfhI7uZAG/sWYwHBaIGtvSoqeJ0GB97SjMfuNDE5/0OxgGRGwA2lGhYW4bBUCrwSo3+mvkc7iCVrukAtAPfyMSBUNnG1wC91Lsv7TSkn3aAKsXuV8QSc4G/W1unphyTtycDpej+2y+7d0x+pBCHanp4yp9UzOPD75KMr+N5VO4OdKNS4/3CPLOogIHzP+zvE4IJo8dZFxIBd8EZYsdp4eQ8eCQEtfECcbsFwHcwRWZrzO9waGgHN1FR+NikupaYy6j4YzS2//sKDbZNTeTaeK8kcnrSdU0zEGwWZ8SW+w176qM/ekoc+Kbo/6rTDFxQr8frzbrZVKSJIxn7VuvaD1TNBnlUjc08l83cRRSNHeYrJvi3ZCQpljWewHT8K8OkPbZBCIv/r1ZSuf37i18FRH2AXjzFVa9ayKSFtkfiFkb2iF6rCcbFeRV8GnJezECJPCZ/hzdPmwELsCmPMp0yVht9MJsPSlrW7TogIFsplRUceBszM7D7Lgy4pOYtDcoRnQsirw/l0851oIGl/CabTwpHyEg2L/zvzgjFB/8FhSVlbOylb/5W/6igEdtuw1DgCQKeS8PcdWm0dZ6Fmmt
+  template:
+    metadata:
+      annotations:
+        sealedsecrets.bitnami.com/cluster-wide: "true"
+      name: wely-deleted-users
+      namespace: wely-dev
