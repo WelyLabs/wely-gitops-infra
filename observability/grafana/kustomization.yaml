@@ -46,4 +46,3 @@ configMapGenerator:
       - dashboards/wely-machines.json
       - dashboards/wely-data-messaging.json
       - dashboards/wely-product.json
-      - dashboards/wely-keycloak.json
