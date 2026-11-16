@@ -110,7 +110,7 @@ patches:
             # Injected into index.html by entrypoint.sh: one image serves every environment, so the
             # tenant, the client and the audience cannot be constants in the bundle.
             - name: AUTH_DOMAIN
-              value: "dev-8k6vch1dvh1qxrdz.eu.auth0.com"
+              value: "auth.welylabs.app"
             - name: AUTH_CLIENT_ID
               value: "a3HWp7xp83GIpuOyxjAoGfKHvFW44PK7"
             - name: AUTH_AUDIENCE
@@ -136,11 +136,11 @@ patches:
           - name: gateway
             env:
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/"
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/.well-known/jwks.json"
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: USERS_API_URL
               value: "http://dev-wely-users-service:8082"
             - name: SOCIAL_API_URL
@@ -230,11 +230,11 @@ patches:
             - name: SPRING_R2DBC_PROPERTIES_SSLMODE
               $patch: delete
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/"
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/.well-known/jwks.json"
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
             # Confluent Cloud, cluster wely-dev-kafka: SASL_SSL as the service account wely-dev-services.
@@ -297,11 +297,11 @@ patches:
             - name: TOPIC_PREFIX
               value: "dev."
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/"
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/.well-known/jwks.json"
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
             # Demo accounts never count as or become community admins, on any leave.
             - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
               valueFrom:
@@ -330,11 +330,11 @@ patches:
             - name: GATEWAY_URL
               value: "http://dev-wely-gateway-service:8081"
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/"
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/.well-known/jwks.json"
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
   target:
     kind: Deployment
     name: wely-mcp
@@ -373,11 +373,11 @@ patches:
                   name: dev-wely-cloud
                   key: mongodb-uri-chat
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/"
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/.well-known/jwks.json"
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
             # Confluent Cloud, cluster wely-dev-kafka: SASL_SSL as the service account wely-dev-services.
@@ -426,11 +426,11 @@ patches:
                   name: dev-wely-cloud
                   key: mongodb-uri-events
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/"
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/.well-known/jwks.json"
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
             # namePrefix renames the Service, not a value that spells its name.
             - name: SOCIAL_API_URL
               value: "http://dev-wely-social-service:8083"
@@ -526,11 +526,11 @@ patches:
                   name: dev-wely-cloud
                   key: mongodb-uri-notifications
             - name: KEYCLOAK_ISSUER_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/"
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/.well-known/jwks.json"
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
             # Confluent Cloud, cluster wely-dev-kafka: SASL_SSL as the service account wely-dev-services.

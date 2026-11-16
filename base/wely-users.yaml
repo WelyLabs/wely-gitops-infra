@@ -60,13 +60,18 @@ spec:
               name: dev-wely-secrets-dev
               key: users-db-username
         - name: KEYCLOAK_ISSUER_URI
-          value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/"
+          value: "https://auth.welylabs.app/"
         # The audience this API accepts: the Auth0 API identifier. Empty would accept any authentic
         # token of the tenant, whoever asked for it.
         - name: JWT_AUDIENCES
           value: "wely-api-prod"
         # The Auth0 tenant, and the M2M client wely-users reads, updates and deletes identities with
         # through the Management API (read/update/delete:users, delete:sessions).
+        #
+        # THE CANONICAL TENANT, NOT auth.welylabs.app. The custom domain serves the login, but the
+        # Management API's audience stays https://<tenant>/api/v2/: pointed at the custom domain the
+        # token is issued for an audience nothing recognises, and the first account creation after
+        # the deploy fails with 401 — the only place it shows.
         - name: AUTH0_DOMAIN
           value: "dev-8k6vch1dvh1qxrdz.eu.auth0.com"
         - name: AUTH0_MGMT_CLIENT_ID
@@ -75,7 +80,7 @@ spec:
           valueFrom:
             secretKeyRef: { name: dev-wely-cloud, key: auth0-mgmt-client-secret }
         - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-          value: "https://dev-8k6vch1dvh1qxrdz.eu.auth0.com/.well-known/jwks.json"
+          value: "https://auth.welylabs.app/.well-known/jwks.json"
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
