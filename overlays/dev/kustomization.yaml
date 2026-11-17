@@ -601,7 +601,7 @@ images:
   newTag: sha-5b0527ac144252f6cbc648fb6fd551ea8b3a6001
 - name: ghcr.io/welylabs/wely-notifications
   newName: ghcr.io/welylabs/wely-notifications
-  newTag: sha-d99d4703af41d569e52bdc76abdd980ff4ccadb9
+  newTag: sha-292f9c8e553d215316204c041a37280eac93d309
 - name: ghcr.io/welylabs/wely-mcp
   newName: ghcr.io/welylabs/wely-mcp
   newTag: sha-1f84929d19d167bc01c059f380afc6e3eb8d42e9
