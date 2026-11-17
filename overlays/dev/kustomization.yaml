@@ -80,7 +80,7 @@ patches:
 # each Deployment's revision, so it narrows the count to the pod's own service and spreads a rollout's
 # new pods among themselves. A key cannot be both there and in labelSelector: the API refuses the pod.
 # Not doubled: wely-mcp (STREAMABLE MCP keeps its sessions in the pod's memory), Redis (stateful, one
-# copy), and the platform's Keycloak and Kafka.
+# copy).
 - patch: |-
     - op: add
       path: /spec/replicas
@@ -139,14 +139,10 @@ patches:
           containers:
           - name: gateway
             env:
-            - name: KEYCLOAK_ISSUER_URI
-              value: "https://auth.welylabs.app/"
             - name: OIDC_ISSUER_URI
               value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
-            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: USERS_API_URL
@@ -237,14 +233,10 @@ patches:
             # ("connection is insecure"), so application.properties' verify-full applies instead.
             - name: SPRING_R2DBC_PROPERTIES_SSLMODE
               $patch: delete
-            - name: KEYCLOAK_ISSUER_URI
-              value: "https://auth.welylabs.app/"
             - name: OIDC_ISSUER_URI
               value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
-            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: KAFKA_BOOTSTRAP_SERVER
@@ -308,14 +300,10 @@ patches:
             # other's records. Created by the topics Job: the binder is not allowed to.
             - name: TOPIC_PREFIX
               value: "dev."
-            - name: KEYCLOAK_ISSUER_URI
-              value: "https://auth.welylabs.app/"
             - name: OIDC_ISSUER_URI
               value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
-            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             # Demo accounts never count as or become community admins, on any leave.
@@ -345,14 +333,10 @@ patches:
               value: "https://dev-mcp.welylabs.app"
             - name: GATEWAY_URL
               value: "http://dev-wely-gateway-service:8081"
-            - name: KEYCLOAK_ISSUER_URI
-              value: "https://auth.welylabs.app/"
             - name: OIDC_ISSUER_URI
               value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
-            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
   target:
@@ -360,7 +344,7 @@ patches:
     name: wely-mcp
 # Keyed by environment-variable name rather than by index, unlike the patches above.
 # The base gained CHAT_BROADCAST_MODE and its Kafka settings, which shifted every index
-# after MONGODB_URI, so /env/4 stopped being the Keycloak issuer. A merge patch has no
+# after MONGODB_URI, so /env/4 stopped being the token issuer. A merge patch has no
 # positions to fall out of date.
 - patch: |-
     apiVersion: apps/v1
@@ -392,14 +376,10 @@ patches:
                 secretKeyRef:
                   name: dev-wely-cloud
                   key: mongodb-uri-chat
-            - name: KEYCLOAK_ISSUER_URI
-              value: "https://auth.welylabs.app/"
             - name: OIDC_ISSUER_URI
               value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
-            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: KAFKA_BOOTSTRAP_SERVER
@@ -449,14 +429,10 @@ patches:
                 secretKeyRef:
                   name: dev-wely-cloud
                   key: mongodb-uri-events
-            - name: KEYCLOAK_ISSUER_URI
-              value: "https://auth.welylabs.app/"
             - name: OIDC_ISSUER_URI
               value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
-            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             # namePrefix renames the Service, not a value that spells its name.
@@ -553,14 +529,10 @@ patches:
                 secretKeyRef:
                   name: dev-wely-cloud
                   key: mongodb-uri-notifications
-            - name: KEYCLOAK_ISSUER_URI
-              value: "https://auth.welylabs.app/"
             - name: OIDC_ISSUER_URI
               value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
-            - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-              value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: KAFKA_BOOTSTRAP_SERVER

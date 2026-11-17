@@ -38,5 +38,5 @@ Traffic flows: browser → cloudflared → web (nginx, reverse proxy) → gatewa
 - **cloudflared's hostname→service mapping** lives in the Cloudflare dashboard
   (token tunnel), not in this repo. The `cloudflared` sources (web, auth, media
   public reads) are inferred from the code (nginx.conf proxies /api and /rsocket
-  to the gateway; MEDIA_PUBLIC_ENDPOINT exists; Keycloak login). If a public
+  to the gateway; MEDIA_PUBLIC_ENDPOINT exists). If a public
   hostname is routed differently, adjust the matching policy.

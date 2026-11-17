@@ -3,6 +3,5 @@ kind: Namespace
 metadata:
   name: wely-dev
   labels:
-    # Read by the NetworkPolicies of wely-platform: they admit any namespace carrying this key,
-    # so a new environment is reachable by Keycloak and Kafka without touching the policies.
+    # Names the environment; read by selectors that must tell environments apart.
     wely.dev/env: dev

@@ -4,7 +4,7 @@
 # it: each overlay's namespace transformer places the pair in its own namespace, and an environment
 # that should not be scraped simply leaves it out. A ClusterRole in the observability overlay would
 # have been one object instead of two per environment — and it would let the scraper list the pods
-# of every namespace, wely-platform included, where Keycloak's pods carry its secrets.
+# of every namespace, secrets-bearing ones included.
 #
 # The subject's namespace is written out: the service account lives in wely-observability and is
 # not part of this kustomization, so nothing rewrites it.

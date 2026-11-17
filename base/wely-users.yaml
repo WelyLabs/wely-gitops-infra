@@ -59,8 +59,6 @@ spec:
             secretKeyRef:
               name: dev-wely-secrets-dev
               key: users-db-username
-        - name: KEYCLOAK_ISSUER_URI
-          value: "https://auth.welylabs.app/"
         - name: OIDC_ISSUER_URI
           value: "https://auth.welylabs.app/"
         # The audience this API accepts: the Auth0 API identifier. Empty would accept any authentic
@@ -81,8 +79,6 @@ spec:
         - name: AUTH0_MGMT_CLIENT_SECRET
           valueFrom:
             secretKeyRef: { name: dev-wely-cloud, key: auth0-mgmt-client-secret }
-        - name: KEYCLOAK_INTERNAL_JWK_SET_URI
-          value: "https://auth.welylabs.app/.well-known/jwks.json"
         - name: OIDC_JWK_SET_URI
           value: "https://auth.welylabs.app/.well-known/jwks.json"
         - name: DB_PASSWORD
