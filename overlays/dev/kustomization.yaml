@@ -141,9 +141,13 @@ patches:
             env:
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/"
+            - name: OIDC_ISSUER_URI
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
+            - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: USERS_API_URL
               value: "http://dev-wely-users-service:8082"
@@ -235,9 +239,13 @@ patches:
               $patch: delete
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/"
+            - name: OIDC_ISSUER_URI
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
+            - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
@@ -302,9 +310,13 @@ patches:
               value: "dev."
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/"
+            - name: OIDC_ISSUER_URI
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
+            - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             # Demo accounts never count as or become community admins, on any leave.
             - name: ACCOUNT_DELETION_PROTECTED_USER_IDS
@@ -335,9 +347,13 @@ patches:
               value: "http://dev-wely-gateway-service:8081"
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/"
+            - name: OIDC_ISSUER_URI
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
+            - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
   target:
     kind: Deployment
@@ -378,9 +394,13 @@ patches:
                   key: mongodb-uri-chat
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/"
+            - name: OIDC_ISSUER_URI
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
+            - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
@@ -431,9 +451,13 @@ patches:
                   key: mongodb-uri-events
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/"
+            - name: OIDC_ISSUER_URI
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
+            - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             # namePrefix renames the Service, not a value that spells its name.
             - name: SOCIAL_API_URL
@@ -531,9 +555,13 @@ patches:
                   key: mongodb-uri-notifications
             - name: KEYCLOAK_ISSUER_URI
               value: "https://auth.welylabs.app/"
+            - name: OIDC_ISSUER_URI
+              value: "https://auth.welylabs.app/"
             - name: JWT_AUDIENCES
               value: "wely-api-dev"
             - name: KEYCLOAK_INTERNAL_JWK_SET_URI
+              value: "https://auth.welylabs.app/.well-known/jwks.json"
+            - name: OIDC_JWK_SET_URI
               value: "https://auth.welylabs.app/.well-known/jwks.json"
             - name: KAFKA_BOOTSTRAP_SERVER
               value: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
