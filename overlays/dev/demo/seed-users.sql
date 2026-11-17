@@ -1,10 +1,10 @@
 -- Demo dataset for wely-users (PostgreSQL). Idempotent: removes the demo rows, then inserts them.
 --
--- Only camille can log in. Her keycloak_id is the id of the Keycloak user created for the demo,
--- passed in as :demo_keycloak_id; the mapper resolves it to the fixed business id below. The
--- other users have no Keycloak account, so their keycloak_id is a placeholder that matches none.
--- identity_checked_at is set for all of them: wely-users deletes unchecked users whose Keycloak
--- account does not exist, which is exactly what the fictional friends look like.
+-- Only camille can log in. Her subject_id is the Auth0 user_id of the demo account, passed in as
+-- :demo_subject_id; at her first login the Auth0 Action provisions her, finds this row and caches the
+-- fixed business id below. The other users have no Auth0 account, so their subject_id is a
+-- placeholder that matches none. identity_checked_at is set for all of them: wely-users deletes
+-- unchecked users whose Auth0 account does not exist, which is exactly what the fictional friends look like.
 -- Birthdays are relative to the reset day, so the calendar always has some coming up; seed-mongo.js
 -- creates the matching BIRTHDAY events with the same offsets.
 \set ON_ERROR_STOP on
@@ -18,13 +18,13 @@ WHERE id IN (
         '0fa728fe-fd0e-4997-b226-fd049c6b0659', '15d05360-522a-4ff1-93a9-07d63346e4c1',
         '4d6501b7-caed-4a98-b960-199db1bd4106', '66e332e6-8d98-49c6-ac22-27095c35cf9d',
         'f4be7974-0ed3-457e-80d3-8aa08e0c5197', 'cdc6f71d-065c-4af5-9775-692411fc9504')
-   -- A visitor cannot change the Keycloak id, but a row provisioned for it under another
-   -- business id would make the insert below fail on the unique keycloak_id.
-   OR keycloak_id = :'demo_keycloak_id'
-   OR keycloak_id LIKE 'demo-fixture-%';
+   -- A visitor cannot change the Auth0 id, but a row provisioned for it under another
+   -- business id would make the insert below fail on the unique subject_id.
+   OR subject_id = :'demo_subject_id'
+   OR subject_id LIKE 'demo-fixture-%';
 
-INSERT INTO app_user (id, keycloak_id, user_name, hashtag, first_name, last_name, profile_pic_url, joined_date, identity_checked_at, birth_date, registration_completed) VALUES
-  ('89a380b8-f66a-44d0-b9d9-616241080430', :'demo_keycloak_id',     'camille', 2680, 'Camille', 'Martin',  '/demo/avatars/camille.svg', now() - interval '94 days', now(), (current_date + 25) - interval '29 years', true),
+INSERT INTO app_user (id, subject_id, user_name, hashtag, first_name, last_name, profile_pic_url, joined_date, identity_checked_at, birth_date, registration_completed) VALUES
+  ('89a380b8-f66a-44d0-b9d9-616241080430', :'demo_subject_id',     'camille', 2680, 'Camille', 'Martin',  '/demo/avatars/camille.svg', now() - interval '94 days', now(), (current_date + 25) - interval '29 years', true),
   ('a0cac685-c593-415d-bd73-6530e25a1f53', 'demo-fixture-lea',      'lea',     6000, 'Léa',     'Moreau',  '/demo/avatars/lea.svg',     now() - interval '120 days', now(), (current_date + 9) - interval '28 years', true),
   ('9de75282-095c-41a9-ab17-2d58b02445da', 'demo-fixture-hugo',     'hugo',    9074, 'Hugo',    'Bernard', '/demo/avatars/hugo.svg',    now() - interval '88 days', now(), (current_date + 16) - interval '31 years', true),
   ('50c7b996-ebf8-40e1-a0a5-5dc634f9b793', 'demo-fixture-ines',     'ines',    3474, 'Inès',    'Petit',   '/demo/avatars/ines.svg',    now() - interval '75 days', now(), (current_date + 3) - interval '27 years', true),

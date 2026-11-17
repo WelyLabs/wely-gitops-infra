@@ -5,8 +5,7 @@
 # visitor did towards real users — and inserts the dataset again. Real users' own data is not
 # touched.
 #
-# The demo Keycloak user is not reset: it has no role on the account console, so a visitor
-# can change neither its password nor its username.
+# The demo Auth0 user is not reset: it lives in the tenant, outside this job.
 #
 # The Secret is named in full: it comes from a SealedSecret, which kustomize does not know
 # is a Secret, so namePrefix does not rewrite references to it.
@@ -59,14 +58,13 @@ spec:
                 - |
                   for i in $(seq 1 20); do
                     psql --host=ep-old-breeze-b947m9wm.c-7.eu-central-1.aws.neon.tech --dbname=users \
-                         --set=demo_keycloak_id="$DEMO_KEYCLOAK_ID" --file=/scripts/seed-users.sql && exit 0
+                         --set=demo_subject_id="$DEMO_SUBJECT_ID" --file=/scripts/seed-users.sql && exit 0
                     echo "users seed attempt $i failed, retrying in 5s"; sleep 5
                   done
                   echo "users seed failed after retries"; exit 1
               env:
                 # Auth0 user_id of "camille" (login: demo@welylabs.app), connection wely-dev-users.
-                # The variable keeps its name until the keycloak_id column is renamed (AUDIT F1).
-                - name: DEMO_KEYCLOAK_ID
+                - name: DEMO_SUBJECT_ID
                   value: "auth0|6afa926ed9d578714d9c3139"
                 # Neon, as wely-users. verify-full with the image's system CAs (psql 16+).
                 - name: PGUSER
